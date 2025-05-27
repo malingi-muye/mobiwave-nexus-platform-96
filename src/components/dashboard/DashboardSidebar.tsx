@@ -17,19 +17,24 @@ import {
   Settings, 
   TrendingUp
 } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const sidebarItems = [
-  { title: "Bulk SMS", icon: Phone, badge: "New", active: true, color: "bg-blue-500" },
-  { title: "Bulk Email", icon: Mail, badge: null, active: false, color: "bg-green-500" },
-  { title: "WhatsApp", icon: MessageSquare, badge: "Pro", active: false, color: "bg-emerald-500" },
-  { title: "USSD", icon: Phone, badge: null, active: false, color: "bg-orange-500" },
-  { title: "Short Codes", icon: Phone, badge: null, active: false, color: "bg-purple-500" },
-  { title: "Surveys", icon: BarChart, badge: null, active: false, color: "bg-indigo-500" },
-  { title: "M-Pesa", icon: TrendingUp, badge: "Beta", active: false, color: "bg-yellow-500" },
-  { title: "Service Desk", icon: Settings, badge: null, active: false, color: "bg-red-500" },
+  { title: "Dashboard", icon: BarChart, badge: null, path: "/dashboard", color: "bg-blue-500" },
+  { title: "Bulk SMS", icon: Phone, badge: "New", path: "/bulk-sms", color: "bg-blue-500" },
+  { title: "Bulk Email", icon: Mail, badge: null, path: "/bulk-email", color: "bg-green-500" },
+  { title: "WhatsApp", icon: MessageSquare, badge: "Pro", path: "/whatsapp", color: "bg-emerald-500" },
+  { title: "USSD", icon: Phone, badge: null, path: "/ussd", color: "bg-orange-500" },
+  { title: "Short Codes", icon: Phone, badge: null, path: "/short-codes", color: "bg-purple-500" },
+  { title: "Surveys", icon: BarChart, badge: null, path: "/surveys", color: "bg-indigo-500" },
+  { title: "M-Pesa", icon: TrendingUp, badge: "Beta", path: "/mpesa", color: "bg-yellow-500" },
+  { title: "Service Desk", icon: Settings, badge: null, path: "/service-desk", color: "bg-red-500" },
 ];
 
 export function DashboardSidebar() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   return (
     <Sidebar className="border-r-0 shadow-xl">
       <SidebarHeader className="p-6 border-b bg-white/70 backdrop-blur-sm">
@@ -54,36 +59,42 @@ export function DashboardSidebar() {
         </div>
         
         <SidebarMenu className="space-y-2">
-          {sidebarItems.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton 
-                asChild 
-                isActive={item.active}
-                className="w-full justify-between group hover:bg-white/80 hover:shadow-sm transition-all duration-200"
-              >
-                <div className="flex items-center justify-between w-full cursor-pointer p-3 rounded-xl">
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-8 h-8 ${item.color} rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow`}>
-                      <item.icon className="w-4 h-4 text-white" />
+          {sidebarItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton 
+                  asChild 
+                  isActive={isActive}
+                  className="w-full justify-between group hover:bg-white/80 hover:shadow-sm transition-all duration-200"
+                >
+                  <div 
+                    className="flex items-center justify-between w-full cursor-pointer p-3 rounded-xl"
+                    onClick={() => navigate(item.path)}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-8 h-8 ${item.color} rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow`}>
+                        <item.icon className="w-4 h-4 text-white" />
+                      </div>
+                      <span className="font-medium">{item.title}</span>
                     </div>
-                    <span className="font-medium">{item.title}</span>
+                    {item.badge && (
+                      <Badge 
+                        variant={item.badge === "New" ? "default" : item.badge === "Pro" ? "secondary" : "outline"} 
+                        className={`text-xs ${
+                          item.badge === "New" ? "bg-green-500" : 
+                          item.badge === "Pro" ? "bg-purple-500 text-white" : 
+                          "bg-orange-500 text-white"
+                        }`}
+                      >
+                        {item.badge}
+                      </Badge>
+                    )}
                   </div>
-                  {item.badge && (
-                    <Badge 
-                      variant={item.badge === "New" ? "default" : item.badge === "Pro" ? "secondary" : "outline"} 
-                      className={`text-xs ${
-                        item.badge === "New" ? "bg-green-500" : 
-                        item.badge === "Pro" ? "bg-purple-500 text-white" : 
-                        "bg-orange-500 text-white"
-                      }`}
-                    >
-                      {item.badge}
-                    </Badge>
-                  )}
-                </div>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </SidebarContent>
     </Sidebar>

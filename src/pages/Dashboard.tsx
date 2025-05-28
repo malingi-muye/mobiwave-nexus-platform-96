@@ -1,13 +1,13 @@
 
 import React from 'react';
-import { DashboardLayout } from '../components/dashboard/DashboardLayout';
+import { ClientDashboardLayout } from '../components/client/ClientDashboardLayout';
 import { ClientDashboard } from '../components/client/ClientDashboard';
 
 const Dashboard = () => {
   return (
-    <DashboardLayout>
+    <ClientDashboardLayout>
       <ClientDashboard />
-    </DashboardLayout>
+    </ClientDashboardLayout>
   );
 };
 

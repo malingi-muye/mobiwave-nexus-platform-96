@@ -18,10 +18,7 @@ export const Header = () => {
           <a href="#about" className="text-gray-600 hover:text-gray-900">About</a>
           <a href="#contact" className="text-gray-600 hover:text-gray-900">Contact</a>
           <Button asChild variant="outline" size="sm">
-            <Link to="/dashboard">Client Portal</Link>
-          </Button>
-          <Button asChild size="sm">
-            <Link to="/admin">Admin Portal</Link>
+            <Link to="/dashboard">Login</Link>
           </Button>
         </nav>
       </div>

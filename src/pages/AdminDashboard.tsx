@@ -1,13 +1,13 @@
 
 import React from 'react';
-import { DashboardLayout } from '../components/dashboard/DashboardLayout';
+import { AdminDashboardLayout } from '../components/admin/AdminDashboardLayout';
 import { AdminDashboard as AdminDashboardComponent } from '../components/admin/AdminDashboard';
 
 const AdminDashboard = () => {
   return (
-    <DashboardLayout>
+    <AdminDashboardLayout>
       <AdminDashboardComponent />
-    </DashboardLayout>
+    </AdminDashboardLayout>
   );
 };
 

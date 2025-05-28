@@ -54,7 +54,7 @@ const App = () => (
               } 
             />
             
-            {/* Redirect legacy routes */}
+            {/* Redirect legacy routes to appropriate dashboards */}
             <Route path="/admin-dashboard" element={<Navigate to="/admin" replace />} />
             <Route path="/client-dashboard" element={<Navigate to="/dashboard" replace />} />
             

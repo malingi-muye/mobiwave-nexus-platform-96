@@ -16,7 +16,9 @@ import {
   BarChart, 
   Settings, 
   TrendingUp,
-  Home
+  Home,
+  Calendar,
+  CreditCard
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -29,6 +31,8 @@ const clientSidebarItems = [
   { title: "Short Codes", icon: Phone, badge: null, path: "/short-codes", color: "bg-purple-500" },
   { title: "Surveys", icon: BarChart, badge: null, path: "/surveys", color: "bg-indigo-500" },
   { title: "M-Pesa", icon: TrendingUp, badge: "Beta", path: "/mpesa", color: "bg-yellow-500" },
+  { title: "Campaigns", icon: Calendar, badge: null, path: "/campaigns", color: "bg-pink-500" },
+  { title: "Billing", icon: CreditCard, badge: null, path: "/billing", color: "bg-violet-500" },
   { title: "Account Settings", icon: Settings, badge: null, path: "/settings", color: "bg-gray-500" },
 ];
 

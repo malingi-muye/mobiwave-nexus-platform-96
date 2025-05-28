@@ -16,7 +16,8 @@ import {
   Database,
   BarChart,
   TrendingUp,
-  MessageSquare
+  MessageSquare,
+  Activity
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -28,6 +29,7 @@ const adminSidebarItems = [
   { title: "Analytics", icon: BarChart, badge: null, path: "/admin/analytics", color: "bg-purple-500" },
   { title: "Revenue Reports", icon: TrendingUp, badge: null, path: "/admin/revenue", color: "bg-yellow-500" },
   { title: "System Logs", icon: MessageSquare, badge: null, path: "/admin/logs", color: "bg-indigo-500" },
+  { title: "Monitoring", icon: Activity, badge: "Live", path: "/admin/monitoring", color: "bg-orange-500" },
 ];
 
 export function AdminSidebar() {

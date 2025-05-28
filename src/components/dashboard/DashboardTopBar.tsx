@@ -1,53 +1,101 @@
 
 import React from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Bell, User } from 'lucide-react';
+import { useAuth } from "@/components/auth/AuthProvider";
+import { useLocation, useNavigate } from "react-router-dom";
+import { 
+  Bell, 
+  User, 
+  LogOut, 
+  Settings,
+  Shield,
+  MessageSquare
+} from "lucide-react";
 
 export function DashboardTopBar() {
+  const { user, logout } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
+  const getContextualInfo = () => {
+    if (isAdminRoute) {
+      return {
+        title: 'Admin Portal',
+        icon: Shield,
+        badgeColor: 'bg-red-500',
+        theme: 'from-red-50 to-red-100'
+      };
+    }
+    return {
+      title: 'Client Portal',
+      icon: MessageSquare,
+      badgeColor: 'bg-blue-500',
+      theme: 'from-blue-50 to-blue-100'
+    };
+  };
+
+  const context = getContextualInfo();
+
   return (
-    <header className="h-16 border-b bg-white/70 backdrop-blur-md flex items-center justify-between px-6 shadow-sm">
-      <div className="flex items-center space-x-4">
-        <SidebarTrigger className="hover:bg-gray-100 transition-colors" />
-        <div className="flex items-center space-x-2">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-            Dashboard
-          </h1>
-          <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-            Live
-          </Badge>
-        </div>
-      </div>
-      
-      <div className="flex items-center space-x-4">
-        <div className="hidden md:block">
-          <select className="px-4 py-2 border border-gray-200 rounded-xl text-sm bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option>🏢 Acme Corporation</option>
-            <option>🚀 TechCorp Ltd</option>
-            <option>🌍 Global Enterprises</option>
-          </select>
-        </div>
-        
-        <Button variant="ghost" size="icon" className="relative hover:bg-gray-100 transition-colors">
-          <Bell className="w-5 h-5" />
-          <Badge className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center text-xs p-0 bg-red-500 animate-pulse">
-            3
-          </Badge>
-        </Button>
-        
-        <div className="flex items-center space-x-3 pl-3 border-l border-gray-200">
-          <Avatar className="w-9 h-9 shadow-md">
-            <AvatarImage src="/placeholder.svg" />
-            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
-              <User className="w-4 h-4" />
-            </AvatarFallback>
-          </Avatar>
-          <div className="hidden lg:block">
-            <p className="text-sm font-medium text-gray-900">Admin User</p>
-            <p className="text-xs text-gray-500">admin@company.com</p>
+    <header className={`bg-gradient-to-r ${context.theme} border-b border-gray-200 px-6 py-4`}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <SidebarTrigger />
+          <div className="flex items-center space-x-2">
+            <context.icon className="w-5 h-5 text-gray-600" />
+            <h1 className="text-lg font-semibold text-gray-900">{context.title}</h1>
+            <Badge className={`${context.badgeColor} text-white text-xs`}>
+              {isAdminRoute ? 'Admin' : 'Client'}
+            </Badge>
           </div>
+        </div>
+
+        <div className="flex items-center space-x-4">
+          {/* Notifications */}
+          <Button variant="ghost" size="sm" className="relative">
+            <Bell className="w-5 h-5" />
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+              3
+            </span>
+          </Button>
+
+          {/* User Menu */}
+          <div className="flex items-center space-x-2">
+            <div className="text-right">
+              <p className="text-sm font-medium text-gray-900">
+                {user?.email?.split('@')[0] || 'User'}
+              </p>
+              <p className="text-xs text-gray-500">
+                {isAdminRoute ? 'Administrator' : 'Client User'}
+              </p>
+            </div>
+            <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+              <User className="w-4 h-4 text-gray-600" />
+            </div>
+          </div>
+
+          {/* Settings */}
+          <Button variant="ghost" size="sm">
+            <Settings className="w-5 h-5" />
+          </Button>
+
+          {/* Logout */}
+          <Button variant="ghost" size="sm" onClick={handleLogout}>
+            <LogOut className="w-5 h-5" />
+          </Button>
         </div>
       </div>
     </header>

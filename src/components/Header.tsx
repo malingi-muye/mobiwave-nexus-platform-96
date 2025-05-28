@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { MessageSquare } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const Header = () => {
   return (
@@ -16,6 +17,12 @@ export const Header = () => {
           <a href="#pricing" className="text-gray-600 hover:text-gray-900">Pricing</a>
           <a href="#about" className="text-gray-600 hover:text-gray-900">About</a>
           <a href="#contact" className="text-gray-600 hover:text-gray-900">Contact</a>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/dashboard">Client Portal</Link>
+          </Button>
+          <Button asChild size="sm">
+            <Link to="/admin">Admin Portal</Link>
+          </Button>
         </nav>
       </div>
     </header>

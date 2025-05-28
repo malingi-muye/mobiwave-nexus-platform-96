@@ -15,12 +15,15 @@ import {
   MessageSquare, 
   BarChart, 
   Settings, 
-  TrendingUp
+  TrendingUp,
+  Shield,
+  Home
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const sidebarItems = [
-  { title: "Dashboard", icon: BarChart, badge: null, path: "/dashboard", color: "bg-blue-500" },
+  { title: "Client Dashboard", icon: Home, badge: null, path: "/dashboard", color: "bg-blue-500" },
+  { title: "Admin Portal", icon: Shield, badge: "Admin", path: "/admin", color: "bg-red-500" },
   { title: "Bulk SMS", icon: Phone, badge: "New", path: "/bulk-sms", color: "bg-blue-500" },
   { title: "Bulk Email", icon: Mail, badge: null, path: "/bulk-email", color: "bg-green-500" },
   { title: "WhatsApp", icon: MessageSquare, badge: "Pro", path: "/whatsapp", color: "bg-emerald-500" },
@@ -54,7 +57,7 @@ export function DashboardSidebar() {
       <SidebarContent className="p-4 bg-white/50 backdrop-blur-sm">
         <div className="mb-4">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3 px-3">
-            Communication Channels
+            Navigation
           </p>
         </div>
         
@@ -80,10 +83,11 @@ export function DashboardSidebar() {
                     </div>
                     {item.badge && (
                       <Badge 
-                        variant={item.badge === "New" ? "default" : item.badge === "Pro" ? "secondary" : "outline"} 
+                        variant={item.badge === "New" ? "default" : item.badge === "Pro" ? "secondary" : item.badge === "Admin" ? "destructive" : "outline"} 
                         className={`text-xs ${
                           item.badge === "New" ? "bg-green-500" : 
                           item.badge === "Pro" ? "bg-purple-500 text-white" : 
+                          item.badge === "Admin" ? "bg-red-500 text-white" :
                           "bg-orange-500 text-white"
                         }`}
                       >

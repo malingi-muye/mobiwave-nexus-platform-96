@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./components/auth/AuthProvider";
 import Index from "./pages/Index";
+import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import { BulkSMS } from "./components/messaging/BulkSMS";
 
@@ -20,7 +21,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={<Index />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/bulk-sms" element={<BulkSMS />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

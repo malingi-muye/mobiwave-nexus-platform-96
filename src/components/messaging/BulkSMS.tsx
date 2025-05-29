@@ -6,13 +6,18 @@ import { RecipientManager } from './sms/RecipientManager';
 import { CampaignScheduler } from './sms/CampaignScheduler';
 import { DeliveryTracker } from './sms/DeliveryTracker';
 import { CampaignHistory } from './sms/CampaignHistory';
+import { CampaignManager } from './sms/CampaignManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Send, Clock, Users, BarChart } from 'lucide-react';
+import { Send, Clock, Users, BarChart, Plus } from 'lucide-react';
 
 export function BulkSMS() {
   const [activeTab, setActiveTab] = useState('compose');
   const [currentCampaign, setCurrentCampaign] = useState(null);
+
+  const handleCampaignSuccess = () => {
+    setActiveTab('history');
+  };
 
   return (
     <DashboardLayout>
@@ -31,9 +36,12 @@ export function BulkSMS() {
               <BarChart className="w-4 h-4" />
               Analytics
             </Button>
-            <Button className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-              <Send className="w-4 h-4" />
-              Send Campaign
+            <Button 
+              className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              onClick={() => setActiveTab('compose')}
+            >
+              <Plus className="w-4 h-4" />
+              New Campaign
             </Button>
           </div>
         </div>
@@ -63,10 +71,7 @@ export function BulkSMS() {
           </TabsList>
 
           <TabsContent value="compose" className="mt-6">
-            <MessageComposer 
-              onCampaignUpdate={setCurrentCampaign}
-              campaign={currentCampaign}
-            />
+            <CampaignManager onSuccess={handleCampaignSuccess} />
           </TabsContent>
 
           <TabsContent value="recipients" className="mt-6">

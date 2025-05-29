@@ -59,6 +59,122 @@ export type Database = {
           },
         ]
       }
+      campaign_recipients: {
+        Row: {
+          campaign_id: string
+          clicked_at: string | null
+          created_at: string
+          delivered_at: string | null
+          error_message: string | null
+          failed_at: string | null
+          id: string
+          opened_at: string | null
+          recipient_type: string
+          recipient_value: string
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          campaign_id: string
+          clicked_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          opened_at?: string | null
+          recipient_type: string
+          recipient_value: string
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          campaign_id?: string
+          clicked_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          opened_at?: string | null
+          recipient_type?: string
+          recipient_value?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_recipients_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          clicked_count: number | null
+          completed_at: string | null
+          content: string
+          created_at: string
+          delivered_count: number | null
+          failed_count: number | null
+          id: string
+          name: string
+          opened_count: number | null
+          recipient_count: number | null
+          scheduled_at: string | null
+          sent_count: number | null
+          started_at: string | null
+          status: string
+          subject: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          clicked_count?: number | null
+          completed_at?: string | null
+          content: string
+          created_at?: string
+          delivered_count?: number | null
+          failed_count?: number | null
+          id?: string
+          name: string
+          opened_count?: number | null
+          recipient_count?: number | null
+          scheduled_at?: string | null
+          sent_count?: number | null
+          started_at?: string | null
+          status?: string
+          subject?: string | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          clicked_count?: number | null
+          completed_at?: string | null
+          content?: string
+          created_at?: string
+          delivered_count?: number | null
+          failed_count?: number | null
+          id?: string
+          name?: string
+          opened_count?: number | null
+          recipient_count?: number | null
+          scheduled_at?: string | null
+          sent_count?: number | null
+          started_at?: string | null
+          status?: string
+          subject?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       message_history: {
         Row: {
           content: string
@@ -158,6 +274,111 @@ export type Database = {
           name?: Database["public"]["Enums"]["app_role"]
           permissions?: string[] | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      service_status: {
+        Row: {
+          cpu_usage: number | null
+          created_at: string
+          id: string
+          instances: number | null
+          last_health_check: string
+          memory_usage: number | null
+          request_rate: string | null
+          service_name: string
+          status: string
+          updated_at: string
+          uptime_percentage: number | null
+          version: string | null
+        }
+        Insert: {
+          cpu_usage?: number | null
+          created_at?: string
+          id?: string
+          instances?: number | null
+          last_health_check?: string
+          memory_usage?: number | null
+          request_rate?: string | null
+          service_name: string
+          status: string
+          updated_at?: string
+          uptime_percentage?: number | null
+          version?: string | null
+        }
+        Update: {
+          cpu_usage?: number | null
+          created_at?: string
+          id?: string
+          instances?: number | null
+          last_health_check?: string
+          memory_usage?: number | null
+          request_rate?: string | null
+          service_name?: string
+          status?: string
+          updated_at?: string
+          uptime_percentage?: number | null
+          version?: string | null
+        }
+        Relationships: []
+      }
+      system_metrics: {
+        Row: {
+          id: string
+          labels: Json | null
+          metric_name: string
+          metric_type: string
+          metric_value: number
+          recorded_at: string
+        }
+        Insert: {
+          id?: string
+          labels?: Json | null
+          metric_name: string
+          metric_type: string
+          metric_value: number
+          recorded_at?: string
+        }
+        Update: {
+          id?: string
+          labels?: Json | null
+          metric_name?: string
+          metric_type?: string
+          metric_value?: number
+          recorded_at?: string
+        }
+        Relationships: []
+      }
+      user_credits: {
+        Row: {
+          created_at: string
+          credits_remaining: number | null
+          credits_total: number
+          credits_used: number
+          id: string
+          last_purchase_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_remaining?: number | null
+          credits_total?: number
+          credits_used?: number
+          id?: string
+          last_purchase_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_remaining?: number | null
+          credits_total?: number
+          credits_used?: number
+          id?: string
+          last_purchase_at?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

@@ -33,9 +33,13 @@ export const useUpdateCredits = () => {
 
   return useMutation({
     mutationFn: async (creditsToAdd: number) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       const { data: currentCredits } = await supabase
         .from('user_credits')
         .select('credits_total')
+        .eq('user_id', user.id)
         .single();
 
       const newTotal = (currentCredits?.credits_total || 0) + creditsToAdd;
@@ -43,6 +47,7 @@ export const useUpdateCredits = () => {
       const { data, error } = await supabase
         .from('user_credits')
         .upsert({
+          user_id: user.id,
           credits_total: newTotal,
           last_purchase_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),

@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCreateCampaign, useUpdateCampaign } from '@/hooks/useCampaigns';
+import { useCreateCampaign } from '@/hooks/useCampaigns';
 import { useUserCredits } from '@/hooks/useUserCredits';
+import { useMspaceApi } from '@/hooks/useMspaceApi';
 import { toast } from 'sonner';
-import { Send, Save, AlertCircle } from 'lucide-react';
+import { Send, Save, AlertCircle, DollarSign } from 'lucide-react';
 
 interface CampaignManagerProps {
   onSuccess?: () => void;
@@ -21,15 +22,35 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
     type: 'sms' as 'sms' | 'email' | 'whatsapp',
     content: '',
     subject: '',
+    recipients: [] as string[]
   });
 
   const createCampaign = useCreateCampaign();
   const { data: credits } = useUserCredits();
+  const { sendSMS, checkBalance } = useMspaceApi();
   const [estimatedCost, setEstimatedCost] = useState(0);
+
+  const handleRecipientsChange = (value: string) => {
+    const recipients = value.split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+    
+    setCampaignData(prev => ({ ...prev, recipients }));
+    
+    // Update cost estimation
+    const smsCount = Math.ceil(campaignData.content.length / 160);
+    const cost = recipients.length * smsCount * 0.05;
+    setEstimatedCost(cost);
+  };
 
   const handleSubmit = async (status: 'draft' | 'active') => {
     if (!campaignData.name || !campaignData.content) {
       toast.error('Please fill in all required fields');
+      return;
+    }
+
+    if (status === 'active' && campaignData.recipients.length === 0) {
+      toast.error('Please add recipients to send the campaign');
       return;
     }
 
@@ -39,12 +60,23 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
     }
 
     try {
-      await createCampaign.mutateAsync({
+      // Create campaign first
+      const campaign = await createCampaign.mutateAsync({
         ...campaignData,
         status,
       });
 
-      toast.success(`Campaign ${status === 'draft' ? 'saved as draft' : 'created and activated'} successfully`);
+      if (status === 'active' && campaignData.recipients.length > 0) {
+        // Send SMS immediately
+        await sendSMS.mutateAsync({
+          recipients: campaignData.recipients,
+          message: campaignData.content,
+          sender_id: 'MOBIWAVE',
+          campaign_id: campaign.id
+        });
+      }
+
+      toast.success(`Campaign ${status === 'draft' ? 'saved as draft' : 'created and sent'} successfully`);
       
       // Reset form
       setCampaignData({
@@ -52,7 +84,9 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
         type: 'sms',
         content: '',
         subject: '',
+        recipients: []
       });
+      setEstimatedCost(0);
 
       onSuccess?.();
     } catch (error) {
@@ -63,11 +97,11 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
 
   const characterCount = campaignData.content.length;
   const smsCount = Math.ceil(characterCount / 160);
-  const costPerSMS = 0.05;
   
   React.useEffect(() => {
-    setEstimatedCost(smsCount * costPerSMS);
-  }, [smsCount]);
+    const cost = campaignData.recipients.length * smsCount * 0.05;
+    setEstimatedCost(cost);
+  }, [smsCount, campaignData.recipients.length]);
 
   return (
     <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
@@ -77,7 +111,7 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
           Create New Campaign
         </CardTitle>
         <CardDescription>
-          Design and launch your messaging campaign
+          Design and launch your messaging campaign with Mspace integration
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -140,17 +174,57 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
           />
         </div>
 
-        {/* Cost Estimation */}
-        <div className="bg-blue-50 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <AlertCircle className="w-4 h-4 text-blue-600" />
-            <span className="font-medium text-blue-900">Cost Estimation</span>
-          </div>
-          <div className="text-sm text-blue-800">
-            <p>Estimated cost: ${estimatedCost.toFixed(2)} ({smsCount} SMS)</p>
-            <p>Available credits: {credits?.credits_remaining || 0}</p>
+        <div className="space-y-2">
+          <Label htmlFor="recipients">Recipients (one per line)</Label>
+          <Textarea
+            id="recipients"
+            placeholder="Enter phone numbers, one per line (e.g., +254712345678)"
+            onChange={(e) => handleRecipientsChange(e.target.value)}
+            className="min-h-[100px]"
+          />
+          <div className="text-sm text-gray-500">
+            Recipients: {campaignData.recipients.length}
           </div>
         </div>
+
+        {/* Balance & Cost Display */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-green-50 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <DollarSign className="w-4 h-4 text-green-600" />
+              <span className="font-medium text-green-900">Your Credits</span>
+            </div>
+            <div className="text-lg font-bold text-green-600">
+              ${credits?.credits_remaining?.toFixed(2) || '0.00'}
+            </div>
+          </div>
+
+          <div className="bg-blue-50 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertCircle className="w-4 h-4 text-blue-600" />
+              <span className="font-medium text-blue-900">Campaign Cost</span>
+            </div>
+            <div className="text-lg font-bold text-blue-600">
+              ${estimatedCost.toFixed(2)}
+            </div>
+            <div className="text-xs text-blue-800">
+              {campaignData.recipients.length} recipients × {smsCount} SMS
+            </div>
+          </div>
+        </div>
+
+        {/* Mspace Balance */}
+        {checkBalance.data && (
+          <div className="bg-purple-50 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <DollarSign className="w-4 h-4 text-purple-600" />
+              <span className="font-medium text-purple-900">Mspace Balance</span>
+            </div>
+            <div className="text-lg font-bold text-purple-600">
+              {checkBalance.data.currency} {checkBalance.data.balance}
+            </div>
+          </div>
+        )}
 
         <div className="flex gap-3">
           <Button
@@ -164,11 +238,16 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
           </Button>
           <Button
             onClick={() => handleSubmit('active')}
-            disabled={createCampaign.isPending || (credits && credits.credits_remaining < estimatedCost)}
+            disabled={
+              createCampaign.isPending || 
+              sendSMS.isPending ||
+              (credits && credits.credits_remaining < estimatedCost) ||
+              campaignData.recipients.length === 0
+            }
             className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
           >
             <Send className="w-4 h-4" />
-            {createCampaign.isPending ? 'Creating...' : 'Launch Campaign'}
+            {sendSMS.isPending ? 'Sending...' : 'Send Campaign'}
           </Button>
         </div>
       </CardContent>

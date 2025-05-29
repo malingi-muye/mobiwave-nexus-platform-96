@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from '@/integrations/supabase/client';
-import { RefreshCw, CheckCircle, XCircle, Clock, Send } from 'lucide-react';
+import { RefreshCw, CheckCircle, XCircle, Clock, Send, Activity } from 'lucide-react';
 
 interface MessageStatus {
   id: string;
@@ -15,6 +14,7 @@ interface MessageStatus {
   delivered_at?: string;
   failed_at?: string;
   error_message?: string;
+  provider_message_id?: string;
 }
 
 export function RealTimeTracker() {
@@ -97,71 +97,120 @@ export function RealTimeTracker() {
     return new Date(timestamp).toLocaleString();
   };
 
+  const getStats = () => {
+    const total = messages.length;
+    const delivered = messages.filter(m => m.status === 'delivered').length;
+    const failed = messages.filter(m => m.status === 'failed').length;
+    const pending = messages.filter(m => m.status === 'sent' || m.status === 'pending').length;
+
+    return { total, delivered, failed, pending };
+  };
+
+  const stats = getStats();
+
   return (
-    <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <RefreshCw className="w-5 h-5 text-blue-600" />
-              Real-time Message Tracking
-            </CardTitle>
-            <CardDescription>
-              Live updates of SMS delivery status
-            </CardDescription>
-          </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={loadMessages}
-            disabled={loading}
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4 max-h-96 overflow-y-auto">
-          {messages.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">
-              No messages sent yet
+    <div className="space-y-6">
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="border-0 shadow-sm bg-white/50">
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
+            <div className="text-sm text-gray-600">Total Messages</div>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm bg-green-50">
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-green-600">{stats.delivered}</div>
+            <div className="text-sm text-green-700">Delivered</div>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm bg-yellow-50">
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+            <div className="text-sm text-yellow-700">Pending</div>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm bg-red-50">
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-red-600">{stats.failed}</div>
+            <div className="text-sm text-red-700">Failed</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Real-time Message List */}
+      <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="w-5 h-5 text-blue-600" />
+                Real-time Message Tracking
+              </CardTitle>
+              <CardDescription>
+                Live updates of SMS delivery status via Mspace API
+              </CardDescription>
             </div>
-          ) : (
-            messages.map((message) => (
-              <div key={message.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
-                <div className="flex items-center gap-3">
-                  {getStatusIcon(message.status)}
-                  <div>
-                    <div className="font-medium text-gray-900">
-                      {message.recipient}
-                    </div>
-                    <div className="text-sm text-gray-600 truncate max-w-xs">
-                      {message.content}
-                    </div>
-                    {message.error_message && (
-                      <div className="text-xs text-red-600 mt-1">
-                        Error: {message.error_message}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="text-right">
-                  {getStatusBadge(message.status)}
-                  <div className="text-xs text-gray-500 mt-1">
-                    {message.delivered_at 
-                      ? `Delivered: ${formatTime(message.delivered_at)}`
-                      : message.failed_at
-                      ? `Failed: ${formatTime(message.failed_at)}`
-                      : `Sent: ${formatTime(message.sent_at)}`
-                    }
-                  </div>
-                </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={loadMessages}
+              disabled={loading}
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4 max-h-96 overflow-y-auto">
+            {messages.length === 0 ? (
+              <div className="text-center text-gray-500 py-8">
+                <Send className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-lg font-medium">No messages sent yet</p>
+                <p className="text-sm">Create a campaign to start tracking messages</p>
               </div>
-            ))
-          )}
-        </div>
-      </CardContent>
-    </Card>
+            ) : (
+              messages.map((message) => (
+                <div key={message.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-3">
+                    {getStatusIcon(message.status)}
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">
+                        {message.recipient}
+                      </div>
+                      <div className="text-sm text-gray-600 truncate max-w-xs">
+                        {message.content}
+                      </div>
+                      {message.provider_message_id && (
+                        <div className="text-xs text-gray-400">
+                          ID: {message.provider_message_id}
+                        </div>
+                      )}
+                      {message.error_message && (
+                        <div className="text-xs text-red-600 mt-1">
+                          Error: {message.error_message}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    {getStatusBadge(message.status)}
+                    <div className="text-xs text-gray-500 mt-1">
+                      {message.delivered_at 
+                        ? `Delivered: ${formatTime(message.delivered_at)}`
+                        : message.failed_at
+                        ? `Failed: ${formatTime(message.failed_at)}`
+                        : `Sent: ${formatTime(message.sent_at)}`
+                      }
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

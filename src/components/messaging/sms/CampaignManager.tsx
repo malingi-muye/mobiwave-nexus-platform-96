@@ -10,7 +10,7 @@ import { useCreateCampaign } from '@/hooks/useCampaigns';
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { useMspaceApi } from '@/hooks/useMspaceApi';
 import { toast } from 'sonner';
-import { Send, Save, AlertCircle, DollarSign } from 'lucide-react';
+import { Send, Save, AlertCircle, DollarSign, Wifi } from 'lucide-react';
 
 interface CampaignManagerProps {
   onSuccess?: () => void;
@@ -33,11 +33,11 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
   const handleRecipientsChange = (value: string) => {
     const recipients = value.split('\n')
       .map(line => line.trim())
-      .filter(line => line.length > 0);
+      .filter(line => line.length > 0 && line.includes('+'));
     
     setCampaignData(prev => ({ ...prev, recipients }));
     
-    // Update cost estimation
+    // Update cost estimation (assuming $0.05 per SMS segment)
     const smsCount = Math.ceil(campaignData.content.length / 160);
     const cost = recipients.length * smsCount * 0.05;
     setEstimatedCost(cost);
@@ -45,7 +45,7 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
 
   const handleSubmit = async (status: 'draft' | 'active') => {
     if (!campaignData.name || !campaignData.content) {
-      toast.error('Please fill in all required fields');
+      toast.error('Please fill in campaign name and message content');
       return;
     }
 
@@ -55,7 +55,7 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
     }
 
     if (status === 'active' && credits && credits.credits_remaining < estimatedCost) {
-      toast.error('Insufficient credits to send campaign');
+      toast.error(`Insufficient credits. You need $${estimatedCost.toFixed(2)} but have $${credits.credits_remaining.toFixed(2)}`);
       return;
     }
 
@@ -67,16 +67,18 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
       });
 
       if (status === 'active' && campaignData.recipients.length > 0) {
-        // Send SMS immediately
+        // Send SMS immediately via Mspace
         await sendSMS.mutateAsync({
           recipients: campaignData.recipients,
           message: campaignData.content,
           sender_id: 'MOBIWAVE',
           campaign_id: campaign.id
         });
+        
+        toast.success('Campaign sent successfully! Check the Live Tracking tab for real-time updates.');
+      } else {
+        toast.success(`Campaign ${status === 'draft' ? 'saved as draft' : 'created'} successfully`);
       }
-
-      toast.success(`Campaign ${status === 'draft' ? 'saved as draft' : 'created and sent'} successfully`);
       
       // Reset form
       setCampaignData({
@@ -89,8 +91,8 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
       setEstimatedCost(0);
 
       onSuccess?.();
-    } catch (error) {
-      toast.error('Failed to create campaign');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create campaign');
       console.error('Campaign creation error:', error);
     }
   };
@@ -108,10 +110,10 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Send className="w-5 h-5 text-blue-600" />
-          Create New Campaign
+          Create New SMS Campaign
         </CardTitle>
         <CardDescription>
-          Design and launch your messaging campaign with Mspace integration
+          Design and launch your SMS campaign with Mspace integration and real-time tracking
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -146,49 +148,41 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
           </div>
         </div>
 
-        {campaignData.type === 'email' && (
-          <div className="space-y-2">
-            <Label htmlFor="subject">Email Subject</Label>
-            <Input
-              id="subject"
-              placeholder="Enter email subject..."
-              value={campaignData.subject}
-              onChange={(e) => setCampaignData(prev => ({ ...prev, subject: e.target.value }))}
-            />
-          </div>
-        )}
-
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="content">Message Content *</Label>
             <div className="text-sm text-gray-500">
-              {characterCount}/160 ({smsCount} SMS)
+              {characterCount}/160 ({smsCount} SMS{smsCount > 1 ? ' segments' : ''})
             </div>
           </div>
           <Textarea
             id="content"
-            placeholder="Type your message here..."
+            placeholder="Type your SMS message here..."
             value={campaignData.content}
             onChange={(e) => setCampaignData(prev => ({ ...prev, content: e.target.value }))}
             className="min-h-[120px]"
+            maxLength={918} // SMS limit for 6 segments
           />
+          <div className="text-xs text-gray-500">
+            {smsCount > 1 && `Long messages will be split into ${smsCount} segments`}
+          </div>
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="recipients">Recipients (one per line)</Label>
           <Textarea
             id="recipients"
-            placeholder="Enter phone numbers, one per line (e.g., +254712345678)"
+            placeholder="Enter phone numbers with country code, one per line:&#10;+254712345678&#10;+254798765432"
             onChange={(e) => handleRecipientsChange(e.target.value)}
             className="min-h-[100px]"
           />
           <div className="text-sm text-gray-500">
-            Recipients: {campaignData.recipients.length}
+            Recipients: {campaignData.recipients.length} | Valid format: +254XXXXXXXXX
           </div>
         </div>
 
         {/* Balance & Cost Display */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-green-50 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
               <DollarSign className="w-4 h-4 text-green-600" />
@@ -211,20 +205,23 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
               {campaignData.recipients.length} recipients × {smsCount} SMS
             </div>
           </div>
-        </div>
 
-        {/* Mspace Balance */}
-        {checkBalance.data && (
           <div className="bg-purple-50 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="w-4 h-4 text-purple-600" />
+              <Wifi className="w-4 h-4 text-purple-600" />
               <span className="font-medium text-purple-900">Mspace Balance</span>
             </div>
-            <div className="text-lg font-bold text-purple-600">
-              {checkBalance.data.currency} {checkBalance.data.balance}
-            </div>
+            {checkBalance.data ? (
+              <div className="text-lg font-bold text-purple-600">
+                {checkBalance.data.currency} {checkBalance.data.balance}
+              </div>
+            ) : (
+              <div className="text-sm text-purple-600">
+                {checkBalance.isLoading ? 'Loading...' : 'Connect to check'}
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
         <div className="flex gap-3">
           <Button
@@ -242,13 +239,28 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
               createCampaign.isPending || 
               sendSMS.isPending ||
               (credits && credits.credits_remaining < estimatedCost) ||
-              campaignData.recipients.length === 0
+              campaignData.recipients.length === 0 ||
+              !campaignData.name ||
+              !campaignData.content
             }
             className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
           >
             <Send className="w-4 h-4" />
-            {sendSMS.isPending ? 'Sending...' : 'Send Campaign'}
+            {sendSMS.isPending ? 'Sending via Mspace...' : 'Send Campaign'}
           </Button>
+        </div>
+
+        {/* Integration Status */}
+        <div className="border-t pt-4">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span>Mspace API Integration Active</span>
+            {checkBalance.data && (
+              <span className="text-purple-600">
+                • Provider Balance: {checkBalance.data.currency} {checkBalance.data.balance}
+              </span>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

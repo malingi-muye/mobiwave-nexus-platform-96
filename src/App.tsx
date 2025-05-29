@@ -60,6 +60,62 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/admin/users" 
+              element={
+                <ProtectedRoute>
+                  <UserManagement />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/settings" 
+              element={
+                <ProtectedRoute>
+                  <SystemSettings />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/database" 
+              element={
+                <ProtectedRoute>
+                  <DatabaseAdmin />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/analytics" 
+              element={
+                <ProtectedRoute>
+                  <Analytics />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/revenue" 
+              element={
+                <ProtectedRoute>
+                  <RevenueReports />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/logs" 
+              element={
+                <ProtectedRoute>
+                  <SystemLogs />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/monitoring" 
+              element={
+                <ProtectedRoute>
+                  <Monitoring />
+                </ProtectedRoute>
+              } 
+            />
             
             {/* Redirect legacy routes to appropriate dashboards */}
             <Route path="/admin-dashboard" element={<Navigate to="/admin" replace />} />

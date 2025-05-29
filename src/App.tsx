@@ -10,6 +10,13 @@ import { AuthPage } from "./components/auth/AuthPage";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import UserManagement from "./pages/admin/UserManagement";
+import SystemSettings from "./pages/admin/SystemSettings";
+import DatabaseAdmin from "./pages/admin/DatabaseAdmin";
+import Analytics from "./pages/admin/Analytics";
+import RevenueReports from "./pages/admin/RevenueReports";
+import SystemLogs from "./pages/admin/SystemLogs";
+import Monitoring from "./pages/admin/Monitoring";
 import NotFound from "./pages/NotFound";
 import { BulkSMS } from "./components/messaging/BulkSMS";
 

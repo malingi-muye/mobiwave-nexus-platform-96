@@ -4,219 +4,262 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, Clock, Send, Timer } from 'lucide-react';
-import { format } from 'date-fns';
-import { cn } from "@/lib/utils";
+import { Clock, Calendar as CalendarIcon, Play, Pause, Edit, Trash2, Plus } from 'lucide-react';
+import { format } from "date-fns";
+import { toast } from 'sonner';
+
+interface ScheduledCampaign {
+  id: string;
+  name: string;
+  content: string;
+  recipients: string[];
+  scheduledAt: Date;
+  status: 'scheduled' | 'running' | 'paused' | 'completed' | 'failed';
+  repeatType?: 'none' | 'daily' | 'weekly' | 'monthly';
+  timezone: string;
+  createdAt: Date;
+}
 
 interface CampaignSchedulerProps {
-  campaign: any;
-  onScheduleUpdate: (campaign: any) => void;
+  campaign?: any;
+  onScheduleUpdate?: (campaign: any) => void;
 }
 
 export function CampaignScheduler({ campaign, onScheduleUpdate }: CampaignSchedulerProps) {
-  const [scheduleType, setScheduleType] = useState('immediate');
+  const [scheduledCampaigns, setScheduledCampaigns] = useState<ScheduledCampaign[]>([]);
+  const [showScheduleDialog, setShowScheduleDialog] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState('09:00');
+  const [repeatType, setRepeatType] = useState('none');
   const [timezone, setTimezone] = useState('UTC');
 
-  const timezones = [
-    'UTC',
-    'America/New_York',
-    'America/Chicago',
-    'America/Denver',
-    'America/Los_Angeles',
-    'Europe/London',
-    'Europe/Paris',
-    'Asia/Tokyo',
-    'Asia/Dubai',
-    'Africa/Nairobi'
-  ];
+  const scheduleNewCampaign = () => {
+    if (!selectedDate || !campaign) {
+      toast.error('Please select a date and ensure campaign is ready');
+      return;
+    }
 
-  const handleScheduleUpdate = () => {
-    const scheduleData = {
-      type: scheduleType,
-      date: selectedDate,
-      time: selectedTime,
+    const scheduledDateTime = new Date(selectedDate);
+    const [hours, minutes] = selectedTime.split(':');
+    scheduledDateTime.setHours(parseInt(hours), parseInt(minutes));
+
+    const newScheduledCampaign: ScheduledCampaign = {
+      id: `scheduled-${Date.now()}`,
+      name: campaign.name || 'Untitled Campaign',
+      content: campaign.content || '',
+      recipients: campaign.recipients || [],
+      scheduledAt: scheduledDateTime,
+      status: 'scheduled',
+      repeatType: repeatType as any,
       timezone,
-      scheduledAt: scheduleType === 'scheduled' && selectedDate ? 
-        new Date(`${format(selectedDate, 'yyyy-MM-dd')}T${selectedTime}:00`) : null
+      createdAt: new Date()
     };
-    
-    onScheduleUpdate({
-      ...campaign,
-      schedule: scheduleData
-    });
+
+    setScheduledCampaigns(prev => [...prev, newScheduledCampaign]);
+    setShowScheduleDialog(false);
+    setSelectedDate(undefined);
+    toast.success('Campaign scheduled successfully');
+  };
+
+  const updateCampaignStatus = (id: string, status: ScheduledCampaign['status']) => {
+    setScheduledCampaigns(prev => 
+      prev.map(c => c.id === id ? { ...c, status } : c)
+    );
+    toast.success(`Campaign ${status}`);
+  };
+
+  const deleteCampaign = (id: string) => {
+    setScheduledCampaigns(prev => prev.filter(c => c.id !== id));
+    toast.success('Scheduled campaign deleted');
+  };
+
+  const getStatusColor = (status: ScheduledCampaign['status']) => {
+    switch (status) {
+      case 'scheduled': return 'bg-blue-100 text-blue-800';
+      case 'running': return 'bg-green-100 text-green-800';
+      case 'paused': return 'bg-yellow-100 text-yellow-800';
+      case 'completed': return 'bg-gray-100 text-gray-800';
+      case 'failed': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-blue-600" />
-            Campaign Scheduling
-          </CardTitle>
-          <CardDescription>
-            Choose when to send your SMS campaign
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <RadioGroup value={scheduleType} onValueChange={setScheduleType}>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="immediate" id="immediate" />
-              <Label htmlFor="immediate" className="flex items-center gap-2 cursor-pointer">
-                <Send className="w-4 h-4 text-green-600" />
-                Send Immediately
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="scheduled" id="scheduled" />
-              <Label htmlFor="scheduled" className="flex items-center gap-2 cursor-pointer">
-                <Timer className="w-4 h-4 text-orange-600" />
-                Schedule for Later
-              </Label>
-            </div>
-          </RadioGroup>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Campaign Scheduler</h2>
+          <p className="text-gray-600">Schedule campaigns for future delivery with recurring options</p>
+        </div>
+        <Dialog open={showScheduleDialog} onOpenChange={setShowScheduleDialog}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Schedule Campaign
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Schedule New Campaign</DialogTitle>
+              <DialogDescription>
+                Set date, time, and recurring options for your campaign
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Campaign Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      initialFocus
+                      disabled={(date) => date < new Date()}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-          {scheduleType === 'scheduled' && (
-            <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Select Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal mt-1",
-                          !selectedDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={setSelectedDate}
-                        disabled={(date) => date < new Date()}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                <div>
-                  <Label htmlFor="time">Select Time</Label>
+                  <Label htmlFor="time">Time</Label>
                   <Input
                     id="time"
                     type="time"
                     value={selectedTime}
                     onChange={(e) => setSelectedTime(e.target.value)}
-                    className="mt-1"
                   />
+                </div>
+                <div>
+                  <Label htmlFor="timezone">Timezone</Label>
+                  <Select value={timezone} onValueChange={setTimezone}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="UTC">UTC</SelectItem>
+                      <SelectItem value="EST">EST</SelectItem>
+                      <SelectItem value="PST">PST</SelectItem>
+                      <SelectItem value="GMT">GMT</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="timezone">Timezone</Label>
-                <Select value={timezone} onValueChange={setTimezone}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select timezone" />
+                <Label htmlFor="repeat">Repeat</Label>
+                <Select value={repeatType} onValueChange={setRepeatType}>
+                  <SelectTrigger>
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {timezones.map((tz) => (
-                      <SelectItem key={tz} value={tz}>{tz}</SelectItem>
-                    ))}
+                    <SelectItem value="none">No Repeat</SelectItem>
+                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {selectedDate && (
-                <div className="p-3 bg-white rounded-md border">
-                  <p className="text-sm font-medium text-gray-700 mb-1">Scheduled for:</p>
-                  <p className="text-lg font-semibold text-blue-600">
-                    {format(selectedDate, "EEEE, MMMM d, yyyy")} at {selectedTime} ({timezone})
-                  </p>
-                </div>
-              )}
+              <Button onClick={scheduleNewCampaign} className="w-full">
+                Schedule Campaign
+              </Button>
             </div>
-          )}
+          </DialogContent>
+        </Dialog>
+      </div>
 
-          <Button 
-            onClick={handleScheduleUpdate}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-          >
-            Update Schedule
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CalendarIcon className="w-5 h-5 text-purple-600" />
-            Campaign Summary
-          </CardTitle>
+          <CardTitle>Scheduled Campaigns</CardTitle>
           <CardDescription>
-            Review your campaign details before sending
+            {scheduledCampaigns.length} campaigns scheduled
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-3">
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-700">Campaign Name:</span>
-              <span className="text-sm text-gray-900">{campaign?.name || 'Untitled Campaign'}</span>
+        <CardContent>
+          {scheduledCampaigns.length > 0 ? (
+            <div className="space-y-4">
+              {scheduledCampaigns.map(scheduledCampaign => (
+                <Card key={scheduledCampaign.id} className="border-2">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-semibold">{scheduledCampaign.name}</h3>
+                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                          <div className="flex items-center gap-1">
+                            <CalendarIcon className="w-4 h-4" />
+                            {format(scheduledCampaign.scheduledAt, "PPP")}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            {format(scheduledCampaign.scheduledAt, "p")}
+                          </div>
+                          <Badge className={getStatusColor(scheduledCampaign.status)}>
+                            {scheduledCampaign.status}
+                          </Badge>
+                          {scheduledCampaign.repeatType !== 'none' && (
+                            <Badge variant="outline">
+                              Repeats {scheduledCampaign.repeatType}
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {scheduledCampaign.recipients.length} recipients
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        {scheduledCampaign.status === 'scheduled' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateCampaignStatus(scheduledCampaign.id, 'running')}
+                          >
+                            <Play className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {scheduledCampaign.status === 'running' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateCampaignStatus(scheduledCampaign.id, 'paused')}
+                          >
+                            <Pause className="w-4 h-4" />
+                          </Button>
+                        )}
+                        <Button size="sm" variant="ghost">
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => deleteCampaign(scheduledCampaign.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-            
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-700">Recipients:</span>
-              <Badge variant="secondary">{campaign?.recipients?.length || 0} contacts</Badge>
-            </div>
-            
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-700">Sender ID:</span>
-              <span className="text-sm text-gray-900">{campaign?.senderId || 'Not set'}</span>
-            </div>
-            
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-700">Message Length:</span>
-              <Badge variant={campaign?.smsCount > 1 ? "destructive" : "secondary"}>
-                {campaign?.smsCount || 0} SMS parts
-              </Badge>
-            </div>
-            
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-              <span className="text-sm font-medium text-gray-700">Schedule:</span>
-              <Badge variant={scheduleType === 'immediate' ? "default" : "outline"}>
-                {scheduleType === 'immediate' ? 'Send Now' : 'Scheduled'}
-              </Badge>
-            </div>
-          </div>
-
-          {campaign?.message && (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm font-medium text-gray-700 mb-2">Message Preview:</p>
-              <p className="text-sm text-gray-900 italic">"{campaign.message.substring(0, 100)}{campaign.message.length > 100 ? '...' : ''}"</p>
+          ) : (
+            <div className="text-center py-8">
+              <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">No campaigns scheduled</p>
+              <p className="text-sm text-gray-400">Schedule your first campaign to get started</p>
             </div>
           )}
-
-          <div className="pt-4 border-t">
-            <div className="flex justify-between items-center text-sm">
-              <span className="font-medium text-gray-700">Estimated Cost:</span>
-              <span className="font-semibold text-green-600">
-                ${((campaign?.recipients?.length || 0) * (campaign?.smsCount || 1) * 0.05).toFixed(2)}
-              </span>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>

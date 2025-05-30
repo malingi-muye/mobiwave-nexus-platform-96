@@ -9,11 +9,13 @@ import { CampaignHistory } from './sms/CampaignHistory';
 import { CampaignManager } from './sms/CampaignManager';
 import { RealTimeTracker } from './sms/RealTimeTracker';
 import { BulkOperations } from './sms/BulkOperations';
+import { AdvancedAnalytics } from './sms/AdvancedAnalytics';
+import { ABTesting } from './sms/ABTesting';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Send, Clock, Users, BarChart, Plus, Activity, DollarSign, Layers, Zap } from 'lucide-react';
+import { Send, Clock, Users, BarChart, Plus, Activity, DollarSign, Layers, Zap, FlaskConical, TrendingUp } from 'lucide-react';
 import { useMspaceApi } from '@/hooks/useMspaceApi';
 import { useUserCredits } from '@/hooks/useUserCredits';
 
@@ -33,16 +35,20 @@ export function BulkSMS() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Bulk SMS Campaign Center
+              Advanced SMS Campaign Center
             </h1>
             <p className="text-gray-600 mt-2">
-              Complete SMS campaign management with advanced contact tools, templates, and real-time tracking via Mspace API.
+              Complete SMS campaign management with analytics, A/B testing, scheduling, and real-time tracking via Mspace API.
             </p>
           </div>
           <div className="flex gap-3">
-            <Button variant="outline" className="flex items-center gap-2">
-              <BarChart className="w-4 h-4" />
+            <Button variant="outline" className="flex items-center gap-2" onClick={() => setActiveTab('analytics')}>
+              <TrendingUp className="w-4 h-4" />
               Analytics
+            </Button>
+            <Button variant="outline" className="flex items-center gap-2" onClick={() => setActiveTab('ab-testing')}>
+              <FlaskConical className="w-4 h-4" />
+              A/B Testing
             </Button>
             <Button 
               className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
@@ -121,7 +127,7 @@ export function BulkSMS() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-7 bg-white/50 backdrop-blur-sm">
+          <TabsList className="grid w-full grid-cols-9 bg-white/50 backdrop-blur-sm">
             <TabsTrigger value="compose" className="flex items-center gap-2">
               <Send className="w-4 h-4" />
               Compose
@@ -141,6 +147,14 @@ export function BulkSMS() {
             <TabsTrigger value="tracking" className="flex items-center gap-2">
               <Activity className="w-4 h-4" />
               Live Tracking
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              Analytics
+            </TabsTrigger>
+            <TabsTrigger value="ab-testing" className="flex items-center gap-2">
+              <FlaskConical className="w-4 h-4" />
+              A/B Testing
             </TabsTrigger>
             <TabsTrigger value="history" className="flex items-center gap-2">
               <BarChart className="w-4 h-4" />
@@ -181,6 +195,14 @@ export function BulkSMS() {
               <RealTimeTracker />
               <DeliveryTracker campaigns={[currentCampaign].filter(Boolean)} />
             </div>
+          </TabsContent>
+
+          <TabsContent value="analytics" className="mt-6">
+            <AdvancedAnalytics />
+          </TabsContent>
+
+          <TabsContent value="ab-testing" className="mt-6">
+            <ABTesting />
           </TabsContent>
 
           <TabsContent value="history" className="mt-6">

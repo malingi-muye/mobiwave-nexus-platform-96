@@ -2,17 +2,18 @@
 import React, { useState } from 'react';
 import { DashboardLayout } from '../dashboard/DashboardLayout';
 import { MessageComposer } from './sms/MessageComposer';
-import { RecipientManager } from './sms/RecipientManager';
+import { EnhancedRecipientManager } from './sms/EnhancedRecipientManager';
 import { CampaignScheduler } from './sms/CampaignScheduler';
 import { DeliveryTracker } from './sms/DeliveryTracker';
 import { CampaignHistory } from './sms/CampaignHistory';
 import { CampaignManager } from './sms/CampaignManager';
 import { RealTimeTracker } from './sms/RealTimeTracker';
+import { BulkOperations } from './sms/BulkOperations';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Send, Clock, Users, BarChart, Plus, Activity, DollarSign } from 'lucide-react';
+import { Send, Clock, Users, BarChart, Plus, Activity, DollarSign, Layers, Zap } from 'lucide-react';
 import { useMspaceApi } from '@/hooks/useMspaceApi';
 import { useUserCredits } from '@/hooks/useUserCredits';
 
@@ -32,10 +33,10 @@ export function BulkSMS() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Bulk SMS Campaign
+              Bulk SMS Campaign Center
             </h1>
             <p className="text-gray-600 mt-2">
-              Create, manage, and track your SMS campaigns with Mspace integration and real-time delivery tracking.
+              Complete SMS campaign management with advanced contact tools, templates, and real-time tracking via Mspace API.
             </p>
           </div>
           <div className="flex gap-3">
@@ -53,8 +54,8 @@ export function BulkSMS() {
           </div>
         </div>
 
-        {/* Status Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Enhanced Status Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-gray-600">Your Credits</CardTitle>
@@ -91,22 +92,36 @@ export function BulkSMS() {
 
           <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
             <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Active Operations</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <Layers className="w-5 h-5 text-blue-600" />
+                <span className="text-2xl font-bold text-blue-600">3</span>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Bulk operations running</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
+            <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-gray-600">System Status</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                 <Badge variant="secondary" className="bg-green-100 text-green-800">
-                  Operational
+                  <Zap className="w-3 h-3 mr-1" />
+                  Enhanced
                 </Badge>
               </div>
-              <p className="text-xs text-gray-500 mt-1">All systems online</p>
+              <p className="text-xs text-gray-500 mt-1">All systems optimal</p>
             </CardContent>
           </Card>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 bg-white/50 backdrop-blur-sm">
+          <TabsList className="grid w-full grid-cols-7 bg-white/50 backdrop-blur-sm">
             <TabsTrigger value="compose" className="flex items-center gap-2">
               <Send className="w-4 h-4" />
               Compose
@@ -114,6 +129,10 @@ export function BulkSMS() {
             <TabsTrigger value="recipients" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
               Recipients
+            </TabsTrigger>
+            <TabsTrigger value="bulk-ops" className="flex items-center gap-2">
+              <Layers className="w-4 h-4" />
+              Bulk Ops
             </TabsTrigger>
             <TabsTrigger value="schedule" className="flex items-center gap-2">
               <Clock className="w-4 h-4" />
@@ -127,6 +146,10 @@ export function BulkSMS() {
               <BarChart className="w-4 h-4" />
               History
             </TabsTrigger>
+            <TabsTrigger value="templates" className="flex items-center gap-2">
+              <BarChart className="w-4 h-4" />
+              Templates
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="compose" className="mt-6">
@@ -134,12 +157,16 @@ export function BulkSMS() {
           </TabsContent>
 
           <TabsContent value="recipients" className="mt-6">
-            <RecipientManager 
+            <EnhancedRecipientManager 
               onRecipientsUpdate={(recipients) => 
                 setCurrentCampaign(prev => ({ ...prev, recipients }))
               }
               recipients={currentCampaign?.recipients || []}
             />
+          </TabsContent>
+
+          <TabsContent value="bulk-ops" className="mt-6">
+            <BulkOperations />
           </TabsContent>
 
           <TabsContent value="schedule" className="mt-6">
@@ -158,6 +185,19 @@ export function BulkSMS() {
 
           <TabsContent value="history" className="mt-6">
             <CampaignHistory />
+          </TabsContent>
+
+          <TabsContent value="templates" className="mt-6">
+            <div className="text-center py-8">
+              <p className="text-gray-500">Template management is integrated into the Recipients tab</p>
+              <Button 
+                variant="outline" 
+                onClick={() => setActiveTab('recipients')}
+                className="mt-4"
+              >
+                Go to Template Manager
+              </Button>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

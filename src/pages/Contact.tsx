@@ -5,7 +5,7 @@ import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Phone, Mail, MapPin, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -15,75 +15,50 @@ const Contact = () => {
     name: '',
     email: '',
     company: '',
-    phone: '',
-    subject: '',
     message: ''
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Basic validation
-    if (!formData.name || !formData.email || !formData.message) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Here you would typically send the form data to your backend
-    console.log('Form submitted:', formData);
-    
+    console.log('Contact form submitted:', formData);
     toast({
       title: "Message Sent!",
-      description: "Thank you for contacting us. We'll get back to you soon.",
+      description: "We'll get back to you within 24 hours.",
     });
+    setFormData({ name: '', email: '', company: '', message: '' });
+  };
 
-    // Reset form
-    setFormData({
-      name: '',
-      email: '',
-      company: '',
-      phone: '',
-      subject: '',
-      message: ''
-    });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
   };
 
   const contactInfo = [
     {
       icon: Phone,
       title: "Phone",
-      details: ["+254 123 456 789", "+254 987 654 321"],
-      color: "bg-blue-500"
+      details: "+254 700 123 456",
+      subtitle: "Mon-Fri 8AM-6PM"
     },
     {
       icon: Mail,
       title: "Email",
-      details: ["info@mobiwave.co.ke", "support@mobiwave.co.ke"],
-      color: "bg-green-500"
+      details: "support@mobiwave.co.ke",
+      subtitle: "We'll respond within 24 hours"
     },
     {
       icon: MapPin,
-      title: "Address",
-      details: ["123 Business Street", "Nairobi, Kenya"],
-      color: "bg-purple-500"
+      title: "Office",
+      details: "Nairobi, Kenya",
+      subtitle: "Visit us by appointment"
     },
     {
       icon: Clock,
       title: "Business Hours",
-      details: ["Mon - Fri: 8:00 AM - 6:00 PM", "Sat: 9:00 AM - 2:00 PM"],
-      color: "bg-orange-500"
+      details: "Mon-Fri: 8AM-6PM",
+      subtitle: "Sat: 9AM-2PM"
     }
   ];
 
@@ -96,108 +71,77 @@ const Contact = () => {
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-5xl font-bold mb-6">Contact Us</h1>
           <p className="text-xl max-w-3xl mx-auto">
-            Get in touch with our team. We're here to help you succeed with your messaging needs.
+            Ready to transform your business communication? Get in touch with our team of experts.
           </p>
         </div>
       </section>
 
-      {/* Contact Info Cards */}
+      {/* Contact Form and Info */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-            {contactInfo.map((info, index) => (
-              <Card key={index} className="text-center">
-                <CardContent className="p-6">
-                  <div className={`w-12 h-12 ${info.color} rounded-lg flex items-center justify-center mx-auto mb-4`}>
-                    <info.icon className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2">{info.title}</h3>
-                  {info.details.map((detail, detailIndex) => (
-                    <p key={detailIndex} className="text-gray-600 text-sm">{detail}</p>
-                  ))}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Contact Form and Map */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Contact Form */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-2xl">Send us a Message</CardTitle>
+                <CardTitle className="text-2xl">Send us a message</CardTitle>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="name">Name *</Label>
+                      <label htmlFor="name" className="block text-sm font-medium mb-2">
+                        Full Name *
+                      </label>
                       <Input
                         id="name"
                         name="name"
                         value={formData.name}
-                        onChange={handleInputChange}
+                        onChange={handleChange}
                         required
+                        placeholder="John Doe"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="email">Email *</Label>
+                      <label htmlFor="email" className="block text-sm font-medium mb-2">
+                        Email Address *
+                      </label>
                       <Input
                         id="email"
                         name="email"
                         type="email"
                         value={formData.email}
-                        onChange={handleInputChange}
+                        onChange={handleChange}
                         required
+                        placeholder="john@company.com"
                       />
                     </div>
                   </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="company">Company</Label>
-                      <Input
-                        id="company"
-                        name="company"
-                        value={formData.company}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="phone">Phone</Label>
-                      <Input
-                        id="phone"
-                        name="phone"
-                        type="tel"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                  </div>
-
                   <div>
-                    <Label htmlFor="subject">Subject</Label>
+                    <label htmlFor="company" className="block text-sm font-medium mb-2">
+                      Company Name
+                    </label>
                     <Input
-                      id="subject"
-                      name="subject"
-                      value={formData.subject}
-                      onChange={handleInputChange}
+                      id="company"
+                      name="company"
+                      value={formData.company}
+                      onChange={handleChange}
+                      placeholder="Your Company Ltd"
                     />
                   </div>
-
                   <div>
-                    <Label htmlFor="message">Message *</Label>
-                    <textarea
+                    <label htmlFor="message" className="block text-sm font-medium mb-2">
+                      Message *
+                    </label>
+                    <Textarea
                       id="message"
                       name="message"
-                      rows={5}
-                      className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       value={formData.message}
-                      onChange={handleInputChange}
+                      onChange={handleChange}
                       required
+                      rows={6}
+                      placeholder="Tell us about your messaging needs..."
                     />
                   </div>
-
                   <Button type="submit" className="w-full">
                     Send Message
                   </Button>
@@ -205,53 +149,55 @@ const Contact = () => {
               </CardContent>
             </Card>
 
-            {/* Map and Office Info */}
+            {/* Contact Information */}
             <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Visit Our Office</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64 bg-gray-200 rounded-lg mb-4 flex items-center justify-center">
-                    <p className="text-gray-500">Interactive Map Coming Soon</p>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="font-semibold">Mobiwave Office</p>
-                    <p className="text-gray-600">123 Business Street</p>
-                    <p className="text-gray-600">Nairobi, Kenya</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Quick Support</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600 mb-4">
-                    Need immediate assistance? Our support team is available to help you with:
-                  </p>
-                  <ul className="space-y-2 text-sm">
-                    <li className="flex items-center">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                      Technical integration support
-                    </li>
-                    <li className="flex items-center">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                      Account setup and configuration
-                    </li>
-                    <li className="flex items-center">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                      Billing and subscription queries
-                    </li>
-                    <li className="flex items-center">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                      API documentation and examples
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
+              <h2 className="text-3xl font-bold mb-8">Get in Touch</h2>
+              <div className="grid grid-cols-1 gap-6">
+                {contactInfo.map((info, index) => (
+                  <Card key={index}>
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="bg-blue-100 p-3 rounded-lg">
+                          <info.icon className="w-6 h-6 text-blue-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-lg">{info.title}</h3>
+                          <p className="text-gray-900 font-medium">{info.details}</p>
+                          <p className="text-gray-600 text-sm">{info.subtitle}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
+          <div className="max-w-3xl mx-auto space-y-6">
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="font-semibold mb-2">How quickly can I get started?</h3>
+                <p className="text-gray-600">Most services can be set up within 24-48 hours. USSD services require 2 weeks for authorization and setup.</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="font-semibold mb-2">Do you offer free trials?</h3>
+                <p className="text-gray-600">Yes! We offer free trials for select services including Service Desk (1 month) and USSD Test-Bed (30 days).</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="font-semibold mb-2">What payment methods do you accept?</h3>
+                <p className="text-gray-600">We accept bank transfers, mobile money (M-Pesa), and other local payment methods. Monthly billing is standard.</p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>

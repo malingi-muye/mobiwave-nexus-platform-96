@@ -13,10 +13,10 @@ export const Header = () => {
           <span className="text-2xl font-bold text-gray-900">Mobiwave</span>
         </Link>
         <nav className="hidden md:flex items-center space-x-8">
-          <a href="#features" className="text-gray-600 hover:text-gray-900">Features</a>
-          <a href="#pricing" className="text-gray-600 hover:text-gray-900">Pricing</a>
-          <a href="#about" className="text-gray-600 hover:text-gray-900">About</a>
-          <a href="#contact" className="text-gray-600 hover:text-gray-900">Contact</a>
+          <Link to="/services" className="text-gray-600 hover:text-gray-900">Services</Link>
+          <Link to="/pricing" className="text-gray-600 hover:text-gray-900">Pricing</Link>
+          <Link to="/about" className="text-gray-600 hover:text-gray-900">About</Link>
+          <Link to="/contact" className="text-gray-600 hover:text-gray-900">Contact</Link>
           <div className="flex items-center space-x-2">
             <Button asChild variant="outline" size="sm">
               <Link to="/dashboard">Client Portal</Link>

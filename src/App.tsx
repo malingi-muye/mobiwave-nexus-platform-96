@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,6 +22,7 @@ import SystemLogs from "./pages/admin/SystemLogs";
 import Monitoring from "./pages/admin/Monitoring";
 import NotFound from "./pages/NotFound";
 import { BulkSMS } from "./components/messaging/BulkSMS";
+import SecurityConfig from "./pages/admin/SecurityConfig";
 
 const queryClient = new QueryClient();
 
@@ -82,6 +82,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <SystemSettings />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/security" 
+              element={
+                <ProtectedRoute>
+                  <SecurityConfig />
                 </ProtectedRoute>
               } 
             />

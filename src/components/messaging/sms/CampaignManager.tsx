@@ -10,7 +10,8 @@ import { useCreateCampaign } from '@/hooks/useCampaigns';
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { useMspaceApi } from '@/hooks/useMspaceApi';
 import { toast } from 'sonner';
-import { Send, Save, AlertCircle, DollarSign, Wifi } from 'lucide-react';
+import { Send, Save } from 'lucide-react';
+import { BalanceDisplay } from './BalanceDisplay';
 
 interface CampaignManagerProps {
   onSuccess?: () => void;
@@ -37,7 +38,6 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
     
     setCampaignData(prev => ({ ...prev, recipients }));
     
-    // Update cost estimation (assuming $0.05 per SMS segment)
     const smsCount = Math.ceil(campaignData.content.length / 160);
     const cost = recipients.length * smsCount * 0.05;
     setEstimatedCost(cost);
@@ -60,14 +60,12 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
     }
 
     try {
-      // Create campaign first
       const campaign = await createCampaign.mutateAsync({
         ...campaignData,
         status,
       });
 
       if (status === 'active' && campaignData.recipients.length > 0) {
-        // Send SMS immediately via Mspace
         await sendSMS.mutateAsync({
           recipients: campaignData.recipients,
           message: campaignData.content,
@@ -80,7 +78,6 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
         toast.success(`Campaign ${status === 'draft' ? 'saved as draft' : 'created'} successfully`);
       }
       
-      // Reset form
       setCampaignData({
         name: '',
         type: 'sms',
@@ -161,7 +158,7 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
             value={campaignData.content}
             onChange={(e) => setCampaignData(prev => ({ ...prev, content: e.target.value }))}
             className="min-h-[120px]"
-            maxLength={918} // SMS limit for 6 segments
+            maxLength={918}
           />
           <div className="text-xs text-gray-500">
             {smsCount > 1 && `Long messages will be split into ${smsCount} segments`}
@@ -181,47 +178,11 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
           </div>
         </div>
 
-        {/* Balance & Cost Display */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-green-50 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="w-4 h-4 text-green-600" />
-              <span className="font-medium text-green-900">Your Credits</span>
-            </div>
-            <div className="text-lg font-bold text-green-600">
-              ${credits?.credits_remaining?.toFixed(2) || '0.00'}
-            </div>
-          </div>
-
-          <div className="bg-blue-50 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <AlertCircle className="w-4 h-4 text-blue-600" />
-              <span className="font-medium text-blue-900">Campaign Cost</span>
-            </div>
-            <div className="text-lg font-bold text-blue-600">
-              ${estimatedCost.toFixed(2)}
-            </div>
-            <div className="text-xs text-blue-800">
-              {campaignData.recipients.length} recipients × {smsCount} SMS
-            </div>
-          </div>
-
-          <div className="bg-purple-50 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Wifi className="w-4 h-4 text-purple-600" />
-              <span className="font-medium text-purple-900">Mspace Balance</span>
-            </div>
-            {checkBalance.data ? (
-              <div className="text-lg font-bold text-purple-600">
-                {checkBalance.data.currency} {checkBalance.data.balance}
-              </div>
-            ) : (
-              <div className="text-sm text-purple-600">
-                {checkBalance.isLoading ? 'Loading...' : 'Connect to check'}
-              </div>
-            )}
-          </div>
-        </div>
+        <BalanceDisplay
+          estimatedCost={estimatedCost}
+          recipientCount={campaignData.recipients.length}
+          smsCount={smsCount}
+        />
 
         <div className="flex gap-3">
           <Button
@@ -250,7 +211,6 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
           </Button>
         </div>
 
-        {/* Integration Status */}
         <div className="border-t pt-4">
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />

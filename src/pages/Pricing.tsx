@@ -4,61 +4,100 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, X } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Pricing = () => {
-  const plans = [
+  const smsRates = [
+    { volume: "1 – 50,000", price: "0.60" },
+    { volume: "50,001 – 500,000", price: "0.40" },
+    { volume: "500,001 – 2,000,000", price: "0.35" },
+    { volume: "Above 2,000,000", price: "0.30" },
+  ];
+
+  const emailRates = [
+    { volume: "1 – 30,000", price: "0.50" },
+    { volume: "40,001 – 80,000", price: "0.40" },
+    { volume: "80,001 – 300,000", price: "0.30" },
+    { volume: "300,001 – 500,000", price: "0.20" },
+    { volume: "Above 500,000", price: "0.15" },
+  ];
+
+  const services = [
     {
-      name: "Starter",
-      price: "$29",
-      period: "/month",
-      description: "Perfect for small businesses getting started",
-      features: [
-        { name: "1,000 SMS messages", included: true },
-        { name: "5,000 emails", included: true },
-        { name: "Basic analytics", included: true },
-        { name: "Email support", included: true },
-        { name: "WhatsApp integration", included: false },
-        { name: "Advanced analytics", included: false },
-        { name: "Priority support", included: false },
-        { name: "Custom integrations", included: false }
-      ],
-      popular: false
+      title: "USSD Services",
+      plans: [
+        {
+          name: "Shared USSD",
+          setupFee: "15,000",
+          monthlyFee: "8,000",
+          description: "Cost-effective solution for smaller businesses"
+        },
+        {
+          name: "Test-Bed",
+          setupFee: "32,000",
+          monthlyFee: "—",
+          description: "30-day trial for testing your USSD application"
+        },
+        {
+          name: "Dedicated USSD",
+          setupFee: "110,000",
+          monthlyFee: "40,000",
+          description: "Premium solution with dedicated resources"
+        }
+      ]
     },
     {
-      name: "Professional",
-      price: "$99",
-      period: "/month",
-      description: "Ideal for growing businesses",
-      features: [
-        { name: "10,000 SMS messages", included: true },
-        { name: "50,000 emails", included: true },
-        { name: "Advanced analytics", included: true },
-        { name: "Priority support", included: true },
-        { name: "WhatsApp integration", included: true },
-        { name: "A/B testing", included: true },
-        { name: "Custom integrations", included: false },
-        { name: "Dedicated account manager", included: false }
+      title: "Short Codes",
+      plans: [
+        {
+          name: "Shared Short Code",
+          setupFee: "2,500 per network",
+          monthlyFee: "15,000",
+          description: "Shared short code across multiple clients"
+        },
+        {
+          name: "Dedicated Short Code",
+          setupFee: "15,000 per network",
+          monthlyFee: "15,000",
+          description: "Your own dedicated short code"
+        }
+      ]
+    }
+  ];
+
+  const additionalServices = [
+    {
+      title: "M-Pesa Integration",
+      pricing: [
+        "Below KES 3,000: 5% per transaction",
+        "Above KES 3,000: KES 50 per transaction"
       ],
-      popular: true
+      note: "Charges are billed monthly"
     },
     {
-      name: "Enterprise",
-      price: "$299",
-      period: "/month",
-      description: "For large organizations with advanced needs",
-      features: [
-        { name: "Unlimited SMS messages", included: true },
-        { name: "Unlimited emails", included: true },
-        { name: "Advanced analytics", included: true },
-        { name: "24/7 priority support", included: true },
-        { name: "WhatsApp integration", included: true },
-        { name: "A/B testing", included: true },
-        { name: "Custom integrations", included: true },
-        { name: "Dedicated account manager", included: true }
+      title: "Survey Services",
+      pricing: [
+        "Setup Fee: KES 25,000 + VAT",
+        "Monthly Fee: KES 8,000 (up to 2,000 responses)"
       ],
-      popular: false
+      note: "Requires authorization and 2-week setup"
+    },
+    {
+      title: "Service Desk",
+      pricing: [
+        "KES 6,000 + VAT per user/month",
+        "Free 1-month trial available"
+      ],
+      note: "Multi-user support included"
+    },
+    {
+      title: "Airtime & Data Rewards",
+      pricing: [
+        "Custom pricing based on volume",
+        "Flexible reward criteria"
+      ],
+      note: "Contact sales for detailed pricing"
     }
   ];
 
@@ -69,55 +108,130 @@ const Pricing = () => {
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-5xl font-bold mb-6">Simple, Transparent Pricing</h1>
+          <h1 className="text-5xl font-bold mb-6">Transparent Pricing</h1>
           <p className="text-xl max-w-3xl mx-auto">
-            Choose the plan that fits your business needs. No hidden fees, no surprises.
+            Volume-based pricing designed for Kenyan businesses. Pay only for what you use with no hidden fees.
           </p>
         </div>
       </section>
 
-      {/* Pricing Cards */}
+      {/* Volume-Based Pricing Tables */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {plans.map((plan, index) => (
-              <Card key={index} className={`relative ${plan.popular ? 'ring-2 ring-blue-500 scale-105' : ''}`}>
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-medium">
-                      Most Popular
-                    </span>
-                  </div>
-                )}
-                <CardHeader className="text-center">
-                  <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
-                  <div className="mt-4">
-                    <span className="text-4xl font-bold">{plan.price}</span>
-                    <span className="text-gray-600">{plan.period}</span>
-                  </div>
-                  <p className="text-gray-600 mt-2">{plan.description}</p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
+            {/* SMS Pricing */}
+            <Card>
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl flex items-center justify-center gap-2">
+                  📱 Bulk SMS Pricing
+                </CardTitle>
+                <p className="text-gray-600">Per SMS (KES)</p>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-hidden rounded-lg border">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left font-semibold">Monthly Volume</th>
+                        <th className="px-4 py-3 text-right font-semibold">Price (KES)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {smsRates.map((rate, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-4 py-3">{rate.volume}</td>
+                          <td className="px-4 py-3 text-right font-mono">{rate.price}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Email Pricing */}
+            <Card>
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl flex items-center justify-center gap-2">
+                  📧 Bulk Email Pricing
+                </CardTitle>
+                <p className="text-gray-600">Per Email (KES)</p>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-hidden rounded-lg border">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left font-semibold">Email Volume</th>
+                        <th className="px-4 py-3 text-right font-semibold">Price (KES)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {emailRates.map((rate, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-4 py-3">{rate.volume}</td>
+                          <td className="px-4 py-3 text-right font-mono">{rate.price}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Service-Based Pricing */}
+          <h2 className="text-3xl font-bold text-center mb-12">Service Plans</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
+            {services.map((service, index) => (
+              <Card key={index}>
+                <CardHeader>
+                  <CardTitle className="text-xl">{service.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ul className="space-y-3 mb-6">
-                    {plan.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-center">
-                        {feature.included ? (
-                          <Check className="w-5 h-5 text-green-500 mr-3" />
-                        ) : (
-                          <X className="w-5 h-5 text-gray-400 mr-3" />
-                        )}
-                        <span className={feature.included ? 'text-gray-900' : 'text-gray-400'}>
-                          {feature.name}
-                        </span>
+                  <div className="space-y-4">
+                    {service.plans.map((plan, planIndex) => (
+                      <div key={planIndex} className="border rounded-lg p-4">
+                        <h4 className="font-semibold text-lg mb-2">{plan.name}</h4>
+                        <div className="space-y-1 text-sm">
+                          <div className="flex justify-between">
+                            <span>Setup Fee:</span>
+                            <span className="font-mono">KES {plan.setupFee} + VAT</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Monthly Fee:</span>
+                            <span className="font-mono">
+                              {plan.monthlyFee === "—" ? "—" : `KES ${plan.monthlyFee} + VAT`}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-gray-600 text-xs mt-2">{plan.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Additional Services */}
+          <h2 className="text-3xl font-bold text-center mb-12">Additional Services</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {additionalServices.map((service, index) => (
+              <Card key={index}>
+                <CardHeader>
+                  <CardTitle className="text-lg">{service.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 mb-4">
+                    {service.pricing.map((price, priceIndex) => (
+                      <li key={priceIndex} className="flex items-start gap-2">
+                        <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span className="text-sm">{price}</span>
                       </li>
                     ))}
                   </ul>
-                  <Button 
-                    asChild 
-                    className={`w-full ${plan.popular ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
-                  >
-                    <Link to="/auth">Get Started</Link>
-                  </Button>
+                  <p className="text-xs text-gray-500 italic">{service.note}</p>
                 </CardContent>
               </Card>
             ))}
@@ -125,23 +239,53 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* FAQ Section */}
+      {/* Pricing Notes */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
-          <div className="max-w-3xl mx-auto space-y-6">
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="font-semibold mb-2">Can I change my plan anytime?</h3>
-              <p className="text-gray-600">Yes, you can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle.</p>
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl font-bold text-center mb-8">Important Notes</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="font-semibold mb-3">💰 Payment Terms</h3>
+                  <ul className="text-sm space-y-2">
+                    <li>• All prices are in Kenyan Shillings (KES)</li>
+                    <li>• VAT applies where indicated</li>
+                    <li>• Volume discounts available for enterprise clients</li>
+                    <li>• Monthly billing for most services</li>
+                  </ul>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="font-semibold mb-3">🚀 Getting Started</h3>
+                  <ul className="text-sm space-y-2">
+                    <li>• Free trials available for select services</li>
+                    <li>• Setup assistance included</li>
+                    <li>• 24/7 technical support</li>
+                    <li>• Custom enterprise solutions available</li>
+                  </ul>
+                </CardContent>
+              </Card>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="font-semibold mb-2">What happens if I exceed my message limit?</h3>
-              <p className="text-gray-600">Additional messages are charged at standard rates. You'll receive notifications before reaching your limit.</p>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="font-semibold mb-2">Do you offer custom enterprise plans?</h3>
-              <p className="text-gray-600">Yes, we offer custom solutions for large enterprises. Contact our sales team for more information.</p>
-            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold mb-6">Ready to Start?</h2>
+          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
+            Contact our team for a custom quote or start with our affordable starter plans.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild size="lg">
+              <Link to="/auth">Get Started Today</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link to="/contact">Request Custom Quote</Link>
+            </Button>
           </div>
         </div>
       </section>

@@ -4,7 +4,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Phone, Mail, MessageSquare, BarChart, Globe, Zap, Shield, Clock } from 'lucide-react';
+import { Phone, Mail, MessageSquare, CreditCard, Users, BarChart, Headphones, Gift } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Services = () => {
@@ -12,53 +12,58 @@ const Services = () => {
     {
       icon: Phone,
       title: "Bulk SMS",
-      description: "Send thousands of SMS messages instantly with our reliable SMS gateway. Perfect for marketing campaigns, notifications, and alerts.",
-      features: ["Global coverage", "99.9% delivery rate", "Real-time tracking", "Personalization"],
+      description: "Send automated SMS messages to customers with reliable delivery and competitive pricing starting from KES 0.30 per SMS.",
+      features: ["Volume-based pricing", "99% delivery rate", "Real-time tracking", "API integration"],
       color: "bg-blue-500"
     },
     {
-      icon: Mail,
-      title: "Email Marketing",
-      description: "Create and send professional email campaigns with advanced analytics and automation features.",
-      features: ["Responsive templates", "A/B testing", "Automation workflows", "Advanced analytics"],
+      icon: MessageSquare,
+      title: "USSD Services",
+      description: "Offer quick service delivery via USSD codes with dedicated or shared options to suit your business needs.",
+      features: ["Dedicated USSD codes", "Shared USSD options", "30-day trial available", "Custom menu development"],
       color: "bg-green-500"
     },
     {
-      icon: MessageSquare,
-      title: "WhatsApp Business",
-      description: "Connect with customers on WhatsApp with our official Business API integration.",
-      features: ["Rich media support", "Two-way messaging", "Chatbot integration", "Message templates"],
+      icon: Users,
+      title: "Short Codes",
+      description: "Reach clients through dedicated mobile short codes for marketing campaigns and customer engagement.",
+      features: ["Dedicated short codes", "Shared options available", "Multi-network support", "Campaign management"],
+      color: "bg-purple-500"
+    },
+    {
+      icon: Mail,
+      title: "Bulk Email",
+      description: "Distribute marketing and notification emails in bulk with professional templates and analytics.",
+      features: ["Volume discounts", "Template library", "Analytics tracking", "Delivery optimization"],
       color: "bg-emerald-500"
     },
     {
+      icon: CreditCard,
+      title: "M-Pesa Integration",
+      description: "Automate payment processing through M-Pesa APIs with transparent pricing and reliable transactions.",
+      features: ["Seamless integration", "Real-time processing", "Transaction tracking", "Secure payments"],
+      color: "bg-orange-500"
+    },
+    {
       icon: BarChart,
-      title: "Analytics & Reporting",
-      description: "Get detailed insights into your messaging performance with comprehensive analytics.",
-      features: ["Real-time metrics", "Custom reports", "ROI tracking", "Performance insights"],
-      color: "bg-purple-500"
-    }
-  ];
-
-  const additionalServices = [
-    {
-      icon: Globe,
-      title: "USSD Services",
-      description: "Interactive USSD menus for mobile banking, surveys, and customer service."
+      title: "Survey Tools",
+      description: "Create and manage digital surveys for feedback collection with comprehensive reporting.",
+      features: ["Custom survey design", "2,000 responses included", "Advanced analytics", "Export capabilities"],
+      color: "bg-cyan-500"
     },
     {
-      icon: Zap,
-      title: "Short Codes",
-      description: "Memorable short codes for marketing campaigns and customer engagement."
+      icon: Headphones,
+      title: "Service Desk",
+      description: "Provide dedicated customer service interfaces with multi-user support and free trial period.",
+      features: ["Multi-user support", "Ticket management", "Free 1-month trial", "Custom workflows"],
+      color: "bg-indigo-500"
     },
     {
-      icon: Shield,
-      title: "Secure Messaging",
-      description: "End-to-end encrypted messaging for sensitive communications."
-    },
-    {
-      icon: Clock,
-      title: "Scheduled Campaigns",
-      description: "Schedule your messages for optimal delivery times across time zones."
+      icon: Gift,
+      title: "Airtime & Data Rewards",
+      description: "Launch incentive programs via airtime and data rewards to boost customer engagement and loyalty.",
+      features: ["Automated rewards", "Flexible criteria", "Real-time distribution", "Usage tracking"],
+      color: "bg-pink-500"
     }
   ];
 
@@ -71,38 +76,37 @@ const Services = () => {
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-5xl font-bold mb-6">Our Services</h1>
           <p className="text-xl max-w-3xl mx-auto">
-            Comprehensive messaging solutions to help your business communicate effectively with customers across all channels.
+            Comprehensive communication solutions designed for Kenyan businesses. 
+            Enhance your digital engagement with our reliable and affordable services.
           </p>
         </div>
       </section>
 
-      {/* Main Services */}
+      {/* Services Grid */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Core Services</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <h2 className="text-3xl font-bold text-center mb-12">Complete Communication Suite</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {mainServices.map((service, index) => (
               <Card key={index} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 ${service.color} rounded-lg flex items-center justify-center`}>
-                      <service.icon className="w-6 h-6 text-white" />
-                    </div>
-                    <CardTitle className="text-xl">{service.title}</CardTitle>
+                <CardHeader className="text-center">
+                  <div className={`w-12 h-12 ${service.color} rounded-lg flex items-center justify-center mx-auto mb-4`}>
+                    <service.icon className="w-6 h-6 text-white" />
                   </div>
+                  <CardTitle className="text-lg">{service.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-600 mb-4">{service.description}</p>
-                  <ul className="space-y-2 mb-6">
+                  <p className="text-gray-600 text-sm mb-4">{service.description}</p>
+                  <ul className="space-y-1 mb-4">
                     {service.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-center text-sm">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                      <li key={featureIndex} className="flex items-center text-xs">
+                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2"></div>
                         {feature}
                       </li>
                     ))}
                   </ul>
-                  <Button asChild className="w-full">
-                    <Link to="/auth">Get Started</Link>
+                  <Button asChild className="w-full" size="sm">
+                    <Link to="/pricing">View Pricing</Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -111,26 +115,8 @@ const Services = () => {
         </div>
       </section>
 
-      {/* Additional Services */}
+      {/* Why Choose Mobiwave */}
       <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Additional Services</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {additionalServices.map((service, index) => (
-              <Card key={index} className="text-center hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <service.icon className="w-12 h-12 text-blue-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">{service.title}</h3>
-                  <p className="text-gray-600 text-sm">{service.description}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Benefits Section */}
-      <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -141,8 +127,26 @@ const Services = () => {
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                   </div>
                   <div>
+                    <h3 className="font-semibold">Local Expertise</h3>
+                    <p className="text-gray-600">Deep understanding of the Kenyan market with localized solutions.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Competitive Pricing</h3>
+                    <p className="text-gray-600">Transparent, volume-based pricing with no hidden fees.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  </div>
+                  <div>
                     <h3 className="font-semibold">Reliable Infrastructure</h3>
-                    <p className="text-gray-600">99.9% uptime with redundant systems and global carrier partnerships.</p>
+                    <p className="text-gray-600">99% uptime with robust systems and local network partnerships.</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -151,27 +155,36 @@ const Services = () => {
                   </div>
                   <div>
                     <h3 className="font-semibold">Easy Integration</h3>
-                    <p className="text-gray-600">RESTful APIs and comprehensive documentation for quick implementation.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-1">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">24/7 Support</h3>
-                    <p className="text-gray-600">Round-the-clock technical support and dedicated account management.</p>
+                    <p className="text-gray-600">Simple APIs and comprehensive documentation for quick implementation.</p>
                   </div>
                 </div>
               </div>
             </div>
             <div>
               <img 
-                src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&h=400&fit=crop"
-                alt="Technology and development"
+                src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop"
+                alt="Kenyan business technology"
                 className="rounded-lg shadow-lg"
               />
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold mb-6">Ready to Get Started?</h2>
+          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
+            Join hundreds of Kenyan businesses already using Mobiwave to enhance their customer communication.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild size="lg">
+              <Link to="/auth">Start Free Trial</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link to="/contact">Contact Sales</Link>
+            </Button>
           </div>
         </div>
       </section>

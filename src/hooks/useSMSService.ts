@@ -41,13 +41,23 @@ export const useSMSService = () => {
     queryKey: ['sms-history'],
     queryFn: async (): Promise<SMSMessage[]> => {
       const { data, error } = await supabase
-        .from('sms_messages')
+        .from('message_history')
         .select('*')
+        .eq('type', 'sms')
         .order('created_at', { ascending: false })
         .limit(100);
 
       if (error) throw error;
-      return data || [];
+      
+      // Map message_history data to SMSMessage format
+      return (data || []).map(item => ({
+        id: item.id,
+        recipient: item.recipient,
+        message: item.content,
+        status: item.status === 'sent' ? 'delivered' : (item.status as 'pending' | 'sent' | 'delivered' | 'failed') || 'pending',
+        cost: 0.05, // Default cost per SMS, could be stored in database later
+        created_at: item.created_at || new Date().toISOString()
+      }));
     }
   });
 

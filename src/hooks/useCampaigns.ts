@@ -1,54 +1,53 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
-export interface Campaign {
+interface Campaign {
   id: string;
   name: string;
   type: 'sms' | 'email' | 'whatsapp';
-  status: 'draft' | 'scheduled' | 'active' | 'completed' | 'paused' | 'cancelled';
-  subject?: string;
+  status: 'draft' | 'scheduled' | 'active' | 'completed' | 'paused' | 'failed';
   content: string;
   recipient_count: number;
-  sent_count: number;
   delivered_count: number;
-  opened_count: number;
-  clicked_count: number;
   failed_count: number;
-  scheduled_at?: string;
-  started_at?: string;
-  completed_at?: string;
+  total_cost: number;
+  scheduled_at: string | null;
   created_at: string;
   updated_at: string;
+  user_id: string;
 }
 
 export const useCampaigns = () => {
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const getCampaigns = useQuery({
     queryKey: ['campaigns'],
-    queryFn: async () => {
+    queryFn: async (): Promise<Campaign[]> => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
       const { data, error } = await supabase
         .from('campaigns')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Campaign[];
-    },
+      return data || [];
+    }
   });
-};
 
-export const useCreateCampaign = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (campaignData: Omit<Campaign, 'id' | 'created_at' | 'updated_at' | 'recipient_count' | 'sent_count' | 'delivered_count' | 'opened_count' | 'clicked_count' | 'failed_count'>) => {
+  const createCampaign = useMutation({
+    mutationFn: async (campaign: Omit<Campaign, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
         .from('campaigns')
         .insert({
-          ...campaignData,
+          ...campaign,
           user_id: user.id
         })
         .select()
@@ -59,15 +58,15 @@ export const useCreateCampaign = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+      toast.success('Campaign created successfully');
     },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to create campaign');
+    }
   });
-};
 
-export const useUpdateCampaign = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<Campaign> & { id: string }) => {
+  const updateCampaign = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Campaign> }) => {
       const { data, error } = await supabase
         .from('campaigns')
         .update(updates)
@@ -80,6 +79,19 @@ export const useUpdateCampaign = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+      toast.success('Campaign updated successfully');
     },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to update campaign');
+    }
   });
+
+  return {
+    data: getCampaigns.data,
+    isLoading: getCampaigns.isLoading,
+    error: getCampaigns.error,
+    createCampaign,
+    updateCampaign,
+    refetch: getCampaigns.refetch
+  };
 };

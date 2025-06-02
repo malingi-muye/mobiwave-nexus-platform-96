@@ -15,9 +15,11 @@ import { ABTesting } from './sms/ABTesting';
 import { MessagePersonalizer } from './sms/MessagePersonalizer';
 import { NotificationCenter } from './sms/NotificationCenter';
 import { PerformanceOptimizer } from './sms/PerformanceOptimizer';
+import { CreditPurchase } from '../billing/CreditPurchase';
+import { AnalyticsDashboard } from '../analytics/AnalyticsDashboard';
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Plus, Bell, Zap } from 'lucide-react';
+import { Plus, Bell, Zap, DollarSign, BarChart3 } from 'lucide-react';
 
 export function BulkSMS() {
   const [activeTab, setActiveTab] = useState('compose');
@@ -40,6 +42,14 @@ export function BulkSMS() {
             </p>
           </div>
           <div className="flex gap-3">
+            <Button variant="outline" className="flex items-center gap-2" onClick={() => setActiveTab('billing')}>
+              <DollarSign className="w-4 h-4" />
+              Buy Credits
+            </Button>
+            <Button variant="outline" className="flex items-center gap-2" onClick={() => setActiveTab('advanced-analytics')}>
+              <BarChart3 className="w-4 h-4" />
+              Analytics
+            </Button>
             <Button variant="outline" className="flex items-center gap-2" onClick={() => setActiveTab('notifications')}>
               <Bell className="w-4 h-4" />
               Notifications
@@ -108,6 +118,10 @@ export function BulkSMS() {
             <AdvancedAnalytics />
           </TabsContent>
 
+          <TabsContent value="advanced-analytics" className="mt-6">
+            <AnalyticsDashboard />
+          </TabsContent>
+
           <TabsContent value="ab-testing" className="mt-6">
             <ABTesting />
           </TabsContent>
@@ -122,6 +136,10 @@ export function BulkSMS() {
 
           <TabsContent value="performance" className="mt-6">
             <PerformanceOptimizer />
+          </TabsContent>
+
+          <TabsContent value="billing" className="mt-6">
+            <CreditPurchase />
           </TabsContent>
 
           <TabsContent value="templates" className="mt-6">

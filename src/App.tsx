@@ -55,7 +55,7 @@ const App = () => (
               <Route path="/contact" element={<Contact />} />
               <Route path="/auth" element={<AuthPage />} />
               
-              {/* Client Dashboard Routes */}
+              {/* Client Dashboard Routes - Default for end_user role */}
               <Route 
                 path="/dashboard" 
                 element={
@@ -73,11 +73,11 @@ const App = () => (
                 } 
               />
               
-              {/* Admin Dashboard Routes */}
+              {/* Admin Dashboard Routes - Require admin role */}
               <Route 
                 path="/admin" 
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredRole="admin">
                     <AdminDashboard />
                   </ProtectedRoute>
                 } 
@@ -85,7 +85,7 @@ const App = () => (
               <Route 
                 path="/admin/users" 
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredRole="admin">
                     <UserManagement />
                   </ProtectedRoute>
                 } 
@@ -93,7 +93,7 @@ const App = () => (
               <Route 
                 path="/admin/settings" 
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredRole="admin">
                     <SystemSettings />
                   </ProtectedRoute>
                 } 
@@ -101,7 +101,7 @@ const App = () => (
               <Route 
                 path="/admin/security" 
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredRole="admin">
                     <SecurityConfig />
                   </ProtectedRoute>
                 } 
@@ -109,7 +109,7 @@ const App = () => (
               <Route 
                 path="/admin/database" 
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredRole="admin">
                     <DatabaseAdmin />
                   </ProtectedRoute>
                 } 
@@ -117,7 +117,7 @@ const App = () => (
               <Route 
                 path="/admin/analytics" 
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredRole="admin">
                     <Analytics />
                   </ProtectedRoute>
                 } 
@@ -125,7 +125,7 @@ const App = () => (
               <Route 
                 path="/admin/revenue" 
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredRole="admin">
                     <RevenueReports />
                   </ProtectedRoute>
                 } 
@@ -133,7 +133,7 @@ const App = () => (
               <Route 
                 path="/admin/logs" 
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredRole="admin">
                     <SystemLogs />
                   </ProtectedRoute>
                 } 
@@ -141,7 +141,7 @@ const App = () => (
               <Route 
                 path="/admin/monitoring" 
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredRole="admin">
                     <Monitoring />
                   </ProtectedRoute>
                 } 

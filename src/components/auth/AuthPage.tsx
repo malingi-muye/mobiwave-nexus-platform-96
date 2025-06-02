@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +9,7 @@ import { Eye, EyeOff, Lock, Mail, Shield, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "./AuthProvider";
 
 export const AuthPage = () => {
   const [email, setEmail] = useState("");
@@ -20,6 +20,18 @@ export const AuthPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user, userRole, isLoading: authLoading } = useAuth();
+
+  // Redirect authenticated users to appropriate dashboard
+  useEffect(() => {
+    if (!authLoading && user && userRole) {
+      if (userRole === 'admin') {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
+    }
+  }, [user, userRole, authLoading, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,11 +53,28 @@ export const AuthPage = () => {
       }
 
       if (data.user) {
+        // Fetch user role to determine redirect
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select(`
+            roles!inner(name)
+          `)
+          .eq('user_id', data.user.id)
+          .maybeSingle();
+
+        const userRole = roleData?.roles?.name || 'end_user';
+
         toast({
           title: "Welcome back!",
           description: "You have been successfully logged in.",
         });
-        navigate("/dashboard");
+
+        // Navigate based on role
+        if (userRole === 'admin') {
+          navigate("/admin");
+        } else {
+          navigate("/dashboard");
+        }
       }
     } catch (error) {
       toast({

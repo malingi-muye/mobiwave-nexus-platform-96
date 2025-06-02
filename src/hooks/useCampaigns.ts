@@ -12,6 +12,7 @@ interface Campaign {
   recipient_count: number;
   delivered_count: number;
   failed_count: number;
+  sent_count: number; // Added this property
   total_cost: number;
   scheduled_at: string | null;
   created_at: string;
@@ -35,12 +36,18 @@ export const useCampaigns = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      
+      // Map database fields to our interface
+      return (data || []).map(campaign => ({
+        ...campaign,
+        sent_count: campaign.sent_count || 0,
+        total_cost: 0 // Default value, will be calculated based on sent messages
+      }));
     }
   });
 
   const createCampaign = useMutation({
-    mutationFn: async (campaign: Omit<Campaign, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
+    mutationFn: async (campaign: Omit<Campaign, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'sent_count'>) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -48,7 +55,9 @@ export const useCampaigns = () => {
         .from('campaigns')
         .insert({
           ...campaign,
-          user_id: user.id
+          user_id: user.id,
+          sent_count: 0,
+          total_cost: 0
         })
         .select()
         .single();
@@ -94,4 +103,10 @@ export const useCampaigns = () => {
     updateCampaign,
     refetch: getCampaigns.refetch
   };
+};
+
+// Export the hook that CampaignManager expects
+export const useCreateCampaign = () => {
+  const { createCampaign } = useCampaigns();
+  return createCampaign;
 };

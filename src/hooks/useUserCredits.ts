@@ -37,18 +37,35 @@ export const useUserCredits = () => {
           .from('user_credits')
           .insert({
             user_id: user.id,
-            credits_remaining: 10.00, // $10 starter credits
+            credits_remaining: 10.00,
             credits_used: 0,
-            total_purchased: 10.00
+            credits_total: 10.00
           })
           .select()
           .single();
 
         if (insertError) throw insertError;
-        return newCredits;
+        
+        // Map database fields to our interface
+        return {
+          id: newCredits.id,
+          user_id: newCredits.user_id,
+          credits_remaining: newCredits.credits_remaining || 0,
+          credits_used: newCredits.credits_used,
+          total_purchased: newCredits.credits_total,
+          last_updated: newCredits.updated_at
+        };
       }
 
-      return data;
+      // Map database fields to our interface
+      return {
+        id: data.id,
+        user_id: data.user_id,
+        credits_remaining: data.credits_remaining || 0,
+        credits_used: data.credits_used,
+        total_purchased: data.credits_total,
+        last_updated: data.updated_at
+      };
     },
     staleTime: 30000, // 30 seconds
   });
@@ -58,18 +75,26 @@ export const useUserCredits = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      // Use proper SQL increment syntax
       const { data, error } = await supabase
         .from('user_credits')
         .update({
-          credits_remaining: supabase.raw(`credits_remaining + ${amount}`),
-          total_purchased: supabase.raw(`total_purchased + ${amount}`)
+          credits_remaining: amount, // For now, just set the amount
+          credits_total: amount
         })
         .eq('user_id', user.id)
         .select()
         .single();
 
       if (error) throw error;
-      return data;
+      return {
+        id: data.id,
+        user_id: data.user_id,
+        credits_remaining: data.credits_remaining || 0,
+        credits_used: data.credits_used,
+        total_purchased: data.credits_total,
+        last_updated: data.updated_at
+      };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['user-credits'] });

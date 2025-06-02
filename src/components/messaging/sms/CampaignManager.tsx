@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCreateCampaign } from '@/hooks/useCampaigns';
+import { useCampaigns } from '@/hooks/useCampaigns';
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { useMspaceApi } from '@/hooks/useMspaceApi';
 import { toast } from 'sonner';
@@ -26,7 +25,7 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
     recipients: [] as string[]
   });
 
-  const createCampaign = useCreateCampaign();
+  const { createCampaign } = useCampaigns();
   const { data: credits } = useUserCredits();
   const { sendSMS, checkBalance } = useMspaceApi();
   const [estimatedCost, setEstimatedCost] = useState(0);
@@ -63,6 +62,11 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
       const campaign = await createCampaign.mutateAsync({
         ...campaignData,
         status,
+        recipient_count: campaignData.recipients.length,
+        delivered_count: 0,
+        failed_count: 0,
+        total_cost: estimatedCost,
+        scheduled_at: null
       });
 
       if (status === 'active' && campaignData.recipients.length > 0) {

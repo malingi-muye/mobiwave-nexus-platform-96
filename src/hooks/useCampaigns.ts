@@ -12,7 +12,7 @@ interface Campaign {
   recipient_count: number;
   delivered_count: number;
   failed_count: number;
-  sent_count: number; // Added this property
+  sent_count: number;
   total_cost: number;
   scheduled_at: string | null;
   created_at: string;
@@ -37,11 +37,14 @@ export const useCampaigns = () => {
 
       if (error) throw error;
       
-      // Map database fields to our interface
+      // Map database fields to our interface with proper type casting
       return (data || []).map(campaign => ({
         ...campaign,
+        type: campaign.type as 'sms' | 'email' | 'whatsapp', // Type assertion
         sent_count: campaign.sent_count || 0,
-        total_cost: 0 // Default value, will be calculated based on sent messages
+        total_cost: campaign.total_cost || 0,
+        delivered_count: campaign.delivered_count || 0,
+        failed_count: campaign.failed_count || 0
       }));
     }
   });
@@ -57,7 +60,7 @@ export const useCampaigns = () => {
           ...campaign,
           user_id: user.id,
           sent_count: 0,
-          total_cost: 0
+          total_cost: campaign.total_cost || 0
         })
         .select()
         .single();

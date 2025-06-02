@@ -41,8 +41,9 @@ export const useCampaigns = () => {
       return (data || []).map(campaign => ({
         ...campaign,
         type: campaign.type as 'sms' | 'email' | 'whatsapp', // Type assertion
+        status: campaign.status as 'draft' | 'scheduled' | 'active' | 'completed' | 'paused' | 'failed', // Type assertion
         sent_count: campaign.sent_count || 0,
-        total_cost: campaign.total_cost || 0,
+        total_cost: 0, // Default value since this field might not exist in DB yet
         delivered_count: campaign.delivered_count || 0,
         failed_count: campaign.failed_count || 0
       }));

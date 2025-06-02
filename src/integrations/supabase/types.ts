@@ -220,6 +220,99 @@ export type Database = {
         }
         Relationships: []
       }
+      mpesa_callbacks: {
+        Row: {
+          amount: number | null
+          callback_data: Json | null
+          checkout_request_id: string
+          created_at: string | null
+          id: string
+          merchant_request_id: string | null
+          mpesa_receipt_number: string | null
+          phone_number: string | null
+          processed: boolean | null
+          result_code: number | null
+          result_desc: string | null
+          transaction_date: string | null
+        }
+        Insert: {
+          amount?: number | null
+          callback_data?: Json | null
+          checkout_request_id: string
+          created_at?: string | null
+          id?: string
+          merchant_request_id?: string | null
+          mpesa_receipt_number?: string | null
+          phone_number?: string | null
+          processed?: boolean | null
+          result_code?: number | null
+          result_desc?: string | null
+          transaction_date?: string | null
+        }
+        Update: {
+          amount?: number | null
+          callback_data?: Json | null
+          checkout_request_id?: string
+          created_at?: string | null
+          id?: string
+          merchant_request_id?: string | null
+          mpesa_receipt_number?: string | null
+          phone_number?: string | null
+          processed?: boolean | null
+          result_code?: number | null
+          result_desc?: string | null
+          transaction_date?: string | null
+        }
+        Relationships: []
+      }
+      payment_transactions: {
+        Row: {
+          amount: number
+          checkout_request_id: string | null
+          created_at: string | null
+          currency: string | null
+          failure_reason: string | null
+          id: string
+          merchant_request_id: string | null
+          mpesa_receipt_number: string | null
+          phone_number: string
+          status: string | null
+          transaction_date: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          checkout_request_id?: string | null
+          created_at?: string | null
+          currency?: string | null
+          failure_reason?: string | null
+          id?: string
+          merchant_request_id?: string | null
+          mpesa_receipt_number?: string | null
+          phone_number: string
+          status?: string | null
+          transaction_date?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          checkout_request_id?: string | null
+          created_at?: string | null
+          currency?: string | null
+          failure_reason?: string | null
+          id?: string
+          merchant_request_id?: string | null
+          mpesa_receipt_number?: string | null
+          phone_number?: string
+          status?: string | null
+          transaction_date?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

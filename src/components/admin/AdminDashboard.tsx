@@ -1,6 +1,9 @@
 
-import React from 'react';
-import { AdminMetrics } from '../dashboard/AdminMetrics';
+import React, { Suspense, lazy } from 'react';
+import { LoadingWrapper } from '@/components/ui/loading-wrapper';
+
+// Lazy load heavy components
+const AdminMetrics = lazy(() => import('../dashboard/AdminMetrics').then(module => ({ default: module.AdminMetrics })));
 
 export function AdminDashboard() {
   return (
@@ -14,7 +17,23 @@ export function AdminDashboard() {
         </p>
       </div>
       
-      <AdminMetrics />
+      <Suspense fallback={
+        <LoadingWrapper 
+          isLoading={true} 
+          skeletonRows={4}
+          fallback={
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-32 bg-gray-200 rounded-lg"></div>
+                </div>
+              ))}
+            </div>
+          }
+        />
+      }>
+        <AdminMetrics />
+      </Suspense>
     </div>
   );
 }

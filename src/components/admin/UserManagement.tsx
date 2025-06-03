@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { LoadingWrapper } from '@/components/ui/loading-wrapper';
+import { useOptimizedQuery } from '@/hooks/useOptimizedQueries';
 import { UserStats } from './user-management/UserStats';
 import { UserFilters } from './user-management/UserFilters';
 import { UserTable } from './user-management/UserTable';
@@ -17,44 +19,47 @@ interface User {
   role?: string;
 }
 
+const fetchUsers = async (searchTerm: string, roleFilter: string): Promise<User[]> => {
+  let query = supabase
+    .from('profiles')
+    .select(`
+      id,
+      email,
+      first_name,
+      last_name,
+      created_at,
+      user_roles(
+        roles(name)
+      )
+    `);
+
+  if (searchTerm) {
+    query = query.or(`email.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%`);
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  return (data || []).map(user => ({
+    id: user.id,
+    email: user.email,
+    first_name: user.first_name,
+    last_name: user.last_name,
+    created_at: user.created_at,
+    role: user.user_roles?.[0]?.roles?.name || 'end_user'
+  }));
+};
+
 export function UserManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const queryClient = useQueryClient();
 
-  const { data: users, isLoading } = useQuery({
+  const { data: users, isLoading, error } = useOptimizedQuery({
     queryKey: ['admin-users', searchTerm, roleFilter],
-    queryFn: async (): Promise<User[]> => {
-      let query = supabase
-        .from('profiles')
-        .select(`
-          id,
-          email,
-          first_name,
-          last_name,
-          created_at,
-          user_roles(
-            roles(name)
-          )
-        `);
-
-      if (searchTerm) {
-        query = query.or(`email.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%`);
-      }
-
-      const { data, error } = await query.order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      return (data || []).map(user => ({
-        id: user.id,
-        email: user.email,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        created_at: user.created_at,
-        role: user.user_roles?.[0]?.roles?.name || 'end_user'
-      }));
-    }
+    queryFn: () => fetchUsers(searchTerm, roleFilter),
+    staleTime: 60000 // 1 minute
   });
 
   const updateUserRole = useMutation({
@@ -113,13 +118,27 @@ export function UserManagement() {
         onRoleFilterChange={setRoleFilter}
       />
 
-      <UserStats users={users || []} />
-
-      <UserTable 
-        users={filteredUsers}
-        isLoading={isLoading}
-        onRoleUpdate={(userId, newRole) => updateUserRole.mutate({ userId, newRole })}
-      />
+      <LoadingWrapper 
+        isLoading={isLoading} 
+        error={error}
+        fallback={
+          <div className="space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="h-20 bg-gray-200 rounded-lg"></div>
+              </div>
+            ))}
+          </div>
+        }
+      >
+        <UserStats users={users || []} />
+        
+        <UserTable 
+          users={filteredUsers}
+          isLoading={isLoading}
+          onRoleUpdate={(userId, newRole) => updateUserRole.mutate({ userId, newRole })}
+        />
+      </LoadingWrapper>
     </div>
   );
 }

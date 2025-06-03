@@ -3,8 +3,11 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { useAuth } from './auth/AuthProvider';
 
 export const CTA = () => {
+  const { isAuthenticated } = useAuth();
+
   return (
     <section className="py-20 bg-gray-50">
       <div className="container mx-auto px-4">
@@ -18,13 +21,13 @@ export const CTA = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="text-lg px-8 py-6">
-              <Link to="/auth" className="flex items-center gap-2">
-                Start Free Trial
+              <Link to={isAuthenticated ? "/dashboard" : "/auth"} className="flex items-center gap-2">
+                {isAuthenticated ? "Go to Dashboard" : "Start Free Trial"}
                 <ArrowRight className="w-5 h-5" />
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6">
-              <Link to="#contact">
+              <Link to="/contact">
                 Contact Sales
               </Link>
             </Button>

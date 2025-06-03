@@ -25,6 +25,13 @@ import Monitoring from "./pages/admin/Monitoring";
 import NotFound from "./pages/NotFound";
 import { BulkSMS } from "./components/messaging/BulkSMS";
 import SecurityConfig from "./pages/admin/SecurityConfig";
+import EmailCampaigns from "./pages/EmailCampaigns";
+import WhatsAppCampaigns from "./pages/WhatsAppCampaigns";
+import Contacts from "./pages/Contacts";
+import CampaignAnalytics from "./pages/CampaignAnalytics";
+import BillingDashboard from "./pages/BillingDashboard";
+import SurveyBuilder from "./pages/SurveyBuilder";
+import ProfileSettings from "./pages/ProfileSettings";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -69,6 +76,70 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <BulkSMS />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/email-campaigns" 
+                element={
+                  <ProtectedRoute>
+                    <EmailCampaigns />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/whatsapp-campaigns" 
+                element={
+                  <ProtectedRoute>
+                    <WhatsAppCampaigns />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/surveys" 
+                element={
+                  <ProtectedRoute>
+                    <SurveyBuilder />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/contacts" 
+                element={
+                  <ProtectedRoute>
+                    <Contacts />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/analytics" 
+                element={
+                  <ProtectedRoute>
+                    <CampaignAnalytics />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/billing" 
+                element={
+                  <ProtectedRoute>
+                    <BillingDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/profile" 
+                element={
+                  <ProtectedRoute>
+                    <ProfileSettings />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/settings" 
+                element={
+                  <ProtectedRoute>
+                    <ProfileSettings />
                   </ProtectedRoute>
                 } 
               />

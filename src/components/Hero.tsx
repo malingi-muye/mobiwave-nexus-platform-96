@@ -3,8 +3,11 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { MessageCircle, Send, Users } from 'lucide-react';
+import { useAuth } from './auth/AuthProvider';
 
 export const Hero = () => {
+  const { isAuthenticated } = useAuth();
+
   return (
     <section className="bg-gradient-to-br from-blue-50 to-indigo-100 py-20">
       <div className="container mx-auto px-4 text-center">
@@ -19,12 +22,12 @@ export const Hero = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <Button asChild size="lg" className="text-lg px-8 py-6">
-              <Link to="/auth">
-                Get Started Free
+              <Link to={isAuthenticated ? "/dashboard" : "/auth"}>
+                {isAuthenticated ? "Go to Dashboard" : "Get Started Free"}
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6">
-              <Link to="#features">
+              <Link to="/services">
                 Learn More
               </Link>
             </Button>

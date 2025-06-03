@@ -1,13 +1,13 @@
 
 import React from 'react';
-import { DashboardLayout } from '../components/dashboard/DashboardLayout';
+import { ClientDashboardLayout } from '../components/client/ClientDashboardLayout';
 import { EmailCampaignManager } from '../components/messaging/email/EmailCampaignManager';
 
 const EmailCampaigns = () => {
   return (
-    <DashboardLayout>
+    <ClientDashboardLayout>
       <EmailCampaignManager />
-    </DashboardLayout>
+    </ClientDashboardLayout>
   );
 };
 

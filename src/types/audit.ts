@@ -1,15 +1,15 @@
-
 export interface AuditLog {
   id: string;
-  timestamp: Date;
-  user_id: string;
+  timestamp: string;
+  user_id: string | null;
   action: string;
-  resource_type?: string;
-  resource_id?: string;
-  ip_address?: string;
-  user_agent?: string;
-  metadata?: Record<string, any>;
+  resource_type?: string | null;
+  resource_id?: string | null;
+  ip_address?: unknown;
+  user_agent?: string | null;
+  details?: any;
   severity: 'low' | 'medium' | 'high' | 'critical';
+  status: 'success' | 'failure' | 'pending';
 }
 
 export interface Role {

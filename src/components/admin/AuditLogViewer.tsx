@@ -8,19 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Search, Filter, Calendar, User, Activity } from 'lucide-react';
+import type { Database } from '@/integrations/supabase/types';
 
-interface AuditLog {
-  id: string;
-  timestamp: string;
-  user_id: string;
-  action: string;
-  resource_type?: string;
-  resource_id?: string;
-  ip_address?: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  status: 'success' | 'failure' | 'pending';
-  details?: Record<string, any>;
-}
+type AuditLogRow = Database['public']['Tables']['audit_logs']['Row'];
 
 export function AuditLogViewer() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,7 +19,7 @@ export function AuditLogViewer() {
 
   const { data: auditLogs, isLoading } = useQuery({
     queryKey: ['audit-logs', searchTerm, severityFilter, actionFilter],
-    queryFn: async (): Promise<AuditLog[]> => {
+    queryFn: async (): Promise<AuditLogRow[]> => {
       let query = supabase
         .from('audit_logs')
         .select('*')
@@ -41,7 +31,7 @@ export function AuditLogViewer() {
       }
 
       if (severityFilter !== 'all') {
-        query = query.eq('severity', severityFilter);
+        query = query.eq('severity', severityFilter as Database['public']['Enums']['audit_severity']);
       }
 
       if (actionFilter !== 'all') {
@@ -55,7 +45,7 @@ export function AuditLogViewer() {
     }
   });
 
-  const getSeverityColor = (severity: string) => {
+  const getSeverityColor = (severity: string | null) => {
     switch (severity) {
       case 'critical': return 'bg-red-100 text-red-800';
       case 'high': return 'bg-orange-100 text-orange-800';
@@ -64,7 +54,7 @@ export function AuditLogViewer() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | null) => {
     switch (status) {
       case 'success': return 'bg-green-100 text-green-800';
       case 'failure': return 'bg-red-100 text-red-800';
@@ -170,7 +160,7 @@ export function AuditLogViewer() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-gray-500" />
-                        {new Date(log.timestamp).toLocaleString()}
+                        {log.timestamp ? new Date(log.timestamp).toLocaleString() : 'N/A'}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -192,17 +182,17 @@ export function AuditLogViewer() {
                     </TableCell>
                     <TableCell>
                       <Badge className={getSeverityColor(log.severity)}>
-                        {log.severity}
+                        {log.severity || 'unknown'}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge className={getStatusColor(log.status)}>
-                        {log.status}
+                        {log.status || 'unknown'}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <span className="text-sm text-gray-600">
-                        {log.ip_address || 'N/A'}
+                        {log.ip_address ? String(log.ip_address) : 'N/A'}
                       </span>
                     </TableCell>
                   </TableRow>

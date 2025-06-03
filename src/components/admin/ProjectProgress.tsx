@@ -190,13 +190,13 @@ export function ProjectProgress() {
                   <div key={featureIndex} className="border rounded-lg p-4 bg-white">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-medium text-sm">{feature.name}</h4>
-                      <Badge size="sm" className={getPriorityColor(feature.priority)}>
+                      <Badge className={`${getPriorityColor(feature.priority)} text-xs`}>
                         {feature.priority}
                       </Badge>
                     </div>
                     <div className="flex items-center gap-2 mb-2">
                       {getStatusIcon(feature.status)}
-                      <Badge size="sm" className={getStatusColor(feature.status)}>
+                      <Badge className={`${getStatusColor(feature.status)} text-xs`}>
                         {feature.status.replace('-', ' ')}
                       </Badge>
                     </div>

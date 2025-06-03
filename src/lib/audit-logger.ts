@@ -28,15 +28,16 @@ class AuditLogger {
   ): Promise<void> {
     const auditLog: AuditLog = {
       id: this.generateId(),
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
       user_id: userId,
       action,
-      resource_type: options.resourceType,
-      resource_id: options.resourceId,
+      resource_type: options.resourceType || null,
+      resource_id: options.resourceId || null,
       ip_address: options.ipAddress || this.getClientIP(),
       user_agent: options.userAgent || navigator.userAgent,
-      metadata: options.metadata,
-      severity: options.severity || 'low'
+      details: options.metadata,
+      severity: options.severity || 'low',
+      status: 'success'
     };
 
     this.logs.push(auditLog);

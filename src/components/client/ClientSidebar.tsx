@@ -12,10 +12,7 @@ import {
   SidebarMenuSubButton,
   SidebarGroup,
   SidebarGroupLabel,
-  SidebarGroupContent,
-  SidebarCollapsible,
-  SidebarCollapsibleTrigger,
-  SidebarCollapsibleContent
+  SidebarGroupContent
 } from "@/components/ui/sidebar";
 import { 
   LayoutDashboard, 
@@ -31,6 +28,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 export function ClientSidebar() {
   const location = useLocation();
@@ -70,32 +68,36 @@ export function ClientSidebar() {
           <SidebarGroupLabel>Campaigns</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarCollapsible>
-                <SidebarCollapsibleTrigger>
-                  <MessageSquare className="w-5 h-5" />
-                  Messaging
-                  <ChevronRight className="w-4 h-4 ml-auto" />
-                </SidebarCollapsibleTrigger>
-                <SidebarCollapsibleContent>
-                  <SidebarMenuSub>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild isActive={isActive('/bulk-sms')}>
-                        <Link to="/bulk-sms">SMS Campaigns</Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild isActive={isActive('/email-campaigns')}>
-                        <Link to="/email-campaigns">Email Campaigns</Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild isActive={isActive('/whatsapp-campaigns')}>
-                        <Link to="/whatsapp-campaigns">WhatsApp</Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  </SidebarMenuSub>
-                </SidebarCollapsibleContent>
-              </SidebarCollapsible>
+              <SidebarMenuItem>
+                <Collapsible>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton>
+                      <MessageSquare className="w-5 h-5" />
+                      Messaging
+                      <ChevronRight className="w-4 h-4 ml-auto" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton asChild isActive={isActive('/bulk-sms')}>
+                          <Link to="/bulk-sms">SMS Campaigns</Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton asChild isActive={isActive('/email-campaigns')}>
+                          <Link to="/email-campaigns">Email Campaigns</Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton asChild isActive={isActive('/whatsapp-campaigns')}>
+                          <Link to="/whatsapp-campaigns">WhatsApp</Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </Collapsible>
+              </SidebarMenuItem>
 
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={isActive('/surveys')}>

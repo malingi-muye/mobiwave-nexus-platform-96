@@ -1,202 +1,305 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Server, Database, Shield, Mail, MessageSquare } from 'lucide-react';
+import { Separator } from "@/components/ui/separator";
+import { Settings, Globe, Bell, Shield, Database, Zap } from 'lucide-react';
+import { toast } from 'sonner';
 
 export function SystemSettings() {
+  const [settings, setSettings] = useState({
+    siteName: 'MobiWave Communications',
+    siteDescription: 'Professional SMS and Email Marketing Platform',
+    allowRegistration: true,
+    requireEmailVerification: true,
+    maxMessageLength: 160,
+    defaultCredits: 1000,
+    enableAnalytics: true,
+    enableNotifications: true,
+    maintenanceMode: false,
+    rateLimitPerHour: 1000,
+    maxCampaignSize: 10000,
+    smtpHost: '',
+    smtpPort: 587,
+    smtpUsername: '',
+    smtpPassword: '',
+    enableSSL: true
+  });
+
+  const handleSave = () => {
+    // In a real implementation, this would save to database
+    toast.success('System settings saved successfully');
+  };
+
+  const handleReset = () => {
+    toast.success('Settings reset to defaults');
+  };
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="mb-8">
-        <h2 className="text-4xl font-bold tracking-tight mb-3 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent">
+        <h2 className="text-4xl font-bold tracking-tight mb-3 bg-gradient-to-r from-purple-900 via-purple-800 to-purple-700 bg-clip-text text-transparent">
           System Settings
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl">
-          Configure system-wide settings, integrations, and security parameters.
+          Configure platform-wide settings, limits, and integrations.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* General Settings */}
-        <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="w-5 h-5 text-gray-600" />
-              General Settings
-            </CardTitle>
-            <CardDescription>
-              Basic system configuration and preferences
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+      {/* General Settings */}
+      <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="w-5 h-5 text-purple-600" />
+            General Settings
+          </CardTitle>
+          <CardDescription>
+            Basic platform configuration and branding
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="app-name">Application Name</Label>
-              <Input id="app-name" defaultValue="Mobiwave Admin" />
+              <Label htmlFor="siteName">Site Name</Label>
+              <Input
+                id="siteName"
+                value={settings.siteName}
+                onChange={(e) => setSettings({...settings, siteName: e.target.value})}
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="app-url">Application URL</Label>
-              <Input id="app-url" defaultValue="https://admin.mobiwave.com" />
+              <Label htmlFor="defaultCredits">Default Credits for New Users</Label>
+              <Input
+                id="defaultCredits"
+                type="number"
+                value={settings.defaultCredits}
+                onChange={(e) => setSettings({...settings, defaultCredits: parseInt(e.target.value)})}
+              />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="contact-email">Contact Email</Label>
-              <Input id="contact-email" defaultValue="admin@mobiwave.com" />
-            </div>
-            <Button className="w-full">Save General Settings</Button>
-          </CardContent>
-        </Card>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="siteDescription">Site Description</Label>
+            <Textarea
+              id="siteDescription"
+              value={settings.siteDescription}
+              onChange={(e) => setSettings({...settings, siteDescription: e.target.value})}
+              rows={3}
+            />
+          </div>
 
-        {/* Security Settings */}
-        <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-red-600" />
-              Security Settings
-            </CardTitle>
-            <CardDescription>
-              Authentication and security configuration
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Session Timeout (minutes)</Label>
-              <Input defaultValue="60" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Allow User Registration</Label>
+                <p className="text-sm text-gray-500">Allow new users to create accounts</p>
+              </div>
+              <Switch
+                checked={settings.allowRegistration}
+                onCheckedChange={(checked) => setSettings({...settings, allowRegistration: checked})}
+              />
             </div>
-            <div className="space-y-2">
-              <Label>Password Min Length</Label>
-              <Input defaultValue="8" />
-            </div>
-            <div className="space-y-2">
-              <Label>Two-Factor Authentication</Label>
-              <Badge className="bg-green-100 text-green-800">Enabled</Badge>
-            </div>
-            <Button className="w-full bg-red-600 hover:bg-red-700">
-              Update Security Settings
-            </Button>
-          </CardContent>
-        </Card>
 
-        {/* Database Settings */}
-        <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Database className="w-5 h-5 text-blue-600" />
-              Database Configuration
-            </CardTitle>
-            <CardDescription>
-              Database connection and performance settings
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Connection Status</Label>
-              <Badge className="bg-green-100 text-green-800">Connected</Badge>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Require Email Verification</Label>
+                <p className="text-sm text-gray-500">Users must verify email before login</p>
+              </div>
+              <Switch
+                checked={settings.requireEmailVerification}
+                onCheckedChange={(checked) => setSettings({...settings, requireEmailVerification: checked})}
+              />
             </div>
-            <div className="space-y-2">
-              <Label>Max Connections</Label>
-              <Input defaultValue="100" />
-            </div>
-            <div className="space-y-2">
-              <Label>Query Timeout (seconds)</Label>
-              <Input defaultValue="30" />
-            </div>
-            <Button className="w-full bg-blue-600 hover:bg-blue-700">
-              Test Connection
-            </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* API Settings */}
-        <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Server className="w-5 h-5 text-purple-600" />
-              API Configuration
-            </CardTitle>
-            <CardDescription>
-              API endpoints and integration settings
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+      {/* Platform Limits */}
+      <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="w-5 h-5 text-yellow-600" />
+            Platform Limits
+          </CardTitle>
+          <CardDescription>
+            Configure rate limits and usage restrictions
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
-              <Label>Rate Limit (requests/hour)</Label>
-              <Input defaultValue="1000" />
+              <Label htmlFor="maxMessageLength">Max Message Length</Label>
+              <Input
+                id="maxMessageLength"
+                type="number"
+                value={settings.maxMessageLength}
+                onChange={(e) => setSettings({...settings, maxMessageLength: parseInt(e.target.value)})}
+              />
+              <p className="text-xs text-gray-500">Characters per SMS message</p>
             </div>
+            
             <div className="space-y-2">
-              <Label>API Version</Label>
-              <Input defaultValue="v2.1" />
+              <Label htmlFor="rateLimitPerHour">Rate Limit (per hour)</Label>
+              <Input
+                id="rateLimitPerHour"
+                type="number"
+                value={settings.rateLimitPerHour}
+                onChange={(e) => setSettings({...settings, rateLimitPerHour: parseInt(e.target.value)})}
+              />
+              <p className="text-xs text-gray-500">Max API requests per user</p>
             </div>
+            
             <div className="space-y-2">
-              <Label>CORS Enabled</Label>
-              <Badge className="bg-green-100 text-green-800">Yes</Badge>
+              <Label htmlFor="maxCampaignSize">Max Campaign Size</Label>
+              <Input
+                id="maxCampaignSize"
+                type="number"
+                value={settings.maxCampaignSize}
+                onChange={(e) => setSettings({...settings, maxCampaignSize: parseInt(e.target.value)})}
+              />
+              <p className="text-xs text-gray-500">Max recipients per campaign</p>
             </div>
-            <Button className="w-full bg-purple-600 hover:bg-purple-700">
-              Update API Settings
-            </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Email Settings */}
-        <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mail className="w-5 h-5 text-orange-600" />
-              Email Configuration
-            </CardTitle>
-            <CardDescription>
-              SMTP and email delivery settings
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+      {/* Email Configuration */}
+      <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="w-5 h-5 text-blue-600" />
+            Email Configuration
+          </CardTitle>
+          <CardDescription>
+            SMTP settings for outbound email notifications
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label>SMTP Host</Label>
-              <Input defaultValue="smtp.gmail.com" />
+              <Label htmlFor="smtpHost">SMTP Host</Label>
+              <Input
+                id="smtpHost"
+                value={settings.smtpHost}
+                onChange={(e) => setSettings({...settings, smtpHost: e.target.value})}
+                placeholder="smtp.example.com"
+              />
             </div>
+            
             <div className="space-y-2">
-              <Label>SMTP Port</Label>
-              <Input defaultValue="587" />
+              <Label htmlFor="smtpPort">SMTP Port</Label>
+              <Input
+                id="smtpPort"
+                type="number"
+                value={settings.smtpPort}
+                onChange={(e) => setSettings({...settings, smtpPort: parseInt(e.target.value)})}
+              />
             </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label>From Email</Label>
-              <Input defaultValue="noreply@mobiwave.com" />
+              <Label htmlFor="smtpUsername">SMTP Username</Label>
+              <Input
+                id="smtpUsername"
+                value={settings.smtpUsername}
+                onChange={(e) => setSettings({...settings, smtpUsername: e.target.value})}
+              />
             </div>
-            <Button className="w-full bg-orange-600 hover:bg-orange-700">
-              Test Email Configuration
-            </Button>
-          </CardContent>
-        </Card>
+            
+            <div className="space-y-2">
+              <Label htmlFor="smtpPassword">SMTP Password</Label>
+              <Input
+                id="smtpPassword"
+                type="password"
+                value={settings.smtpPassword}
+                onChange={(e) => setSettings({...settings, smtpPassword: e.target.value})}
+              />
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Enable SSL/TLS</Label>
+              <p className="text-sm text-gray-500">Use secure connection for SMTP</p>
+            </div>
+            <Switch
+              checked={settings.enableSSL}
+              onCheckedChange={(checked) => setSettings({...settings, enableSSL: checked})}
+            />
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* SMS Settings */}
-        <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-green-600" />
-              SMS Configuration
-            </CardTitle>
-            <CardDescription>
-              SMS provider and delivery settings
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>SMS Provider</Label>
-              <Input defaultValue="Twilio" />
+      {/* System Status */}
+      <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="w-5 h-5 text-green-600" />
+            System Status
+          </CardTitle>
+          <CardDescription>
+            Current system status and feature toggles
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Analytics Tracking</Label>
+                <p className="text-sm text-gray-500">Enable user analytics and tracking</p>
+              </div>
+              <Switch
+                checked={settings.enableAnalytics}
+                onCheckedChange={(checked) => setSettings({...settings, enableAnalytics: checked})}
+              />
             </div>
-            <div className="space-y-2">
-              <Label>Default Sender ID</Label>
-              <Input defaultValue="MOBIWAVE" />
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Push Notifications</Label>
+                <p className="text-sm text-gray-500">Enable system notifications</p>
+              </div>
+              <Switch
+                checked={settings.enableNotifications}
+                onCheckedChange={(checked) => setSettings({...settings, enableNotifications: checked})}
+              />
             </div>
-            <div className="space-y-2">
-              <Label>Daily Rate Limit</Label>
-              <Input defaultValue="10000" />
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="space-y-0.5">
+              <Label>Maintenance Mode</Label>
+              <p className="text-sm text-gray-600">Temporarily disable user access</p>
             </div>
-            <Button className="w-full bg-green-600 hover:bg-green-700">
-              Update SMS Settings
-            </Button>
-          </CardContent>
-        </Card>
+            <div className="flex items-center gap-2">
+              <Badge variant={settings.maintenanceMode ? "destructive" : "default"}>
+                {settings.maintenanceMode ? "Active" : "Inactive"}
+              </Badge>
+              <Switch
+                checked={settings.maintenanceMode}
+                onCheckedChange={(checked) => setSettings({...settings, maintenanceMode: checked})}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-4">
+        <Button variant="outline" onClick={handleReset}>
+          Reset to Defaults
+        </Button>
+        <Button onClick={handleSave}>
+          Save Settings
+        </Button>
       </div>
     </div>
   );

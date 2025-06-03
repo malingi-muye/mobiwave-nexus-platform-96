@@ -6,7 +6,7 @@ interface QueryConfig<T> {
   queryFn: () => Promise<T>;
   enabled?: boolean;
   staleTime?: number;
-  cacheTime?: number;
+  gcTime?: number;
 }
 
 export function useOptimizedQuery<T>(config: QueryConfig<T>) {
@@ -15,7 +15,7 @@ export function useOptimizedQuery<T>(config: QueryConfig<T>) {
     queryFn: config.queryFn,
     enabled: config.enabled ?? true,
     staleTime: config.staleTime ?? 5 * 60 * 1000, // 5 minutes
-    cacheTime: config.cacheTime ?? 10 * 60 * 1000, // 10 minutes
+    gcTime: config.gcTime ?? 10 * 60 * 1000, // 10 minutes
     retry: (failureCount, error) => {
       // Don't retry on 4xx errors
       if (error && 'status' in error && typeof error.status === 'number') {

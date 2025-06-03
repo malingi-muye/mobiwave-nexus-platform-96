@@ -30,7 +30,9 @@ export function AdminDashboard() {
               ))}
             </div>
           }
-        />
+        >
+          <div />
+        </LoadingWrapper>
       }>
         <AdminMetrics />
       </Suspense>

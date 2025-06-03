@@ -29,6 +29,16 @@ export function BulkSMS() {
     setActiveTab('tracking');
   };
 
+  const handleSchedule = (scheduledTime: Date) => {
+    console.log('Campaign scheduled for:', scheduledTime);
+    // Handle scheduling logic here
+  };
+
+  const handleSendNow = () => {
+    console.log('Sending campaign immediately');
+    // Handle immediate send logic here
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -102,8 +112,8 @@ export function BulkSMS() {
 
           <TabsContent value="schedule" className="mt-6">
             <CampaignScheduler 
-              campaign={currentCampaign}
-              onScheduleUpdate={setCurrentCampaign}
+              onSchedule={handleSchedule}
+              onSendNow={handleSendNow}
             />
           </TabsContent>
 

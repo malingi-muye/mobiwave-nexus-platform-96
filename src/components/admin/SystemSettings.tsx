@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useSystemMetrics } from '@/hooks/useSystemMetrics';
+import { useServiceStatus } from '@/hooks/useSystemMetrics';
 import { toast } from 'sonner';
 import { 
   Settings, 
@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 export function SystemSettings() {
-  const { data: serviceStatus } = useSystemMetrics();
+  const { data: serviceStatus } = useServiceStatus();
   const [settings, setSettings] = useState({
     maintenanceMode: false,
     enableRegistration: true,

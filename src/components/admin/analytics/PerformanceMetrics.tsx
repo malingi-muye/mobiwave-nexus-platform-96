@@ -1,78 +1,67 @@
 
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Users, MessageSquare, DollarSign, Target } from 'lucide-react';
-
-interface MetricData {
-  title: string;
-  value: string | number;
-  change: string;
-  trend: string;
-  icon: React.ComponentType<any>;
-  color: string;
-}
+import { TrendingUp, Users, MessageSquare, DollarSign } from 'lucide-react';
 
 interface PerformanceMetricsProps {
   campaignStats?: {
     totalCampaigns: number;
+    activeCampaigns: number;
+    completedCampaigns: number;
+    totalRecipients: number;
     totalDelivered: number;
+    deliveryRate: number;
   };
 }
 
 export function PerformanceMetrics({ campaignStats }: PerformanceMetricsProps) {
-  const performanceMetrics: MetricData[] = [
+  const metrics = [
     {
-      title: "Total Campaigns",
+      title: 'Total Campaigns',
       value: campaignStats?.totalCampaigns || 0,
-      change: "+12%",
-      trend: "up",
-      icon: Target,
-      color: "text-blue-600"
-    },
-    {
-      title: "Active Users",
-      value: "2,847",
-      change: "+8%",
-      trend: "up",
-      icon: Users,
-      color: "text-green-600"
-    },
-    {
-      title: "Messages Sent",
-      value: campaignStats?.totalDelivered || 0,
-      change: "+23%",
-      trend: "up",
+      change: '+12%',
       icon: MessageSquare,
-      color: "text-purple-600"
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50'
     },
     {
-      title: "Revenue",
-      value: "$12,450",
-      change: "+15%",
-      trend: "up",
+      title: 'Messages Sent',
+      value: (campaignStats?.totalRecipients || 0).toLocaleString(),
+      change: '+23%',
+      icon: TrendingUp,
+      color: 'text-green-600',
+      bgColor: 'bg-green-50'
+    },
+    {
+      title: 'Delivery Rate',
+      value: `${(campaignStats?.deliveryRate || 0).toFixed(1)}%`,
+      change: '+5%',
+      icon: TrendingUp,
+      color: 'text-emerald-600',
+      bgColor: 'bg-emerald-50'
+    },
+    {
+      title: 'Revenue',
+      value: '$12,430',
+      change: '+18%',
       icon: DollarSign,
-      color: "text-orange-600"
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50'
     }
   ];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {performanceMetrics.map((metric, index) => (
+      {metrics.map((metric, index) => (
         <Card key={index} className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-1">{metric.title}</p>
                 <p className="text-3xl font-bold text-gray-900 mb-1">{metric.value}</p>
-                <div className="flex items-center gap-1">
-                  <Badge className="bg-green-100 text-green-800 text-xs">
-                    {metric.change}
-                  </Badge>
-                  <span className="text-xs text-gray-500">vs last period</span>
-                </div>
+                <p className="text-sm text-green-600 font-medium">{metric.change} from last month</p>
               </div>
-              <div className="p-3 rounded-full bg-gray-50">
+              <div className={`p-3 rounded-full ${metric.bgColor}`}>
                 <metric.icon className={`w-6 h-6 ${metric.color}`} />
               </div>
             </div>

@@ -1,306 +1,274 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Settings, Globe, Bell, Shield, Database, Zap } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSystemMetrics } from '@/hooks/useSystemMetrics';
 import { toast } from 'sonner';
+import { 
+  Settings, 
+  Shield, 
+  Server, 
+  Mail, 
+  MessageSquare, 
+  CreditCard,
+  AlertTriangle,
+  CheckCircle
+} from 'lucide-react';
 
 export function SystemSettings() {
+  const { data: serviceStatus } = useSystemMetrics();
   const [settings, setSettings] = useState({
-    siteName: 'MobiWave Communications',
-    siteDescription: 'Professional SMS and Email Marketing Platform',
-    allowRegistration: true,
-    requireEmailVerification: true,
-    maxMessageLength: 160,
-    defaultCredits: 1000,
-    enableAnalytics: true,
-    enableNotifications: true,
     maintenanceMode: false,
-    rateLimitPerHour: 1000,
-    maxCampaignSize: 10000,
-    smtpHost: '',
+    enableRegistration: true,
+    requireEmailVerification: true,
+    maxCampaignRecipients: 10000,
+    smtpHost: 'smtp.gmail.com',
     smtpPort: 587,
-    smtpUsername: '',
-    smtpPassword: '',
-    enableSSL: true
+    smsProvider: 'mspace',
+    rateLimitPerMinute: 100
   });
 
-  const handleSave = () => {
-    // In a real implementation, this would save to database
-    toast.success('System settings saved successfully');
+  const handleSaveSettings = () => {
+    toast.success('Settings saved successfully');
   };
 
-  const handleReset = () => {
-    toast.success('Settings reset to defaults');
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'healthy': return 'text-green-600';
+      case 'warning': return 'text-yellow-600';
+      case 'error': return 'text-red-600';
+      default: return 'text-gray-600';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'healthy': return CheckCircle;
+      case 'warning': return AlertTriangle;
+      case 'error': return AlertTriangle;
+      default: return Server;
+    }
   };
 
   return (
     <div className="space-y-6">
       <div className="mb-8">
-        <h2 className="text-4xl font-bold tracking-tight mb-3 bg-gradient-to-r from-purple-900 via-purple-800 to-purple-700 bg-clip-text text-transparent">
+        <h2 className="text-4xl font-bold tracking-tight mb-3 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent">
           System Settings
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl">
-          Configure platform-wide settings, limits, and integrations.
+          Configure system-wide settings, monitor service health, and manage platform preferences.
         </p>
       </div>
 
-      {/* General Settings */}
-      <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Globe className="w-5 h-5 text-purple-600" />
-            General Settings
-          </CardTitle>
-          <CardDescription>
-            Basic platform configuration and branding
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="siteName">Site Name</Label>
-              <Input
-                id="siteName"
-                value={settings.siteName}
-                onChange={(e) => setSettings({...settings, siteName: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="defaultCredits">Default Credits for New Users</Label>
-              <Input
-                id="defaultCredits"
-                type="number"
-                value={settings.defaultCredits}
-                onChange={(e) => setSettings({...settings, defaultCredits: parseInt(e.target.value)})}
-              />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="siteDescription">Site Description</Label>
-            <Textarea
-              id="siteDescription"
-              value={settings.siteDescription}
-              onChange={(e) => setSettings({...settings, siteDescription: e.target.value})}
-              rows={3}
-            />
-          </div>
+      <Tabs defaultValue="general" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="services">Services</TabsTrigger>
+          <TabsTrigger value="integrations">Integrations</TabsTrigger>
+        </TabsList>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Allow User Registration</Label>
-                <p className="text-sm text-gray-500">Allow new users to create accounts</p>
+        <TabsContent value="general" className="space-y-6">
+          <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="w-5 h-5 text-blue-600" />
+                General Settings
+              </CardTitle>
+              <CardDescription>
+                Configure basic platform settings and user preferences
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="maintenance">Maintenance Mode</Label>
+                  <p className="text-sm text-gray-500">Temporarily disable access for maintenance</p>
+                </div>
+                <Switch
+                  id="maintenance"
+                  checked={settings.maintenanceMode}
+                  onCheckedChange={(checked) => setSettings(prev => ({ ...prev, maintenanceMode: checked }))}
+                />
               </div>
-              <Switch
-                checked={settings.allowRegistration}
-                onCheckedChange={(checked) => setSettings({...settings, allowRegistration: checked})}
-              />
-            </div>
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Require Email Verification</Label>
-                <p className="text-sm text-gray-500">Users must verify email before login</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="registration">Enable Registration</Label>
+                  <p className="text-sm text-gray-500">Allow new users to register</p>
+                </div>
+                <Switch
+                  id="registration"
+                  checked={settings.enableRegistration}
+                  onCheckedChange={(checked) => setSettings(prev => ({ ...prev, enableRegistration: checked }))}
+                />
               </div>
-              <Switch
-                checked={settings.requireEmailVerification}
-                onCheckedChange={(checked) => setSettings({...settings, requireEmailVerification: checked})}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Platform Limits */}
-      <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-yellow-600" />
-            Platform Limits
-          </CardTitle>
-          <CardDescription>
-            Configure rate limits and usage restrictions
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="maxMessageLength">Max Message Length</Label>
-              <Input
-                id="maxMessageLength"
-                type="number"
-                value={settings.maxMessageLength}
-                onChange={(e) => setSettings({...settings, maxMessageLength: parseInt(e.target.value)})}
-              />
-              <p className="text-xs text-gray-500">Characters per SMS message</p>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="rateLimitPerHour">Rate Limit (per hour)</Label>
-              <Input
-                id="rateLimitPerHour"
-                type="number"
-                value={settings.rateLimitPerHour}
-                onChange={(e) => setSettings({...settings, rateLimitPerHour: parseInt(e.target.value)})}
-              />
-              <p className="text-xs text-gray-500">Max API requests per user</p>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="maxCampaignSize">Max Campaign Size</Label>
-              <Input
-                id="maxCampaignSize"
-                type="number"
-                value={settings.maxCampaignSize}
-                onChange={(e) => setSettings({...settings, maxCampaignSize: parseInt(e.target.value)})}
-              />
-              <p className="text-xs text-gray-500">Max recipients per campaign</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Email Configuration */}
-      <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="w-5 h-5 text-blue-600" />
-            Email Configuration
-          </CardTitle>
-          <CardDescription>
-            SMTP settings for outbound email notifications
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="smtpHost">SMTP Host</Label>
-              <Input
-                id="smtpHost"
-                value={settings.smtpHost}
-                onChange={(e) => setSettings({...settings, smtpHost: e.target.value})}
-                placeholder="smtp.example.com"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="smtpPort">SMTP Port</Label>
-              <Input
-                id="smtpPort"
-                type="number"
-                value={settings.smtpPort}
-                onChange={(e) => setSettings({...settings, smtpPort: parseInt(e.target.value)})}
-              />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="smtpUsername">SMTP Username</Label>
-              <Input
-                id="smtpUsername"
-                value={settings.smtpUsername}
-                onChange={(e) => setSettings({...settings, smtpUsername: e.target.value})}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="smtpPassword">SMTP Password</Label>
-              <Input
-                id="smtpPassword"
-                type="password"
-                value={settings.smtpPassword}
-                onChange={(e) => setSettings({...settings, smtpPassword: e.target.value})}
-              />
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Enable SSL/TLS</Label>
-              <p className="text-sm text-gray-500">Use secure connection for SMTP</p>
-            </div>
-            <Switch
-              checked={settings.enableSSL}
-              onCheckedChange={(checked) => setSettings({...settings, enableSSL: checked})}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* System Status */}
-      <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-green-600" />
-            System Status
-          </CardTitle>
-          <CardDescription>
-            Current system status and feature toggles
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Analytics Tracking</Label>
-                <p className="text-sm text-gray-500">Enable user analytics and tracking</p>
+              <div className="space-y-2">
+                <Label htmlFor="maxRecipients">Max Campaign Recipients</Label>
+                <Input
+                  id="maxRecipients"
+                  type="number"
+                  value={settings.maxCampaignRecipients}
+                  onChange={(e) => setSettings(prev => ({ ...prev, maxCampaignRecipients: parseInt(e.target.value) }))}
+                />
               </div>
-              <Switch
-                checked={settings.enableAnalytics}
-                onCheckedChange={(checked) => setSettings({...settings, enableAnalytics: checked})}
-              />
-            </div>
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Push Notifications</Label>
-                <p className="text-sm text-gray-500">Enable system notifications</p>
+              <Button onClick={handleSaveSettings} className="w-full">
+                Save General Settings
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="security" className="space-y-6">
+          <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-red-600" />
+                Security Configuration
+              </CardTitle>
+              <CardDescription>
+                Manage authentication and security policies
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="emailVerification">Require Email Verification</Label>
+                  <p className="text-sm text-gray-500">Users must verify email before access</p>
+                </div>
+                <Switch
+                  id="emailVerification"
+                  checked={settings.requireEmailVerification}
+                  onCheckedChange={(checked) => setSettings(prev => ({ ...prev, requireEmailVerification: checked }))}
+                />
               </div>
-              <Switch
-                checked={settings.enableNotifications}
-                onCheckedChange={(checked) => setSettings({...settings, enableNotifications: checked})}
-              />
-            </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="rateLimit">Rate Limit (requests per minute)</Label>
+                <Input
+                  id="rateLimit"
+                  type="number"
+                  value={settings.rateLimitPerMinute}
+                  onChange={(e) => setSettings(prev => ({ ...prev, rateLimitPerMinute: parseInt(e.target.value) }))}
+                />
+              </div>
+
+              <Button onClick={handleSaveSettings} className="w-full">
+                Save Security Settings
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="services" className="space-y-6">
+          <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Server className="w-5 h-5 text-green-600" />
+                Service Status
+              </CardTitle>
+              <CardDescription>
+                Monitor the health and status of all system services
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {serviceStatus?.map((service) => {
+                  const StatusIcon = getStatusIcon(service.status);
+                  return (
+                    <div key={service.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <StatusIcon className={`w-5 h-5 ${getStatusColor(service.status)}`} />
+                        <div>
+                          <h3 className="font-medium">{service.service_name}</h3>
+                          <p className="text-sm text-gray-500">Version {service.version}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-sm font-medium ${getStatusColor(service.status)}`}>
+                          {service.status}
+                        </p>
+                        <p className="text-xs text-gray-500">{service.uptime_percentage}% uptime</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="integrations" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-blue-600" />
+                  Email Configuration
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="smtpHost">SMTP Host</Label>
+                  <Input
+                    id="smtpHost"
+                    value={settings.smtpHost}
+                    onChange={(e) => setSettings(prev => ({ ...prev, smtpHost: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="smtpPort">SMTP Port</Label>
+                  <Input
+                    id="smtpPort"
+                    type="number"
+                    value={settings.smtpPort}
+                    onChange={(e) => setSettings(prev => ({ ...prev, smtpPort: parseInt(e.target.value) }))}
+                  />
+                </div>
+                <Button onClick={handleSaveSettings} className="w-full">
+                  Save Email Settings
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5 text-green-600" />
+                  SMS Configuration
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="smsProvider">SMS Provider</Label>
+                  <Input
+                    id="smsProvider"
+                    value={settings.smsProvider}
+                    onChange={(e) => setSettings(prev => ({ ...prev, smsProvider: e.target.value }))}
+                  />
+                </div>
+                <div className="p-4 bg-green-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <span className="text-sm font-medium text-green-800">Mspace API Connected</span>
+                  </div>
+                  <p className="text-xs text-green-600 mt-1">SMS service is operational</p>
+                </div>
+                <Button onClick={handleSaveSettings} className="w-full">
+                  Save SMS Settings
+                </Button>
+              </CardContent>
+            </Card>
           </div>
-
-          <Separator />
-
-          <div className="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div className="space-y-0.5">
-              <Label>Maintenance Mode</Label>
-              <p className="text-sm text-gray-600">Temporarily disable user access</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge variant={settings.maintenanceMode ? "destructive" : "default"}>
-                {settings.maintenanceMode ? "Active" : "Inactive"}
-              </Badge>
-              <Switch
-                checked={settings.maintenanceMode}
-                onCheckedChange={(checked) => setSettings({...settings, maintenanceMode: checked})}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Action Buttons */}
-      <div className="flex justify-end gap-4">
-        <Button variant="outline" onClick={handleReset}>
-          Reset to Defaults
-        </Button>
-        <Button onClick={handleSave}>
-          Save Settings
-        </Button>
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

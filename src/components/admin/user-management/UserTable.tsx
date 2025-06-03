@@ -1,10 +1,11 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mail, Calendar, User } from 'lucide-react';
+import { Users, Edit, Trash2 } from 'lucide-react';
 
 interface User {
   id: string;
@@ -33,7 +34,13 @@ export function UserTable({ users, isLoading, onRoleUpdate }: UserTableProps) {
   if (isLoading) {
     return (
       <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-        <CardContent className="p-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="w-5 h-5 text-gray-600" />
+            User Management
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="animate-pulse">
@@ -49,10 +56,10 @@ export function UserTable({ users, isLoading, onRoleUpdate }: UserTableProps) {
   return (
     <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle>Users ({users.length})</CardTitle>
-        <CardDescription>
-          Manage user accounts and their permissions
-        </CardDescription>
+        <CardTitle className="flex items-center gap-2">
+          <Users className="w-5 h-5 text-gray-600" />
+          User Management
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
@@ -61,7 +68,7 @@ export function UserTable({ users, isLoading, onRoleUpdate }: UserTableProps) {
               <TableHead>User</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Role</TableHead>
-              <TableHead>Joined</TableHead>
+              <TableHead>Created</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -69,57 +76,46 @@ export function UserTable({ users, isLoading, onRoleUpdate }: UserTableProps) {
             {users.map((user) => (
               <TableRow key={user.id}>
                 <TableCell>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium">
-                        {user.first_name?.charAt(0) || user.email.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="font-medium">
-                        {user.first_name && user.last_name 
-                          ? `${user.first_name} ${user.last_name}`
-                          : 'No name provided'
-                        }
-                      </p>
-                      <p className="text-sm text-gray-500">ID: {user.id.slice(0, 8)}...</p>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-gray-500" />
-                    {user.email}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge className={getRoleBadgeColor(user.role || 'end_user')}>
-                    {user.role || 'end_user'}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-gray-500" />
-                    {new Date(user.created_at).toLocaleDateString()}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Select
-                      value={user.role || 'end_user'}
-                      onValueChange={(newRole: 'admin' | 'agent' | 'end_user') => 
-                        onRoleUpdate(user.id, newRole)
+                  <div>
+                    <div className="font-medium">
+                      {user.first_name || user.last_name 
+                        ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
+                        : user.email.split('@')[0]
                       }
-                    >
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="end_user">End User</SelectItem>
-                        <SelectItem value="agent">Agent</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>
+                  <Select
+                    value={user.role || 'end_user'}
+                    onValueChange={(value) => onRoleUpdate(user.id, value as 'admin' | 'agent' | 'end_user')}
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue>
+                        <Badge className={getRoleBadgeColor(user.role || 'end_user')} variant="secondary">
+                          {user.role || 'end_user'}
+                        </Badge>
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="end_user">End User</SelectItem>
+                      <SelectItem value="agent">Agent</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                <TableCell>
+                  {new Date(user.created_at).toLocaleDateString()}
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm">
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>

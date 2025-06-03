@@ -1,106 +1,172 @@
 
 import React from 'react';
-import { Badge } from "@/components/ui/badge";
 import { 
   Sidebar, 
   SidebarContent, 
   SidebarHeader, 
   SidebarMenu, 
-  SidebarMenuButton, 
-  SidebarMenuItem
+  SidebarMenuItem, 
+  SidebarMenuButton,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
+  SidebarCollapsible,
+  SidebarCollapsibleTrigger,
+  SidebarCollapsibleContent
 } from "@/components/ui/sidebar";
 import { 
-  Mail, 
-  Phone, 
+  LayoutDashboard, 
   MessageSquare, 
-  BarChart, 
-  Settings, 
-  TrendingUp,
-  Home,
-  Calendar,
-  CreditCard
-} from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
-
-const clientSidebarItems = [
-  { title: "Dashboard", icon: Home, badge: null, path: "/dashboard", color: "bg-blue-500" },
-  { title: "Bulk SMS", icon: Phone, badge: "New", path: "/bulk-sms", color: "bg-blue-500" },
-  { title: "Bulk Email", icon: Mail, badge: null, path: "/bulk-email", color: "bg-green-500" },
-  { title: "WhatsApp", icon: MessageSquare, badge: "Pro", path: "/whatsapp", color: "bg-emerald-500" },
-  { title: "USSD", icon: Phone, badge: null, path: "/ussd", color: "bg-orange-500" },
-  { title: "Short Codes", icon: Phone, badge: null, path: "/short-codes", color: "bg-purple-500" },
-  { title: "Surveys", icon: BarChart, badge: null, path: "/surveys", color: "bg-indigo-500" },
-  { title: "M-Pesa", icon: TrendingUp, badge: "Beta", path: "/mpesa", color: "bg-yellow-500" },
-  { title: "Campaigns", icon: Calendar, badge: null, path: "/campaigns", color: "bg-pink-500" },
-  { title: "Billing", icon: CreditCard, badge: null, path: "/billing", color: "bg-violet-500" },
-  { title: "Account Settings", icon: Settings, badge: null, path: "/settings", color: "bg-gray-500" },
-];
+  Users, 
+  BarChart3, 
+  Settings,
+  CreditCard,
+  User,
+  Mail,
+  Phone,
+  FileText,
+  ChevronRight
+} from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 
 export function ClientSidebar() {
-  const navigate = useNavigate();
   const location = useLocation();
 
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+
   return (
-    <Sidebar className="border-r-0 shadow-xl">
-      <SidebarHeader className="p-6 border-b bg-blue-50/70 backdrop-blur-sm">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg">
-            <MessageSquare className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h2 className="font-bold text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Mobiwave
-            </h2>
-            <p className="text-sm text-muted-foreground font-medium">Communication Platform</p>
-          </div>
+    <Sidebar>
+      <SidebarHeader>
+        <div className="p-4">
+          <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Communications Hub
+          </h2>
         </div>
       </SidebarHeader>
       
-      <SidebarContent className="p-4 bg-blue-50/30 backdrop-blur-sm">
-        <div className="mb-4">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3 px-3">
-            Services
-          </p>
-        </div>
-        
-        <SidebarMenu className="space-y-2">
-          {clientSidebarItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton 
-                  asChild 
-                  isActive={isActive}
-                  className="w-full justify-between group hover:bg-white/80 hover:shadow-sm transition-all duration-200"
-                >
-                  <div 
-                    className="flex items-center justify-between w-full cursor-pointer p-3 rounded-xl"
-                    onClick={() => navigate(item.path)}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-8 h-8 ${item.color} rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow`}>
-                        <item.icon className="w-4 h-4 text-white" />
-                      </div>
-                      <span className="font-medium">{item.title}</span>
-                    </div>
-                    {item.badge && (
-                      <Badge 
-                        variant={item.badge === "New" ? "default" : item.badge === "Pro" ? "secondary" : "outline"} 
-                        className={`text-xs ${
-                          item.badge === "New" ? "bg-green-500" : 
-                          item.badge === "Pro" ? "bg-purple-500 text-white" : 
-                          "bg-orange-500 text-white"
-                        }`}
-                      >
-                        {item.badge}
-                      </Badge>
-                    )}
-                  </div>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Main</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive('/dashboard')}>
+                  <Link to="/dashboard">
+                    <LayoutDashboard className="w-5 h-5" />
+                    Dashboard
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-            );
-          })}
-        </SidebarMenu>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Campaigns</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarCollapsible>
+                <SidebarCollapsibleTrigger>
+                  <MessageSquare className="w-5 h-5" />
+                  Messaging
+                  <ChevronRight className="w-4 h-4 ml-auto" />
+                </SidebarCollapsibleTrigger>
+                <SidebarCollapsibleContent>
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild isActive={isActive('/bulk-sms')}>
+                        <Link to="/bulk-sms">SMS Campaigns</Link>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild isActive={isActive('/email-campaigns')}>
+                        <Link to="/email-campaigns">Email Campaigns</Link>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton asChild isActive={isActive('/whatsapp-campaigns')}>
+                        <Link to="/whatsapp-campaigns">WhatsApp</Link>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                </SidebarCollapsibleContent>
+              </SidebarCollapsible>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive('/surveys')}>
+                  <Link to="/surveys">
+                    <FileText className="w-5 h-5" />
+                    Surveys & Forms
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive('/contacts')}>
+                  <Link to="/contacts">
+                    <Users className="w-5 h-5" />
+                    Contacts
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Analytics</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive('/analytics')}>
+                  <Link to="/analytics">
+                    <BarChart3 className="w-5 h-5" />
+                    Campaign Analytics
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Account</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive('/billing')}>
+                  <Link to="/billing">
+                    <CreditCard className="w-5 h-5" />
+                    Billing & Credits
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive('/profile')}>
+                  <Link to="/profile">
+                    <User className="w-5 h-5" />
+                    Profile Settings
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActive('/settings')}>
+                  <Link to="/settings">
+                    <Settings className="w-5 h-5" />
+                    Settings
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
     </Sidebar>
   );

@@ -62,7 +62,7 @@ export function UserManagement() {
   });
 
   const updateUserRole = useMutation({
-    mutationFn: async ({ userId, newRole }: { userId: string; newRole: string }) => {
+    mutationFn: async ({ userId, newRole }: { userId: string; newRole: 'admin' | 'agent' | 'end_user' }) => {
       // First, get the role ID
       const { data: roleData, error: roleError } = await supabase
         .from('roles')
@@ -100,7 +100,7 @@ export function UserManagement() {
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'admin': return 'bg-red-100 text-red-800';
-      case 'moderator': return 'bg-yellow-100 text-yellow-800';
+      case 'agent': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-blue-100 text-blue-800';
     }
   };
@@ -146,7 +146,7 @@ export function UserManagement() {
               <SelectContent>
                 <SelectItem value="all">All Roles</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="moderator">Moderator</SelectItem>
+                <SelectItem value="agent">Agent</SelectItem>
                 <SelectItem value="end_user">End User</SelectItem>
               </SelectContent>
             </Select>
@@ -186,9 +186,9 @@ export function UserManagement() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Moderators</p>
+                <p className="text-sm font-medium text-gray-600 mb-1">Agents</p>
                 <p className="text-3xl font-bold text-gray-900">
-                  {users?.filter(u => u.role === 'moderator').length || 0}
+                  {users?.filter(u => u.role === 'agent').length || 0}
                 </p>
               </div>
               <Shield className="w-8 h-8 text-yellow-600" />
@@ -281,14 +281,16 @@ export function UserManagement() {
                       <div className="flex items-center gap-2">
                         <Select
                           value={user.role || 'end_user'}
-                          onValueChange={(newRole) => updateUserRole.mutate({ userId: user.id, newRole })}
+                          onValueChange={(newRole: 'admin' | 'agent' | 'end_user') => 
+                            updateUserRole.mutate({ userId: user.id, newRole })
+                          }
                         >
                           <SelectTrigger className="w-32">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="end_user">End User</SelectItem>
-                            <SelectItem value="moderator">Moderator</SelectItem>
+                            <SelectItem value="agent">Agent</SelectItem>
                             <SelectItem value="admin">Admin</SelectItem>
                           </SelectContent>
                         </Select>

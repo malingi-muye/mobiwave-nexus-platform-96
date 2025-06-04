@@ -1,228 +1,214 @@
 
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Shield, 
-  AlertTriangle, 
-  Eye, 
-  Lock, 
-  Users, 
-  Activity,
-  CheckCircle,
-  XCircle
-} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Shield, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+
+interface SecurityEvent {
+  id: string;
+  user_id: string;
+  action: string;
+  resource_type: string;
+  resource_id: string;
+  details: any;
+  ip_address: string;
+  user_agent: string;
+  created_at: string;
+}
 
 export function SecurityMonitor() {
-  const { data: auditLogs } = useQuery({
-    queryKey: ['recent-audit-logs'],
+  const [refreshInterval, setRefreshInterval] = useState(30000);
+
+  const { data: securityEvents, isLoading } = useQuery({
+    queryKey: ['security-events'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('audit_logs')
         .select('*')
-        .order('timestamp', { ascending: false })
-        .limit(10);
+        .in('action', ['login_failed', 'suspicious_activity', 'unauthorized_access', 'password_reset'])
+        .order('created_at', { ascending: false })
+        .limit(50);
 
       if (error) throw error;
-      return data || [];
-    }
+      return data as SecurityEvent[];
+    },
+    refetchInterval: refreshInterval
   });
 
-  const securityMetrics = [
-    {
-      title: 'Failed Login Attempts',
-      value: '12',
-      status: 'warning',
-      icon: Lock,
-      description: 'Last 24 hours'
-    },
-    {
-      title: 'Active Sessions',
-      value: '156',
-      status: 'healthy',
-      icon: Users,
-      description: 'Currently online'
-    },
-    {
-      title: 'Security Incidents',
-      value: '2',
-      status: 'error',
-      icon: AlertTriangle,
-      description: 'Requiring attention'
-    },
-    {
-      title: 'System Uptime',
-      value: '99.8%',
-      status: 'healthy',
-      icon: Activity,
-      description: 'Last 30 days'
-    }
-  ];
+  const getSecurityMetrics = () => {
+    if (!securityEvents) return { high: 0, medium: 0, low: 0, total: 0 };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'healthy': return 'text-green-600 bg-green-50';
-      case 'warning': return 'text-yellow-600 bg-yellow-50';
-      case 'error': return 'text-red-600 bg-red-50';
-      default: return 'text-gray-600 bg-gray-50';
+    const high = securityEvents.filter(event => 
+      event.action.includes('unauthorized') || event.action.includes('suspicious')
+    ).length;
+    
+    const medium = securityEvents.filter(event =>
+      event.action.includes('login_failed')
+    ).length;
+    
+    const low = securityEvents.filter(event =>
+      event.action.includes('password_reset')
+    ).length;
+
+    return { high, medium, low, total: securityEvents.length };
+  };
+
+  const getEventSeverity = (action: string) => {
+    if (action.includes('unauthorized') || action.includes('suspicious')) return 'high';
+    if (action.includes('login_failed')) return 'medium';
+    return 'low';
+  };
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'high': return 'destructive';
+      case 'medium': return 'secondary';
+      case 'low': return 'outline';
+      default: return 'outline';
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'healthy': return CheckCircle;
-      case 'warning': return AlertTriangle;
-      case 'error': return XCircle;
-      default: return Activity;
+  const getSeverityIcon = (severity: string) => {
+    switch (severity) {
+      case 'high': return <XCircle className="w-4 h-4 text-red-500" />;
+      case 'medium': return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
+      case 'low': return <CheckCircle className="w-4 h-4 text-green-500" />;
+      default: return <Shield className="w-4 h-4 text-gray-500" />;
     }
   };
+
+  const formatTimestamp = (timestamp: string) => {
+    return new Date(timestamp).toLocaleString();
+  };
+
+  const metrics = getSecurityMetrics();
 
   return (
     <div className="space-y-6">
-      <div className="mb-8">
-        <h2 className="text-4xl font-bold tracking-tight mb-3 bg-gradient-to-r from-red-900 via-red-800 to-red-700 bg-clip-text text-transparent">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          <Shield className="w-5 h-5" />
           Security Monitor
-        </h2>
-        <p className="text-lg text-gray-600 max-w-2xl">
-          Real-time security monitoring and threat detection for the platform.
-        </p>
+        </h3>
+        <div className="flex gap-2">
+          <Button
+            variant={refreshInterval === 10000 ? "default" : "outline"}
+            size="sm"
+            onClick={() => setRefreshInterval(10000)}
+          >
+            10s
+          </Button>
+          <Button
+            variant={refreshInterval === 30000 ? "default" : "outline"}
+            size="sm"
+            onClick={() => setRefreshInterval(30000)}
+          >
+            30s
+          </Button>
+          <Button
+            variant={refreshInterval === 60000 ? "default" : "outline"}
+            size="sm"
+            onClick={() => setRefreshInterval(60000)}
+          >
+            1m
+          </Button>
+        </div>
       </div>
 
-      {/* Security Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {securityMetrics.map((metric, index) => {
-          const StatusIcon = getStatusIcon(metric.status);
-          return (
-            <Card key={index} className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 mb-1">{metric.title}</p>
-                    <p className="text-3xl font-bold text-gray-900 mb-1">{metric.value}</p>
-                    <p className="text-sm text-gray-500">{metric.description}</p>
-                  </div>
-                  <div className={`p-3 rounded-full ${getStatusColor(metric.status)}`}>
-                    <metric.icon className="w-6 h-6" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-red-600">High Risk</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{metrics.high}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-yellow-600">Medium Risk</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-600">{metrics.medium}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-green-600">Low Risk</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{metrics.low}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Total Events</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metrics.total}</div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Recent Security Events */}
-      <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
+      {metrics.high > 0 && (
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            {metrics.high} high-risk security events detected. Immediate attention required.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Eye className="w-5 h-5 text-blue-600" />
-            Recent Security Events
-          </CardTitle>
-          <CardDescription>
-            Latest security-related activities and audit log entries
-          </CardDescription>
+          <CardTitle>Recent Security Events</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {auditLogs?.slice(0, 5).map((log) => (
-              <div key={log.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Shield className="w-5 h-5 text-blue-600" />
-                  <div>
-                    <p className="font-medium">{log.action}</p>
-                    <p className="text-sm text-gray-500">
-                      {log.resource_type} • {new Date(log.timestamp).toLocaleString()}
-                    </p>
+          <div className="space-y-4 max-h-96 overflow-auto">
+            {isLoading ? (
+              <div className="space-y-4">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="h-16 bg-gray-200 rounded"></div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge 
-                    variant={log.status === 'success' ? 'default' : 'destructive'}
-                    className="capitalize"
-                  >
-                    {log.status}
-                  </Badge>
-                  <Badge 
-                    variant="outline"
-                    className={
-                      log.severity === 'critical' ? 'border-red-500 text-red-600' :
-                      log.severity === 'high' ? 'border-orange-500 text-orange-600' :
-                      log.severity === 'medium' ? 'border-yellow-500 text-yellow-600' :
-                      'border-gray-500 text-gray-600'
-                    }
-                  >
-                    {log.severity}
-                  </Badge>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-          
-          <div className="mt-6 flex justify-center">
-            <Button variant="outline">
-              View All Security Events
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Security Recommendations */}
-      <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-green-600" />
-            Security Recommendations
-          </CardTitle>
-          <CardDescription>
-            Suggested actions to improve platform security
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
-                <div>
-                  <h4 className="font-medium text-yellow-800">Enable Two-Factor Authentication</h4>
-                  <p className="text-sm text-yellow-700 mt-1">
-                    Require 2FA for all admin users to enhance account security.
-                  </p>
-                  <Button size="sm" className="mt-2">
-                    Configure 2FA
-                  </Button>
-                </div>
+            ) : securityEvents && securityEvents.length > 0 ? (
+              securityEvents.map((event) => {
+                const severity = getEventSeverity(event.action);
+                return (
+                  <div key={event.id} className="flex items-start gap-3 p-3 border rounded-lg">
+                    {getSeverityIcon(severity)}
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={getSeverityColor(severity)}>
+                          {event.action}
+                        </Badge>
+                        <span className="text-sm text-gray-500">
+                          {formatTimestamp(event.created_at)}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        User: {event.user_id} • IP: {event.ip_address || 'Unknown'}
+                      </p>
+                      {event.resource_type && (
+                        <p className="text-xs text-gray-500">
+                          Resource: {event.resource_type} ({event.resource_id})
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                No security events found
               </div>
-            </div>
-
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-start gap-3">
-                <Lock className="w-5 h-5 text-blue-600 mt-0.5" />
-                <div>
-                  <h4 className="font-medium text-blue-800">Review API Rate Limits</h4>
-                  <p className="text-sm text-blue-700 mt-1">
-                    Current rate limits may be too permissive for production use.
-                  </p>
-                  <Button size="sm" variant="outline" className="mt-2">
-                    Review Settings
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-              <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
-                <div>
-                  <h4 className="font-medium text-green-800">SSL/TLS Configuration</h4>
-                  <p className="text-sm text-green-700 mt-1">
-                    Your SSL configuration is properly set up and secure.
-                  </p>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </CardContent>
       </Card>

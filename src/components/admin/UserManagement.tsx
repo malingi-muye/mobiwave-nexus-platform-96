@@ -22,16 +22,7 @@ interface User {
 const fetchUsers = async (searchTerm: string, roleFilter: string): Promise<User[]> => {
   let query = supabase
     .from('profiles')
-    .select(`
-      id,
-      email,
-      first_name,
-      last_name,
-      created_at,
-      user_roles(
-        roles(name)
-      )
-    `);
+    .select('*');
 
   if (searchTerm) {
     query = query.or(`email.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%`);
@@ -47,7 +38,7 @@ const fetchUsers = async (searchTerm: string, roleFilter: string): Promise<User[
     first_name: user.first_name,
     last_name: user.last_name,
     created_at: user.created_at,
-    role: user.user_roles?.[0]?.roles?.name || 'end_user'
+    role: user.role || 'user'
   }));
 };
 
@@ -63,26 +54,11 @@ export function UserManagement() {
   });
 
   const updateUserRole = useMutation({
-    mutationFn: async ({ userId, newRole }: { userId: string; newRole: 'admin' | 'agent' | 'end_user' }) => {
-      const { data: roleData, error: roleError } = await supabase
-        .from('roles')
-        .select('id')
-        .eq('name', newRole)
-        .single();
-
-      if (roleError) throw roleError;
-
-      await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', userId);
-
+    mutationFn: async ({ userId, newRole }: { userId: string; newRole: 'admin' | 'reseller' | 'client' | 'user' }) => {
       const { error } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: userId,
-          role_id: roleData.id
-        });
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', userId);
 
       if (error) throw error;
     },

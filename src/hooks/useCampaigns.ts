@@ -4,65 +4,41 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface Campaign {
-  id: string;
+  id?: string;
   name: string;
-  type: 'sms' | 'email' | 'whatsapp';
-  status: 'draft' | 'scheduled' | 'active' | 'completed' | 'paused' | 'failed';
+  type: string;
   content: string;
+  subject?: string;
+  status: 'draft' | 'active' | 'paused' | 'completed' | 'failed';
   recipient_count: number;
-  delivered_count: number;
-  failed_count: number;
-  sent_count: number;
-  total_cost: number;
-  scheduled_at: string | null;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
+  sent_count?: number;
+  delivered_count?: number;
+  failed_count?: number;
+  total_cost?: number;
+  scheduled_at?: string | null;
 }
 
 export const useCampaigns = () => {
   const queryClient = useQueryClient();
 
-  const getCampaigns = useQuery({
+  const { data: campaigns, isLoading } = useQuery({
     queryKey: ['campaigns'],
-    queryFn: async (): Promise<Campaign[]> => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
-
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('campaigns')
         .select('*')
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      // Map database fields to our interface with proper type casting
-      return (data || []).map(campaign => ({
-        ...campaign,
-        type: campaign.type as 'sms' | 'email' | 'whatsapp', // Type assertion
-        status: campaign.status as 'draft' | 'scheduled' | 'active' | 'completed' | 'paused' | 'failed', // Type assertion
-        sent_count: campaign.sent_count || 0,
-        total_cost: 0, // Default value since this field might not exist in DB yet
-        delivered_count: campaign.delivered_count || 0,
-        failed_count: campaign.failed_count || 0
-      }));
+      return data;
     }
   });
 
   const createCampaign = useMutation({
-    mutationFn: async (campaign: Omit<Campaign, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'sent_count'>) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
+    mutationFn: async (campaignData: Campaign) => {
       const { data, error } = await supabase
         .from('campaigns')
-        .insert({
-          ...campaign,
-          user_id: user.id,
-          sent_count: 0,
-          total_cost: campaign.total_cost || 0
-        })
+        .insert([campaignData])
         .select()
         .single();
 
@@ -74,7 +50,7 @@ export const useCampaigns = () => {
       toast.success('Campaign created successfully');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to create campaign');
+      toast.error(`Failed to create campaign: ${error.message}`);
     }
   });
 
@@ -95,22 +71,33 @@ export const useCampaigns = () => {
       toast.success('Campaign updated successfully');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to update campaign');
+      toast.error(`Failed to update campaign: ${error.message}`);
+    }
+  });
+
+  const deleteCampaign = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('campaigns')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+      toast.success('Campaign deleted successfully');
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to delete campaign: ${error.message}`);
     }
   });
 
   return {
-    data: getCampaigns.data,
-    isLoading: getCampaigns.isLoading,
-    error: getCampaigns.error,
+    campaigns,
+    isLoading,
     createCampaign,
     updateCampaign,
-    refetch: getCampaigns.refetch
+    deleteCampaign
   };
-};
-
-// Export the hook that CampaignManager expects
-export const useCreateCampaign = () => {
-  const { createCampaign } = useCampaigns();
-  return createCampaign;
 };

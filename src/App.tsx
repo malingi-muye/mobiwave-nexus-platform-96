@@ -49,17 +49,9 @@ const queryClient = new QueryClient({
   },
 });
 
-function QueryClient({ children }: { children: React.ReactNode }) {
-  return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  );
-}
-
 function App() {
   return (
-    <QueryClient>
+    <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
           <Toaster />
@@ -237,7 +229,7 @@ function App() {
           </ErrorBoundary>
         </div>
       </AuthProvider>
-    </QueryClient>
+    </QueryClientProvider>
   );
 }
 

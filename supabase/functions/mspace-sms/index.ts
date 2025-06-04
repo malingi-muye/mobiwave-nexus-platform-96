@@ -8,22 +8,23 @@ const corsHeaders = {
 }
 
 interface SMSRequest {
-  recipients: string[]
-  message: string
-  sender_id?: string
-  campaign_id?: string
+  username: string;
+  senderId: string;
+  recipient: string;
+  message: string;
+  campaignId?: string;
 }
 
 interface MspaceResponse {
-  success: boolean
-  message: string
-  data?: any
-  error?: string
+  messageId?: string;
+  status?: string;
+  message?: string;
+  error?: string;
 }
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
@@ -32,202 +33,136 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const mspaceApiKey = Deno.env.get('MSPACE_API_KEY')
-    if (!mspaceApiKey) {
-      throw new Error('MSPACE_API_KEY not configured')
+    const { username, senderId, recipient, message, campaignId } = await req.json() as SMSRequest
+    
+    // Get API key from request headers
+    const apiKey = req.headers.get('x-api-key')
+    
+    if (!apiKey) {
+      return new Response(
+        JSON.stringify({ error: 'API key is required' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
     }
 
-    const { action, ...data } = await req.json()
+    console.log('Sending SMS via Mspace API:', { username, senderId, recipient: recipient.substring(0, 5) + '...' })
 
-    switch (action) {
-      case 'send_sms':
-        return await sendSMS(data as SMSRequest, mspaceApiKey, supabase)
-      case 'check_balance':
-        return await checkBalance(mspaceApiKey)
-      case 'get_delivery_reports':
-        return await getDeliveryReports(data.message_ids, mspaceApiKey, supabase)
-      default:
-        throw new Error('Invalid action')
+    // Send SMS via Mspace API
+    const mspaceResponse = await fetch('https://api.mspace.co.ke/smsapi/v2/sendtext', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'apikey': apiKey
+      },
+      body: JSON.stringify({
+        username,
+        senderId,
+        recipient,
+        message
+      })
+    })
+
+    const responseData = await mspaceResponse.json() as MspaceResponse
+    console.log('Mspace API response:', responseData)
+
+    // Get user ID from JWT token
+    const authHeader = req.headers.get('Authorization')
+    let userId = null
+    
+    if (authHeader) {
+      const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
+      userId = user?.id
     }
-  } catch (error) {
-    console.error('Mspace API error:', error)
+
+    const isSuccess = mspaceResponse.ok && (responseData.messageId || responseData.status === 'success')
+    const messageStatus = isSuccess ? 'sent' : 'failed'
+
+    // Store message in database if we have user ID
+    if (userId) {
+      const messageRecord = {
+        user_id: userId,
+        campaign_id: campaignId || null,
+        type: 'sms',
+        sender: senderId,
+        recipient: recipient,
+        content: message,
+        status: messageStatus,
+        provider: 'mspace',
+        provider_message_id: responseData.messageId || null,
+        cost: 0.05, // Default cost per SMS
+        sent_at: isSuccess ? new Date().toISOString() : null,
+        failed_at: isSuccess ? null : new Date().toISOString(),
+        error_message: isSuccess ? null : responseData.error || responseData.message || 'Failed to send SMS',
+        metadata: { mspace_response: responseData }
+      }
+
+      const { error: dbError } = await supabase
+        .from('message_history')
+        .insert(messageRecord)
+
+      if (dbError) {
+        console.error('Error storing message in database:', dbError)
+      }
+
+      // Update campaign recipient status if campaignId is provided
+      if (campaignId) {
+        const { error: recipientError } = await supabase
+          .from('campaign_recipients')
+          .update({
+            status: messageStatus,
+            provider_message_id: responseData.messageId || null,
+            cost: 0.05,
+            sent_at: isSuccess ? new Date().toISOString() : null,
+            failed_at: isSuccess ? null : new Date().toISOString(),
+            error_message: isSuccess ? null : responseData.error || responseData.message || 'Failed to send SMS'
+          })
+          .eq('campaign_id', campaignId)
+          .eq('recipient_value', recipient)
+
+        if (recipientError) {
+          console.error('Error updating campaign recipient:', recipientError)
+        }
+      }
+
+      // Update user credits
+      if (isSuccess) {
+        const { error: creditError } = await supabase.rpc('deduct_credits', {
+          user_id: userId,
+          amount: 0.05
+        })
+
+        if (creditError) {
+          console.error('Error deducting credits:', creditError)
+        }
+      }
+    }
+
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({
+        success: isSuccess,
+        messageId: responseData.messageId,
+        status: messageStatus,
+        message: responseData.message || (isSuccess ? 'SMS sent successfully' : 'Failed to send SMS'),
+        error: responseData.error
+      }),
       { 
-        status: 400, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: isSuccess ? 200 : 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
+
+  } catch (error) {
+    console.error('Error in mspace-sms function:', error)
+    return new Response(
+      JSON.stringify({ error: 'Internal server error', details: error.message }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     )
   }
 })
-
-async function sendSMS(request: SMSRequest, apiKey: string, supabase: any): Promise<Response> {
-  const { recipients, message, sender_id = 'MOBIWAVE', campaign_id } = request
-
-  // Calculate cost (assuming $0.05 per SMS)
-  const smsCount = Math.ceil(message.length / 160)
-  const totalCost = recipients.length * smsCount * 0.05
-
-  // Get user from auth header
-  const authHeader = Deno.env.get('AUTHORIZATION')
-  const { data: { user } } = await supabase.auth.getUser(authHeader?.replace('Bearer ', ''))
-  
-  if (!user) {
-    throw new Error('User not authenticated')
-  }
-
-  // Check user credits
-  const { data: credits } = await supabase
-    .from('user_credits')
-    .select('credits_remaining')
-    .eq('user_id', user.id)
-    .single()
-
-  if (!credits || credits.credits_remaining < totalCost) {
-    throw new Error('Insufficient credits')
-  }
-
-  const results = []
-  
-  for (const recipient of recipients) {
-    try {
-      // Send SMS via Mspace API
-      const response = await fetch('https://api.mspace.co.ke/v1/sms/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          to: recipient,
-          message: message,
-          sender_id: sender_id
-        })
-      })
-
-      const result = await response.json()
-      
-      if (result.success) {
-        // Store message in history
-        await supabase
-          .from('message_history')
-          .insert({
-            type: 'sms',
-            sender: sender_id,
-            recipient: recipient,
-            content: message,
-            status: 'sent',
-            provider: 'mspace',
-            provider_message_id: result.data?.message_id,
-            sent_at: new Date().toISOString()
-          })
-
-        // Update campaign recipient if campaign_id provided
-        if (campaign_id) {
-          await supabase
-            .from('campaign_recipients')
-            .upsert({
-              campaign_id,
-              recipient_type: 'phone',
-              recipient_value: recipient,
-              status: 'sent',
-              sent_at: new Date().toISOString()
-            })
-        }
-
-        results.push({ recipient, success: true, message_id: result.data?.message_id })
-      } else {
-        results.push({ recipient, success: false, error: result.message })
-      }
-    } catch (error) {
-      console.error(`SMS send error for ${recipient}:`, error)
-      results.push({ recipient, success: false, error: error.message })
-    }
-  }
-
-  // Deduct credits for successful sends
-  const successCount = results.filter(r => r.success).length
-  const actualCost = successCount * smsCount * 0.05
-
-  if (actualCost > 0) {
-    await supabase
-      .from('user_credits')
-      .update({
-        credits_remaining: credits.credits_remaining - actualCost,
-        credits_used: supabase.raw(`credits_used + ${actualCost}`)
-      })
-      .eq('user_id', user.id)
-  }
-
-  return new Response(
-    JSON.stringify({ 
-      success: true, 
-      results,
-      cost: actualCost,
-      sent_count: successCount
-    }),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  )
-}
-
-async function checkBalance(apiKey: string): Promise<Response> {
-  const response = await fetch('https://api.mspace.co.ke/v1/account/balance', {
-    headers: {
-      'Authorization': `Bearer ${apiKey}`
-    }
-  })
-
-  const result = await response.json()
-  
-  return new Response(
-    JSON.stringify(result),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  )
-}
-
-async function getDeliveryReports(messageIds: string[], apiKey: string, supabase: any): Promise<Response> {
-  const reports = []
-  
-  for (const messageId of messageIds) {
-    try {
-      const response = await fetch(`https://api.mspace.co.ke/v1/sms/delivery-reports/${messageId}`, {
-        headers: {
-          'Authorization': `Bearer ${apiKey}`
-        }
-      })
-
-      const result = await response.json()
-      
-      if (result.success) {
-        // Update message status in database
-        await supabase
-          .from('message_history')
-          .update({
-            status: result.data.status,
-            delivered_at: result.data.status === 'delivered' ? new Date().toISOString() : null,
-            failed_at: result.data.status === 'failed' ? new Date().toISOString() : null
-          })
-          .eq('provider_message_id', messageId)
-
-        // Update campaign recipient status
-        await supabase
-          .from('campaign_recipients')
-          .update({
-            status: result.data.status,
-            delivered_at: result.data.status === 'delivered' ? new Date().toISOString() : null,
-            failed_at: result.data.status === 'failed' ? new Date().toISOString() : null
-          })
-          .eq('provider_message_id', messageId)
-
-        reports.push(result.data)
-      }
-    } catch (error) {
-      console.error(`Delivery report error for ${messageId}:`, error)
-    }
-  }
-
-  return new Response(
-    JSON.stringify({ success: true, reports }),
-    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  )
-}

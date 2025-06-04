@@ -9,7 +9,600 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      api_credentials: {
+        Row: {
+          api_key: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          provider: string
+          sender_id: string | null
+          updated_at: string | null
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          api_key?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          provider?: string
+          sender_id?: string | null
+          updated_at?: string | null
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          api_key?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          provider?: string
+          sender_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_credentials_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: unknown | null
+          resource_id: string | null
+          resource_type: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          resource_id?: string | null
+          resource_type?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          resource_id?: string | null
+          resource_type?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_recipients: {
+        Row: {
+          campaign_id: string
+          contact_id: string | null
+          cost: number | null
+          created_at: string | null
+          delivered_at: string | null
+          error_message: string | null
+          failed_at: string | null
+          id: string
+          provider_message_id: string | null
+          recipient_type: string
+          recipient_value: string
+          sent_at: string | null
+          status: Database["public"]["Enums"]["message_status"] | null
+        }
+        Insert: {
+          campaign_id: string
+          contact_id?: string | null
+          cost?: number | null
+          created_at?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          provider_message_id?: string | null
+          recipient_type?: string
+          recipient_value: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["message_status"] | null
+        }
+        Update: {
+          campaign_id?: string
+          contact_id?: string | null
+          cost?: number | null
+          created_at?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          provider_message_id?: string | null
+          recipient_type?: string
+          recipient_value?: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["message_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_recipients_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_recipients_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          completed_at: string | null
+          content: string
+          created_at: string | null
+          delivered_count: number | null
+          failed_count: number | null
+          id: string
+          name: string
+          recipient_count: number | null
+          scheduled_at: string | null
+          sender_id: string | null
+          sent_at: string | null
+          sent_count: number | null
+          status: Database["public"]["Enums"]["campaign_status"] | null
+          subject: string | null
+          total_cost: number | null
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          content: string
+          created_at?: string | null
+          delivered_count?: number | null
+          failed_count?: number | null
+          id?: string
+          name: string
+          recipient_count?: number | null
+          scheduled_at?: string | null
+          sender_id?: string | null
+          sent_at?: string | null
+          sent_count?: number | null
+          status?: Database["public"]["Enums"]["campaign_status"] | null
+          subject?: string | null
+          total_cost?: number | null
+          type?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          content?: string
+          created_at?: string | null
+          delivered_count?: number | null
+          failed_count?: number | null
+          id?: string
+          name?: string
+          recipient_count?: number | null
+          scheduled_at?: string | null
+          sender_id?: string | null
+          sent_at?: string | null
+          sent_count?: number | null
+          status?: Database["public"]["Enums"]["campaign_status"] | null
+          subject?: string | null
+          total_cost?: number | null
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contact_group_members: {
+        Row: {
+          added_at: string | null
+          contact_id: string
+          group_id: string
+          id: string
+        }
+        Insert: {
+          added_at?: string | null
+          contact_id: string
+          group_id: string
+          id?: string
+        }
+        Update: {
+          added_at?: string | null
+          contact_id?: string
+          group_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_group_members_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "contact_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contact_groups: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_groups_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contacts: {
+        Row: {
+          created_at: string | null
+          custom_fields: Json | null
+          email: string | null
+          first_name: string | null
+          id: string
+          is_active: boolean | null
+          last_name: string | null
+          phone: string
+          tags: string[] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          custom_fields?: Json | null
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_name?: string | null
+          phone: string
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          custom_fields?: Json | null
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_name?: string | null
+          phone?: string
+          tags?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          description: string | null
+          id: string
+          metadata: Json | null
+          reference_id: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          reference_id?: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          reference_id?: string | null
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_history: {
+        Row: {
+          campaign_id: string | null
+          content: string
+          cost: number | null
+          created_at: string | null
+          delivered_at: string | null
+          error_message: string | null
+          failed_at: string | null
+          id: string
+          metadata: Json | null
+          provider: string | null
+          provider_message_id: string | null
+          recipient: string
+          retry_count: number | null
+          sender: string
+          sent_at: string | null
+          status: Database["public"]["Enums"]["message_status"] | null
+          subject: string | null
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          content: string
+          cost?: number | null
+          created_at?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          metadata?: Json | null
+          provider?: string | null
+          provider_message_id?: string | null
+          recipient: string
+          retry_count?: number | null
+          sender: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["message_status"] | null
+          subject?: string | null
+          type?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string | null
+          content?: string
+          cost?: number | null
+          created_at?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          metadata?: Json | null
+          provider?: string | null
+          provider_message_id?: string | null
+          recipient?: string
+          retry_count?: number | null
+          sender?: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["message_status"] | null
+          subject?: string | null
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_history_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          account_type: Database["public"]["Enums"]["account_type"] | null
+          company: string | null
+          created_at: string | null
+          email: string
+          first_name: string | null
+          id: string
+          is_active: boolean | null
+          last_name: string | null
+          parent_account_id: string | null
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          account_type?: Database["public"]["Enums"]["account_type"] | null
+          company?: string | null
+          created_at?: string | null
+          email: string
+          first_name?: string | null
+          id: string
+          is_active?: boolean | null
+          last_name?: string | null
+          parent_account_id?: string | null
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          account_type?: Database["public"]["Enums"]["account_type"] | null
+          company?: string | null
+          created_at?: string | null
+          email?: string
+          first_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_name?: string | null
+          parent_account_id?: string | null
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_parent_account_id_fkey"
+            columns: ["parent_account_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_settings: {
+        Row: {
+          description: string | null
+          id: string
+          key: string
+          updated_at: string | null
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_credits: {
+        Row: {
+          created_at: string | null
+          credits_purchased: number | null
+          credits_remaining: number | null
+          credits_used: number | null
+          id: string
+          last_purchase_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          credits_purchased?: number | null
+          credits_remaining?: number | null
+          credits_used?: number | null
+          id?: string
+          last_purchase_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          credits_purchased?: number | null
+          credits_remaining?: number | null
+          credits_used?: number | null
+          id?: string
+          last_purchase_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_credits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +611,10 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      account_type: "main" | "sub_account" | "reseller_client"
+      campaign_status: "draft" | "active" | "paused" | "completed" | "failed"
+      message_status: "pending" | "sent" | "delivered" | "failed" | "bounced"
+      user_role: "admin" | "reseller" | "client" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +729,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      account_type: ["main", "sub_account", "reseller_client"],
+      campaign_status: ["draft", "active", "paused", "completed", "failed"],
+      message_status: ["pending", "sent", "delivered", "failed", "bounced"],
+      user_role: ["admin", "reseller", "client", "user"],
+    },
   },
 } as const

@@ -29,7 +29,6 @@ const fetchUsers = async (searchTerm: string, roleFilter: string): Promise<User[
   }
 
   if (roleFilter !== 'all') {
-    // Ensure roleFilter is a valid role type
     const validRoles: ('admin' | 'reseller' | 'client' | 'user')[] = ['admin', 'reseller', 'client', 'user'];
     if (validRoles.includes(roleFilter as 'admin' | 'reseller' | 'client' | 'user')) {
       query = query.eq('role', roleFilter as 'admin' | 'reseller' | 'client' | 'user');
@@ -55,7 +54,7 @@ export function UserManagement() {
   const [roleFilter, setRoleFilter] = useState('all');
   const queryClient = useQueryClient();
 
-  const { data: users, isLoading, error } = useOptimizedQuery({
+  const { data: users, isLoading, error, refetch } = useOptimizedQuery({
     queryKey: ['admin-users', searchTerm, roleFilter],
     queryFn: () => fetchUsers(searchTerm, roleFilter),
     staleTime: 60000 // 1 minute
@@ -78,6 +77,10 @@ export function UserManagement() {
       toast.error(`Failed to update user role: ${error.message}`);
     }
   });
+
+  const handleUserUpdated = () => {
+    refetch();
+  };
 
   const filteredUsers = users || [];
 
@@ -118,6 +121,7 @@ export function UserManagement() {
           users={filteredUsers}
           isLoading={isLoading}
           onRoleUpdate={(userId, newRole) => updateUserRole.mutate({ userId, newRole })}
+          onUserUpdated={handleUserUpdated}
         />
       </LoadingWrapper>
     </div>

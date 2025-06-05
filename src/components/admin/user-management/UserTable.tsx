@@ -19,14 +19,15 @@ interface User {
 interface UserTableProps {
   users: User[];
   isLoading: boolean;
-  onRoleUpdate: (userId: string, newRole: 'admin' | 'agent' | 'end_user') => void;
+  onRoleUpdate: (userId: string, newRole: 'admin' | 'reseller' | 'client' | 'user') => void;
 }
 
 export function UserTable({ users, isLoading, onRoleUpdate }: UserTableProps) {
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'admin': return 'bg-red-100 text-red-800';
-      case 'agent': return 'bg-yellow-100 text-yellow-800';
+      case 'reseller': return 'bg-yellow-100 text-yellow-800';
+      case 'client': return 'bg-green-100 text-green-800';
       default: return 'bg-blue-100 text-blue-800';
     }
   };
@@ -88,19 +89,20 @@ export function UserTable({ users, isLoading, onRoleUpdate }: UserTableProps) {
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
                   <Select
-                    value={user.role || 'end_user'}
-                    onValueChange={(value) => onRoleUpdate(user.id, value as 'admin' | 'agent' | 'end_user')}
+                    value={user.role || 'user'}
+                    onValueChange={(value) => onRoleUpdate(user.id, value as 'admin' | 'reseller' | 'client' | 'user')}
                   >
                     <SelectTrigger className="w-32">
                       <SelectValue>
-                        <Badge className={getRoleBadgeColor(user.role || 'end_user')} variant="secondary">
-                          {user.role || 'end_user'}
+                        <Badge className={getRoleBadgeColor(user.role || 'user')} variant="secondary">
+                          {user.role || 'user'}
                         </Badge>
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="end_user">End User</SelectItem>
-                      <SelectItem value="agent">Agent</SelectItem>
+                      <SelectItem value="user">User</SelectItem>
+                      <SelectItem value="client">Client</SelectItem>
+                      <SelectItem value="reseller">Reseller</SelectItem>
                       <SelectItem value="admin">Admin</SelectItem>
                     </SelectContent>
                   </Select>

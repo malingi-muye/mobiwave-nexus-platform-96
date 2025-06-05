@@ -39,7 +39,7 @@ export const useUserCredits = () => {
             user_id: user.id,
             credits_remaining: 10.00,
             credits_used: 0,
-            credits_total: 10.00
+            credits_purchased: 10.00
           })
           .select()
           .single();
@@ -52,7 +52,7 @@ export const useUserCredits = () => {
           user_id: newCredits.user_id,
           credits_remaining: newCredits.credits_remaining || 0,
           credits_used: newCredits.credits_used,
-          total_purchased: newCredits.credits_total,
+          total_purchased: newCredits.credits_purchased,
           last_updated: newCredits.updated_at
         };
       }
@@ -63,7 +63,7 @@ export const useUserCredits = () => {
         user_id: data.user_id,
         credits_remaining: data.credits_remaining || 0,
         credits_used: data.credits_used,
-        total_purchased: data.credits_total,
+        total_purchased: data.credits_purchased,
         last_updated: data.updated_at
       };
     },
@@ -80,7 +80,7 @@ export const useUserCredits = () => {
         .from('user_credits')
         .update({
           credits_remaining: amount, // For now, just set the amount
-          credits_total: amount
+          credits_purchased: amount
         })
         .eq('user_id', user.id)
         .select()
@@ -92,7 +92,7 @@ export const useUserCredits = () => {
         user_id: data.user_id,
         credits_remaining: data.credits_remaining || 0,
         credits_used: data.credits_used,
-        total_purchased: data.credits_total,
+        total_purchased: data.credits_purchased,
         last_updated: data.updated_at
       };
     },

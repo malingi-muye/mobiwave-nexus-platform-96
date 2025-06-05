@@ -78,6 +78,10 @@ export const useSMSService = () => {
       setIsLoading(true);
       
       try {
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('User not authenticated');
+
         // Create campaign
         const { data: campaign, error: campaignError } = await supabase
           .from('campaigns')
@@ -87,7 +91,8 @@ export const useSMSService = () => {
             content: message,
             sender_id: senderId,
             status: 'active',
-            recipient_count: recipients.length
+            recipient_count: recipients.length,
+            user_id: user.id
           })
           .select()
           .single();

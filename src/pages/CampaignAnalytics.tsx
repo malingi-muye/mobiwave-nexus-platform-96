@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ClientDashboardLayout } from '../components/client/ClientDashboardLayout';
-import { CampaignPerformanceDashboard } from '../components/analytics/CampaignPerformanceDashboard';
+import { RealCampaignAnalytics } from '../components/analytics/RealCampaignAnalytics';
 
 const CampaignAnalytics = () => {
   return (
@@ -12,10 +12,10 @@ const CampaignAnalytics = () => {
             Campaign Analytics
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl">
-            Track performance metrics, analyze engagement rates, and optimize your messaging campaigns.
+            Track your campaign performance with detailed analytics and insights.
           </p>
         </div>
-        <CampaignPerformanceDashboard />
+        <RealCampaignAnalytics />
       </div>
     </ClientDashboardLayout>
   );

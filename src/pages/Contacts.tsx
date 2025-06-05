@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ClientDashboardLayout } from '../components/client/ClientDashboardLayout';
-import { ContactManager } from '../components/messaging/sms/ContactManager';
+import { ContactsManager } from '../components/contacts/ContactsManager';
 
 const Contacts = () => {
   return (
@@ -12,10 +12,10 @@ const Contacts = () => {
             Contact Management
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl">
-            Manage your contact lists, import contacts, and organize your audience for targeted campaigns.
+            Manage your contact database, create groups, and organize your messaging campaigns.
           </p>
         </div>
-        <ContactManager />
+        <ContactsManager />
       </div>
     </ClientDashboardLayout>
   );

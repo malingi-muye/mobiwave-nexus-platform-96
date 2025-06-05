@@ -42,7 +42,7 @@ export const useMpesaPayment = () => {
         setPaymentStatus('processing');
         toast.success(data.message || 'STK Push sent to your phone');
         
-        // Start polling for payment status
+        // Start polling for payment status if we have a transaction ID
         if (data.transactionId) {
           pollPaymentStatus(data.transactionId);
         }
@@ -68,10 +68,11 @@ export const useMpesaPayment = () => {
 
     const poll = async () => {
       try {
+        // Use credit_transactions table to check payment status
         const { data, error } = await supabase
-          .from('payment_transactions')
-          .select('status, mpesa_receipt_number, failure_reason')
-          .eq('id', transactionId)
+          .from('credit_transactions')
+          .select('transaction_type, description, metadata')
+          .eq('reference_id', transactionId)
           .single();
 
         if (error) {
@@ -79,23 +80,17 @@ export const useMpesaPayment = () => {
           return;
         }
 
-        if (data.status === 'completed') {
+        if (data && data.transaction_type === 'purchase') {
           setPaymentStatus('completed');
-          toast.success(`Payment successful! Receipt: ${data.mpesa_receipt_number}`);
-          return;
-        }
-
-        if (data.status === 'failed') {
-          setPaymentStatus('failed');
-          toast.error(`Payment failed: ${data.failure_reason || 'Unknown error'}`);
+          toast.success('Payment successful!');
           return;
         }
 
         // Continue polling if still processing
-        if (data.status === 'processing' && attempts < maxAttempts) {
+        if (attempts < maxAttempts) {
           attempts++;
           setTimeout(poll, 10000); // Poll every 10 seconds
-        } else if (attempts >= maxAttempts) {
+        } else {
           setPaymentStatus('failed');
           toast.error('Payment timeout. Please check your transaction status.');
         }
@@ -111,8 +106,9 @@ export const useMpesaPayment = () => {
   const getPaymentHistory = async () => {
     try {
       const { data, error } = await supabase
-        .from('payment_transactions')
+        .from('credit_transactions')
         .select('*')
+        .eq('transaction_type', 'purchase')
         .order('created_at', { ascending: false });
 
       if (error) {

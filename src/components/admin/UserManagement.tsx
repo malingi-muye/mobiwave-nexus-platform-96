@@ -29,7 +29,11 @@ const fetchUsers = async (searchTerm: string, roleFilter: string): Promise<User[
   }
 
   if (roleFilter !== 'all') {
-    query = query.eq('role', roleFilter);
+    // Ensure roleFilter is a valid role type
+    const validRoles: ('admin' | 'reseller' | 'client' | 'user')[] = ['admin', 'reseller', 'client', 'user'];
+    if (validRoles.includes(roleFilter as any)) {
+      query = query.eq('role', roleFilter);
+    }
   }
 
   const { data, error } = await query.order('created_at', { ascending: false });

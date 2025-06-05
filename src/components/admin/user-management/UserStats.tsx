@@ -46,9 +46,9 @@ export function UserStats({ users }: UserStatsProps) {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 mb-1">Agents</p>
+              <p className="text-sm font-medium text-gray-600 mb-1">Resellers</p>
               <p className="text-3xl font-bold text-gray-900">
-                {users?.filter(u => u.role === 'agent').length || 0}
+                {users?.filter(u => u.role === 'reseller').length || 0}
               </p>
             </div>
             <Shield className="w-8 h-8 text-yellow-600" />
@@ -60,9 +60,9 @@ export function UserStats({ users }: UserStatsProps) {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 mb-1">End Users</p>
+              <p className="text-sm font-medium text-gray-600 mb-1">Clients</p>
               <p className="text-3xl font-bold text-gray-900">
-                {users?.filter(u => u.role === 'end_user').length || 0}
+                {users?.filter(u => u.role === 'client').length || 0}
               </p>
             </div>
             <UserPlus className="w-8 h-8 text-green-600" />

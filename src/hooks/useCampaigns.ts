@@ -16,6 +16,7 @@ interface Campaign {
   failed_count?: number;
   total_cost?: number;
   scheduled_at?: string | null;
+  user_id?: string;
 }
 
 export const useCampaigns = () => {
@@ -36,9 +37,17 @@ export const useCampaigns = () => {
 
   const createCampaign = useMutation({
     mutationFn: async (campaignData: Campaign) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const dataToInsert = {
+        ...campaignData,
+        user_id: user.id
+      };
+
       const { data, error } = await supabase
         .from('campaigns')
-        .insert([campaignData])
+        .insert([dataToInsert])
         .select()
         .single();
 

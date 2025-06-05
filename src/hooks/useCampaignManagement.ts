@@ -71,12 +71,12 @@ export const useCampaignManagement = () => {
 
       if (campaignError) throw campaignError;
 
-      // Create campaign recipients
+      // Create campaign recipients with proper types
       const recipients = campaignData.recipients.map(recipient => ({
         campaign_id: campaign.id,
         recipient_type: campaignData.type === 'sms' ? 'phone' : 'email',
         recipient_value: recipient,
-        status: 'pending'
+        status: 'pending' as const
       }));
 
       const { error: recipientsError } = await supabase

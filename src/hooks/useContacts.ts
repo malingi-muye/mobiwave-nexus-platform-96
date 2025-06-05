@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -39,7 +38,14 @@ export const useContacts = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      
+      // Transform the data to handle the custom_fields Json type
+      return (data || []).map(contact => ({
+        ...contact,
+        custom_fields: typeof contact.custom_fields === 'object' && contact.custom_fields !== null 
+          ? contact.custom_fields as Record<string, any>
+          : {}
+      }));
     }
   });
 

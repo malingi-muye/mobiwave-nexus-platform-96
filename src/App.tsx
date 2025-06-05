@@ -18,7 +18,7 @@ import NotFound from '@/pages/NotFound';
 
 // Client pages
 import Dashboard from '@/pages/Dashboard';
-import BulkSMS from '@/components/messaging/BulkSMS';
+import { BulkSMS } from '@/components/messaging/BulkSMS';
 import EmailCampaigns from '@/pages/EmailCampaigns';
 import WhatsAppCampaigns from '@/pages/WhatsAppCampaigns';
 import Contacts from '@/pages/Contacts';

@@ -3,30 +3,36 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 import { toast } from 'sonner';
 
-interface LoginFormProps {
+interface SignupFormProps {
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
 }
 
-export function LoginForm({ isLoading, setIsLoading }: LoginFormProps) {
+export function SignupForm({ isLoading, setIsLoading }: SignupFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+          }
+        }
       });
 
       if (error) {
@@ -35,20 +41,11 @@ export function LoginForm({ isLoading, setIsLoading }: LoginFormProps) {
       }
 
       if (data.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .single();
-
-        const userRole = profile?.role || 'user';
-        toast.success('Welcome back!');
-
-        if (userRole === 'admin') {
-          navigate("/admin");
-        } else {
-          navigate("/dashboard");
-        }
+        toast.success('Account created successfully! You can now log in.');
+        setFirstName("");
+        setLastName("");
+        setEmail("");
+        setPassword("");
       }
     } catch (error) {
       toast.error('An unexpected error occurred. Please try again.');
@@ -58,13 +55,42 @@ export function LoginForm({ isLoading, setIsLoading }: LoginFormProps) {
   };
 
   return (
-    <form onSubmit={handleLogin} className="space-y-4">
+    <form onSubmit={handleSignup} className="space-y-4">
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-2">
+          <Label htmlFor="firstName">First Name</Label>
+          <div className="relative">
+            <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+            <Input
+              id="firstName"
+              type="text"
+              placeholder="John"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="pl-10"
+              required
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="lastName">Last Name</Label>
+          <Input
+            id="lastName"
+            type="text"
+            placeholder="Doe"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            required
+          />
+        </div>
+      </div>
+      
       <div className="space-y-2">
-        <Label htmlFor="email">Email Address</Label>
+        <Label htmlFor="signupEmail">Email Address</Label>
         <div className="relative">
           <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
           <Input
-            id="email"
+            id="signupEmail"
             type="email"
             placeholder="user@company.com"
             value={email}
@@ -76,17 +102,18 @@ export function LoginForm({ isLoading, setIsLoading }: LoginFormProps) {
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="signupPassword">Password</Label>
         <div className="relative">
           <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
           <Input
-            id="password"
+            id="signupPassword"
             type={showPassword ? "text" : "password"}
-            placeholder="Enter your password"
+            placeholder="Create a password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="pl-10 pr-10"
             required
+            minLength={6}
           />
           <Button
             type="button"
@@ -106,10 +133,10 @@ export function LoginForm({ isLoading, setIsLoading }: LoginFormProps) {
 
       <Button
         type="submit"
-        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+        className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
         disabled={isLoading}
       >
-        {isLoading ? "Signing in..." : "Sign In"}
+        {isLoading ? "Creating account..." : "Create Account"}
       </Button>
     </form>
   );

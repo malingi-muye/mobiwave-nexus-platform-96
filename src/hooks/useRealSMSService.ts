@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,7 +26,7 @@ export const useRealSMSService = () => {
       // Check user credits
       const { data: credits } = await supabase
         .from('user_credits')
-        .select('credits_remaining')
+        .select('credits_remaining, credits_used')
         .eq('user_id', user.id)
         .single();
 
@@ -184,7 +183,7 @@ export const useRealSMSService = () => {
 
         // Update campaign status
         const successCount = results.filter(r => r.success).length;
-        const failCount = results.filter(r => !r.success).length;
+        const failCount = results.filter(r => r.success).length;
         const totalCost = results.reduce((sum, r) => sum + (r.cost || 0), 0);
 
         await supabase

@@ -23,6 +23,8 @@ interface UserActionsProps {
   onUserUpdated: () => void;
 }
 
+type UserRole = 'admin' | 'reseller' | 'client' | 'user';
+
 export function UserActions({ user, onUserUpdated }: UserActionsProps) {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -33,7 +35,7 @@ export function UserActions({ user, onUserUpdated }: UserActionsProps) {
     first_name: user.first_name || '',
     last_name: user.last_name || '',
     email: user.email,
-    role: user.role || 'user'
+    role: (user.role || 'user') as UserRole
   });
 
   const [creditsForm, setCreditForm] = useState({
@@ -161,6 +163,32 @@ export function UserActions({ user, onUserUpdated }: UserActionsProps) {
     }
   };
 
+  const handleDeleteUser = async () => {
+    setIsLoading(true);
+    try {
+      // First delete from profiles table
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
+
+      // Then delete from auth.users via admin API
+      const { error: authError } = await supabase.auth.admin.deleteUser(user.id);
+      
+      if (authError) throw authError;
+
+      toast.success('User deleted successfully');
+      setDeleteDialogOpen(false);
+      onUserUpdated();
+    } catch (error: any) {
+      toast.error(`Failed to delete user: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <>
       <div className="flex gap-1">
@@ -241,7 +269,7 @@ export function UserActions({ user, onUserUpdated }: UserActionsProps) {
             </div>
             <div>
               <Label htmlFor="role">Role</Label>
-              <Select value={editForm.role} onValueChange={(value) => setEditForm({...editForm, role: value})}>
+              <Select value={editForm.role} onValueChange={(value: UserRole) => setEditForm({...editForm, role: value})}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

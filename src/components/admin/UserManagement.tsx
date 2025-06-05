@@ -32,7 +32,7 @@ const fetchUsers = async (searchTerm: string, roleFilter: string): Promise<User[
     // Ensure roleFilter is a valid role type
     const validRoles: ('admin' | 'reseller' | 'client' | 'user')[] = ['admin', 'reseller', 'client', 'user'];
     if (validRoles.includes(roleFilter as 'admin' | 'reseller' | 'client' | 'user')) {
-      query = query.eq('role', roleFilter);
+      query = query.eq('role', roleFilter as 'admin' | 'reseller' | 'client' | 'user');
     }
   }
 

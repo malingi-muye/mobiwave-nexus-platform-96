@@ -163,32 +163,6 @@ export function UserActions({ user, onUserUpdated }: UserActionsProps) {
     }
   };
 
-  const handleDeleteUser = async () => {
-    setIsLoading(true);
-    try {
-      // First delete from profiles table
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', user.id);
-
-      if (profileError) throw profileError;
-
-      // Then delete from auth.users via admin API
-      const { error: authError } = await supabase.auth.admin.deleteUser(user.id);
-      
-      if (authError) throw authError;
-
-      toast.success('User deleted successfully');
-      setDeleteDialogOpen(false);
-      onUserUpdated();
-    } catch (error: any) {
-      toast.error(`Failed to delete user: ${error.message}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <>
       <div className="flex gap-1">

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,15 +55,13 @@ export const AuthPage = () => {
 
       if (data.user) {
         // Fetch user role to determine redirect
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select(`
-            roles!inner(name)
-          `)
-          .eq('user_id', data.user.id)
-          .maybeSingle();
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single();
 
-        const userRole = roleData?.roles?.name || 'end_user';
+        const userRole = profile?.role || 'user';
 
         toast({
           title: "Welcome back!",

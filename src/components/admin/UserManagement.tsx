@@ -16,7 +16,7 @@ interface User {
   last_name?: string;
   created_at: string;
   last_sign_in_at?: string;
-  role?: string;
+  role?: 'admin' | 'reseller' | 'client' | 'user';
 }
 
 const fetchUsers = async (searchTerm: string, roleFilter: string): Promise<User[]> => {
@@ -26,6 +26,10 @@ const fetchUsers = async (searchTerm: string, roleFilter: string): Promise<User[
 
   if (searchTerm) {
     query = query.or(`email.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%`);
+  }
+
+  if (roleFilter !== 'all') {
+    query = query.eq('role', roleFilter);
   }
 
   const { data, error } = await query.order('created_at', { ascending: false });
@@ -71,10 +75,7 @@ export function UserManagement() {
     }
   });
 
-  const filteredUsers = users?.filter(user => {
-    if (roleFilter === 'all') return true;
-    return user.role === roleFilter;
-  }) || [];
+  const filteredUsers = users || [];
 
   return (
     <div className="space-y-6">

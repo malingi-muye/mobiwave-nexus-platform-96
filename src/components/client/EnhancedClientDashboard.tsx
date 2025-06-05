@@ -21,14 +21,14 @@ import {
 import { Link } from 'react-router-dom';
 
 export function EnhancedClientDashboard() {
-  const { data: campaigns, isLoading: campaignsLoading } = useCampaigns();
+  const { campaigns, isLoading: campaignsLoading } = useCampaigns();
   const { data: credits, isLoading: creditsLoading } = useUserCredits();
-  const { getSMSHistory } = useSMSService();
+  const smsService = useSMSService();
 
   const totalCampaigns = campaigns?.length || 0;
   const activeCampaigns = campaigns?.filter(c => c.status === 'active').length || 0;
-  const totalSent = campaigns?.reduce((sum, c) => sum + c.sent_count, 0) || 0;
-  const totalDelivered = campaigns?.reduce((sum, c) => sum + c.delivered_count, 0) || 0;
+  const totalSent = campaigns?.reduce((sum, c) => sum + (c.sent_count || 0), 0) || 0;
+  const totalDelivered = campaigns?.reduce((sum, c) => sum + (c.delivered_count || 0), 0) || 0;
   const deliveryRate = totalSent > 0 ? Math.round((totalDelivered / totalSent) * 100) : 0;
 
   const recentCampaigns = campaigns?.slice(0, 5) || [];
@@ -220,7 +220,7 @@ export function EnhancedClientDashboard() {
                         <div>
                           <p className="font-medium text-gray-900">{campaign.name}</p>
                           <p className="text-sm text-gray-500">
-                            {campaign.sent_count} sent • {campaign.delivered_count} delivered
+                            {campaign.sent_count || 0} sent • {campaign.delivered_count || 0} delivered
                           </p>
                         </div>
                       </div>
@@ -230,7 +230,7 @@ export function EnhancedClientDashboard() {
                         </Badge>
                         <div className="text-right">
                           <p className="text-sm text-gray-600">
-                            {Math.round((campaign.delivered_count / Math.max(campaign.sent_count, 1)) * 100)}%
+                            {Math.round(((campaign.delivered_count || 0) / Math.max(campaign.sent_count || 1, 1)) * 100)}%
                           </p>
                           <p className="text-xs text-gray-500">delivery</p>
                         </div>

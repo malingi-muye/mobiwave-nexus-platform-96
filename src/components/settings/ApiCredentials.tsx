@@ -1,108 +1,132 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Badge } from "@/components/ui/badge";
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Key, Settings } from 'lucide-react';
+import { Key, Shield, CheckCircle, AlertCircle } from 'lucide-react';
 
-interface ApiCredential {
-  id: string;
-  provider: string;
+interface ApiCredentialsData {
   api_key: string;
   username: string;
   sender_id: string;
   is_active: boolean;
 }
 
-export const ApiCredentials: React.FC = () => {
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [formData, setFormData] = useState({
+export function ApiCredentials() {
+  const { user } = useAuth();
+  const [credentials, setCredentials] = useState<ApiCredentialsData>({
     api_key: '',
     username: '',
-    sender_id: ''
+    sender_id: '',
+    is_active: false
   });
-  
-  const queryClient = useQueryClient();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
 
-  const { data: credentials, isLoading } = useQuery({
-    queryKey: ['api-credentials'],
-    queryFn: async () => {
+  useEffect(() => {
+    if (user) {
+      loadCredentials();
+    }
+  }, [user]);
+
+  const loadCredentials = async () => {
+    if (!user) return;
+
+    setIsLoading(true);
+    try {
       const { data, error } = await supabase
         .from('api_credentials')
         .select('*')
+        .eq('user_id', user.id)
         .eq('provider', 'mspace')
-        .maybeSingle();
+        .single();
 
-      if (error) throw error;
-      return data as ApiCredential | null;
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error loading credentials:', error);
+        toast.error('Failed to load API credentials');
+        return;
+      }
+
+      if (data) {
+        setCredentials({
+          api_key: data.api_key || '',
+          username: data.username || '',
+          sender_id: data.sender_id || '',
+          is_active: data.is_active || false
+        });
+      }
+    } catch (error) {
+      console.error('Credentials load failed:', error);
+      toast.error('Failed to load API credentials');
+    } finally {
+      setIsLoading(false);
     }
-  });
+  };
 
-  useEffect(() => {
-    if (credentials) {
-      setFormData({
-        api_key: credentials.api_key || '',
-        username: credentials.username || '',
-        sender_id: credentials.sender_id || ''
-      });
-    }
-  }, [credentials]);
+  const saveCredentials = async () => {
+    if (!user) return;
 
-  const saveCredentials = useMutation({
-    mutationFn: async (data: typeof formData) => {
+    setIsSaving(true);
+    try {
+      const credentialsData = {
+        user_id: user.id,
+        provider: 'mspace',
+        api_key: credentials.api_key,
+        username: credentials.username,
+        sender_id: credentials.sender_id,
+        is_active: true
+      };
+
       const { error } = await supabase
         .from('api_credentials')
-        .upsert({
-          provider: 'mspace',
-          api_key: data.api_key,
-          username: data.username,
-          sender_id: data.sender_id,
-          is_active: true
+        .upsert(credentialsData, {
+          onConflict: 'user_id,provider'
         });
 
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['api-credentials'] });
+      if (error) {
+        console.error('Error saving credentials:', error);
+        toast.error('Failed to save API credentials');
+        return;
+      }
+
+      setCredentials(prev => ({ ...prev, is_active: true }));
       toast.success('API credentials saved successfully');
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to save credentials: ${error.message}`);
+    } catch (error) {
+      console.error('Credentials save failed:', error);
+      toast.error('Failed to save API credentials');
+    } finally {
+      setIsSaving(false);
     }
-  });
+  };
 
-  const toggleActiveStatus = useMutation({
-    mutationFn: async (isActive: boolean) => {
-      if (!credentials) return;
-      
-      const { error } = await supabase
-        .from('api_credentials')
-        .update({ is_active: isActive })
-        .eq('id', credentials.id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['api-credentials'] });
-      toast.success('API credentials status updated');
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to update status: ${error.message}`);
-    }
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.api_key || !formData.username || !formData.sender_id) {
-      toast.error('Please fill in all required fields');
+  const testConnection = async () => {
+    if (!credentials.api_key || !credentials.username) {
+      toast.error('Please provide API key and username');
       return;
     }
-    saveCredentials.mutate(formData);
+
+    setIsTestingConnection(true);
+    try {
+      const response = await fetch(`https://api.mspace.co.ke/smsapi/v2/balance/apikey=${credentials.api_key}/username=${credentials.username}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        toast.success(`Connection successful! Balance: ${data.balance || 'N/A'}`);
+      } else {
+        toast.error('Connection failed. Please check your credentials.');
+      }
+    } catch (error) {
+      console.error('Connection test failed:', error);
+      toast.error('Connection test failed. Please check your credentials.');
+    } finally {
+      setIsTestingConnection(false);
+    }
   };
 
   if (isLoading) {
@@ -112,7 +136,7 @@ export const ApiCredentials: React.FC = () => {
           <div className="animate-pulse space-y-4">
             <div className="h-4 bg-gray-200 rounded w-1/4"></div>
             <div className="h-10 bg-gray-200 rounded"></div>
-            <div className="h-10 bg-gray-200 rounded"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
             <div className="h-10 bg-gray-200 rounded"></div>
           </div>
         </CardContent>
@@ -121,106 +145,98 @@ export const ApiCredentials: React.FC = () => {
   }
 
   return (
-    <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
+    <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Key className="w-5 h-5 text-blue-600" />
-          Mspace API Configuration
-        </CardTitle>
-        <CardDescription>
-          Configure your Mspace SMS API credentials to enable SMS functionality
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="w-5 h-5" />
+            Mspace API Configuration
+          </CardTitle>
+          <Badge variant={credentials.is_active ? "default" : "secondary"}>
+            {credentials.is_active ? (
+              <>
+                <CheckCircle className="w-4 h-4 mr-1" />
+                Active
+              </>
+            ) : (
+              <>
+                <AlertCircle className="w-4 h-4 mr-1" />
+                Inactive
+              </>
+            )}
+          </Badge>
+        </div>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <CardContent className="space-y-6">
+        <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="api_key">API Key *</Label>
+            <Label htmlFor="apiKey">API Key</Label>
             <div className="relative">
+              <Key className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
-                id="api_key"
-                type={showApiKey ? "text" : "password"}
-                value={formData.api_key}
-                onChange={(e) => setFormData(prev => ({ ...prev, api_key: e.target.value }))}
+                id="apiKey"
+                type="password"
+                value={credentials.api_key}
+                onChange={(e) => setCredentials(prev => ({ ...prev, api_key: e.target.value }))}
+                className="pl-10"
                 placeholder="Enter your Mspace API key"
-                className="pr-10"
-                required
               />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setShowApiKey(!showApiKey)}
-              >
-                {showApiKey ? (
-                  <EyeOff className="h-4 w-4 text-gray-400" />
-                ) : (
-                  <Eye className="h-4 w-4 text-gray-400" />
-                )}
-              </Button>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="username">Username *</Label>
+            <Label htmlFor="username">Username</Label>
             <Input
               id="username"
-              type="text"
-              value={formData.username}
-              onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+              value={credentials.username}
+              onChange={(e) => setCredentials(prev => ({ ...prev, username: e.target.value }))}
               placeholder="Enter your Mspace username"
-              required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="sender_id">Sender ID *</Label>
+            <Label htmlFor="senderId">Sender ID</Label>
             <Input
-              id="sender_id"
-              type="text"
-              value={formData.sender_id}
-              onChange={(e) => setFormData(prev => ({ ...prev, sender_id: e.target.value }))}
+              id="senderId"
+              value={credentials.sender_id}
+              onChange={(e) => setCredentials(prev => ({ ...prev, sender_id: e.target.value }))}
               placeholder="Enter your sender ID (e.g., COMPANY)"
-              required
+              maxLength={11}
             />
+            <p className="text-sm text-gray-500">
+              Sender ID should be 3-11 characters. Use your company name or brand.
+            </p>
           </div>
+        </div>
 
-          {credentials && (
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center space-x-2">
-                <Settings className="w-4 h-4 text-gray-600" />
-                <Label htmlFor="active-status">API Active</Label>
-              </div>
-              <Switch
-                id="active-status"
-                checked={credentials.is_active}
-                onCheckedChange={(checked) => toggleActiveStatus.mutate(checked)}
-              />
-            </div>
-          )}
+        <div className="flex gap-3">
+          <Button 
+            onClick={saveCredentials} 
+            disabled={isSaving || !credentials.api_key || !credentials.username}
+            className="flex-1"
+          >
+            {isSaving ? 'Saving...' : 'Save Credentials'}
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={testConnection}
+            disabled={isTestingConnection || !credentials.api_key || !credentials.username}
+          >
+            {isTestingConnection ? 'Testing...' : 'Test Connection'}
+          </Button>
+        </div>
 
-          <div className="flex gap-3">
-            <Button 
-              type="submit" 
-              disabled={saveCredentials.isPending}
-              className="flex-1"
-            >
-              {saveCredentials.isPending ? 'Saving...' : 'Save Credentials'}
-            </Button>
-          </div>
-        </form>
-
-        {credentials && (
-          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center gap-2 text-green-800">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm font-medium">
-                API credentials configured and {credentials.is_active ? 'active' : 'inactive'}
-              </span>
-            </div>
-          </div>
-        )}
+        <div className="p-4 bg-blue-50 rounded-lg">
+          <h4 className="font-medium text-blue-900 mb-2">How to get your Mspace credentials:</h4>
+          <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
+            <li>Visit <a href="https://mspace.co.ke" target="_blank" rel="noopener noreferrer" className="underline">mspace.co.ke</a></li>
+            <li>Sign up for an account or log in</li>
+            <li>Navigate to API settings in your dashboard</li>
+            <li>Copy your API key and username</li>
+            <li>Set up your preferred sender ID</li>
+          </ol>
+        </div>
       </CardContent>
     </Card>
   );
-};
+}

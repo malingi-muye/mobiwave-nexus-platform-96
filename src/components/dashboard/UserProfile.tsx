@@ -5,39 +5,44 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useAuth } from "@/components/auth/AuthProvider";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { User, Mail, Save, LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from '@/components/auth/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { User, Phone, Mail, Building } from 'lucide-react';
 
 interface Profile {
   id: string;
   email: string;
-  first_name: string | null;
-  last_name: string | null;
-  avatar_url: string | null;
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+  company?: string;
+  avatar_url?: string;
 }
 
-export const UserProfile = () => {
-  const { user, logout } = useAuth();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+export function UserProfile() {
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<Profile>({
+    id: '',
+    email: '',
+    first_name: '',
+    last_name: '',
+    phone: '',
+    company: '',
+    avatar_url: ''
+  });
   const [isLoading, setIsLoading] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const { toast } = useToast();
-  const navigate = useNavigate();
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (user) {
-      fetchProfile();
+      loadProfile();
     }
   }, [user]);
 
-  const fetchProfile = async () => {
+  const loadProfile = async () => {
     if (!user) return;
-    
+
     setIsLoading(true);
     try {
       const { data, error } = await supabase
@@ -47,82 +52,64 @@ export const UserProfile = () => {
         .single();
 
       if (error) {
-        console.error('Error fetching profile:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load profile information.",
-          variant: "destructive",
-        });
+        console.error('Error loading profile:', error);
+        toast.error('Failed to load profile');
         return;
       }
 
-      setProfile(data);
-      setFirstName(data.first_name || "");
-      setLastName(data.last_name || "");
+      if (data) {
+        setProfile({
+          id: data.id,
+          email: data.email,
+          first_name: data.first_name || '',
+          last_name: data.last_name || '',
+          phone: data.phone || '',
+          company: data.company || '',
+          avatar_url: ''
+        });
+      }
     } catch (error) {
-      console.error('Profile fetch error:', error);
+      console.error('Profile load failed:', error);
+      toast.error('Failed to load profile');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const updateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const saveProfile = async () => {
     if (!user) return;
 
-    setIsUpdating(true);
+    setIsSaving(true);
     try {
       const { error } = await supabase
         .from('profiles')
         .update({
-          first_name: firstName,
-          last_name: lastName,
-          updated_at: new Date().toISOString(),
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          phone: profile.phone,
+          company: profile.company,
         })
         .eq('id', user.id);
 
       if (error) {
-        throw error;
+        console.error('Error saving profile:', error);
+        toast.error('Failed to save profile');
+        return;
       }
 
-      toast({
-        title: "Profile Updated",
-        description: "Your profile has been successfully updated.",
-      });
-
-      // Refresh profile data
-      fetchProfile();
+      toast.success('Profile updated successfully');
     } catch (error) {
-      console.error('Profile update error:', error);
-      toast({
-        title: "Update Failed",
-        description: "Failed to update profile. Please try again.",
-        variant: "destructive",
-      });
+      console.error('Profile save failed:', error);
+      toast.error('Failed to save profile');
     } finally {
-      setIsUpdating(false);
+      setIsSaving(false);
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate("/auth");
-      toast({
-        title: "Logged Out",
-        description: "You have been successfully logged out.",
-      });
-    } catch (error) {
-      toast({
-        title: "Logout Error",
-        description: "Failed to log out. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  const getInitials = () => {
+    const firstName = profile.first_name || '';
+    const lastName = profile.last_name || '';
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U';
   };
 
   if (isLoading) {
@@ -130,9 +117,9 @@ export const UserProfile = () => {
       <Card>
         <CardContent className="p-6">
           <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-20 w-20 bg-gray-200 rounded-full mx-auto"></div>
+            <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
           </div>
         </CardContent>
       </Card>
@@ -144,77 +131,103 @@ export const UserProfile = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <User className="w-5 h-5" />
-          User Profile
+          Profile Settings
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="flex items-center space-x-4">
-          <Avatar className="w-16 h-16">
-            <AvatarFallback className="bg-blue-100 text-blue-600 text-lg font-semibold">
-              {profile && firstName && lastName 
-                ? getInitials(firstName, lastName)
-                : user?.email?.charAt(0).toUpperCase() || "U"
-              }
+        <div className="flex items-center gap-4">
+          <Avatar className="w-20 h-20">
+            <AvatarFallback className="text-xl font-bold bg-blue-100 text-blue-600">
+              {getInitials()}
             </AvatarFallback>
           </Avatar>
           <div>
             <h3 className="text-lg font-semibold">
-              {profile && firstName && lastName 
-                ? `${firstName} ${lastName}`
-                : "No name set"
+              {profile.first_name && profile.last_name 
+                ? `${profile.first_name} ${profile.last_name}`
+                : profile.email
               }
             </h3>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Mail className="w-4 h-4" />
-              {user?.email}
+            <p className="text-gray-600">{profile.email}</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="firstName">First Name</Label>
+            <div className="relative">
+              <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                id="firstName"
+                value={profile.first_name}
+                onChange={(e) => setProfile(prev => ({ ...prev, first_name: e.target.value }))}
+                className="pl-10"
+                placeholder="First name"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="lastName">Last Name</Label>
+            <Input
+              id="lastName"
+              value={profile.last_name}
+              onChange={(e) => setProfile(prev => ({ ...prev, last_name: e.target.value }))}
+              placeholder="Last name"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                id="email"
+                type="email"
+                value={profile.email}
+                disabled
+                className="pl-10 bg-gray-50"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone</Label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                id="phone"
+                value={profile.phone}
+                onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
+                className="pl-10"
+                placeholder="Phone number"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="company">Company</Label>
+            <div className="relative">
+              <Building className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                id="company"
+                value={profile.company}
+                onChange={(e) => setProfile(prev => ({ ...prev, company: e.target.value }))}
+                className="pl-10"
+                placeholder="Company name"
+              />
             </div>
           </div>
         </div>
 
-        <form onSubmit={updateProfile} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">First Name</Label>
-              <Input
-                id="firstName"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="Enter your first name"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="lastName">Last Name</Label>
-              <Input
-                id="lastName"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder="Enter your last name"
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <Button 
-              type="submit" 
-              disabled={isUpdating}
-              className="flex items-center gap-2"
-            >
-              <Save className="w-4 h-4" />
-              {isUpdating ? "Updating..." : "Update Profile"}
-            </Button>
-            
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={handleLogout}
-              className="flex items-center gap-2"
-            >
-              <LogOut className="w-4 h-4" />
-              Logout
-            </Button>
-          </div>
-        </form>
+        <Button 
+          onClick={saveProfile} 
+          disabled={isSaving}
+          className="w-full"
+        >
+          {isSaving ? 'Saving...' : 'Save Changes'}
+        </Button>
       </CardContent>
     </Card>
   );
-};
+}

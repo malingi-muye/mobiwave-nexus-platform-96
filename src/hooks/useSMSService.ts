@@ -186,8 +186,6 @@ export const useSMSService = () => {
     sendBulkSMS: sendBulkSMS.mutateAsync,
     checkBalance,
     getDeliveryReport,
-    isLoading: isLoading || sendSingleSMS.isPending || sendBulkSMS.isPending,
-    sendSingleSMS,
-    sendBulkSMS
+    isLoading: isLoading || sendSingleSMS.isPending || sendBulkSMS.isPending
   };
 };

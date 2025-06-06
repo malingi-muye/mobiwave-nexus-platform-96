@@ -6,7 +6,7 @@ import { useContactMutations } from './contacts/useContactMutations';
 export const useContacts = () => {
   const { data: contacts, isLoading: contactsLoading, error: contactsError, refetch: refetchContacts } = useContactsData();
   const { contactGroups, isLoading: groupsLoading, error: groupsError, createContactGroup, refetch: refetchGroups } = useContactGroups();
-  const { createContact, updateContact, deleteContact, importContacts } = useContactMutations();
+  const { createContact, updateContact, deleteContact, importContacts, mergeContacts } = useContactMutations();
 
   return {
     contacts: contacts || [],
@@ -18,6 +18,7 @@ export const useContacts = () => {
     deleteContact,
     createContactGroup,
     importContacts,
+    mergeContacts,
     refetch: () => {
       refetchContacts();
       refetchGroups();

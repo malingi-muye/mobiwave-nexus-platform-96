@@ -58,7 +58,7 @@ export const useContactMutations = () => {
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from('contacts')
-        .update({ is_active: false })
+        .delete()
         .eq('id', id);
 
       if (error) throw error;
@@ -90,12 +90,32 @@ export const useContactMutations = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
-      toast.success(`Successfully imported ${data?.length || 0} contacts`);
     },
     onError: (error: any) => {
-      toast.error(`Failed to import contacts: ${error.message}`);
+      console.error('Import error:', error);
+      throw error;
+    }
+  });
+
+  const mergeContacts = useMutation({
+    mutationFn: async ({ keepContact, duplicateIds }: { keepContact: Contact; duplicateIds: string[] }) => {
+      // Delete duplicate contacts
+      const { error } = await supabase
+        .from('contacts')
+        .delete()
+        .in('id', duplicateIds);
+
+      if (error) throw error;
+      return { mergedCount: duplicateIds.length };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+    },
+    onError: (error: any) => {
+      console.error('Merge error:', error);
+      throw error;
     }
   });
 
@@ -103,6 +123,7 @@ export const useContactMutations = () => {
     createContact: createContact.mutateAsync,
     updateContact: updateContact.mutateAsync,
     deleteContact: deleteContact.mutateAsync,
-    importContacts: importContacts.mutateAsync
+    importContacts: importContacts.mutateAsync,
+    mergeContacts: mergeContacts.mutateAsync,
   };
 };

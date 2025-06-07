@@ -14,16 +14,20 @@ export interface ContactGroup {
 export const useContactGroups = () => {
   const queryClient = useQueryClient();
 
-  const getContactGroups = useQuery({
+  const { data: contactGroups = [], isLoading, error, refetch } = useQuery({
     queryKey: ['contact-groups'],
-    queryFn: async (): Promise<ContactGroup[]> => {
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       const { data, error } = await supabase
         .from('contact_groups')
         .select('*')
-        .order('name');
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return data as ContactGroup[];
     }
   });
 
@@ -54,10 +58,10 @@ export const useContactGroups = () => {
   });
 
   return {
-    contactGroups: getContactGroups.data || [],
-    isLoading: getContactGroups.isLoading,
-    error: getContactGroups.error,
+    contactGroups,
+    isLoading,
+    error,
     createContactGroup: createContactGroup.mutateAsync,
-    refetch: getContactGroups.refetch
+    refetch
   };
 };

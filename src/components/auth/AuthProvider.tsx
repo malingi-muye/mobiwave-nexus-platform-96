@@ -35,18 +35,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const fetchUserRole = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      // First try to get role from the new roles system
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select(`
+          roles (
+            name
+          )
+        `)
+        .eq('user_id', userId)
+        .order('assigned_at', { ascending: false })
+        .limit(1);
+
+      if (!rolesError && userRoles && userRoles.length > 0) {
+        return (userRoles[0] as any).roles.name;
+      }
+
+      // Fallback to profile role
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', userId)
         .single();
 
-      if (error) {
-        console.error('Error fetching user role:', error);
-        return 'user'; // Default role
+      if (!profileError && profile?.role) {
+        return profile.role;
       }
 
-      return data?.role || 'user';
+      return 'user'; // Default role
     } catch (error) {
       console.error('Role fetch failed:', error);
       return 'user';
@@ -62,8 +78,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          const role = await fetchUserRole(session.user.id);
-          setUserRole(role);
+          // Use setTimeout to avoid potential deadlocks
+          setTimeout(async () => {
+            const role = await fetchUserRole(session.user.id);
+            setUserRole(role);
+          }, 0);
         } else {
           setUserRole(null);
         }

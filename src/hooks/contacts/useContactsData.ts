@@ -19,21 +19,18 @@ export interface Contact {
 export const useContactsData = () => {
   return useQuery({
     queryKey: ['contacts'],
-    queryFn: async (): Promise<Contact[]> => {
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       const { data, error } = await supabase
         .from('contacts')
         .select('*')
-        .eq('is_active', true)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      return (data || []).map(contact => ({
-        ...contact,
-        custom_fields: typeof contact.custom_fields === 'object' && contact.custom_fields !== null 
-          ? contact.custom_fields as Record<string, any>
-          : {}
-      }));
+      return data as Contact[];
     }
   });
 };

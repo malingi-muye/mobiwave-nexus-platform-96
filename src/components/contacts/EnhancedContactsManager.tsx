@@ -40,8 +40,16 @@ export function EnhancedContactsManager() {
     );
   }
 
+  const handleImportContacts = async (contactsToImport: any[]) => {
+    await importContacts(contactsToImport);
+  };
+
   const handleMergeContacts = async (keepContact: any, duplicateIds: string[]) => {
     await mergeContacts({ keepContact, duplicateIds });
+  };
+
+  const handleCreateContactGroup = async (group: any) => {
+    await createContactGroup(group);
   };
 
   return (
@@ -139,7 +147,7 @@ export function EnhancedContactsManager() {
           <TabsContent value="import-export" className="space-y-6">
             <ContactImportExport
               contacts={contacts}
-              onImport={importContacts}
+              onImport={handleImportContacts}
             />
           </TabsContent>
 
@@ -153,7 +161,7 @@ export function EnhancedContactsManager() {
           <TabsContent value="groups" className="space-y-6">
             <ContactGroupManager
               contactGroups={contactGroups}
-              onCreateGroup={createContactGroup}
+              onCreateGroup={handleCreateContactGroup}
             />
           </TabsContent>
         </Tabs>

@@ -24,6 +24,8 @@ export function SignupForm({ isLoading, setIsLoading }: SignupFormProps) {
     setIsLoading(true);
 
     try {
+      console.log('Starting signup process...', { email, firstName, lastName });
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -31,11 +33,15 @@ export function SignupForm({ isLoading, setIsLoading }: SignupFormProps) {
           data: {
             first_name: firstName,
             last_name: lastName,
+            role: 'user'
           }
         }
       });
 
+      console.log('Signup response:', { data, error });
+
       if (error) {
+        console.error('Signup error:', error);
         toast.error(error.message);
         return;
       }
@@ -48,6 +54,7 @@ export function SignupForm({ isLoading, setIsLoading }: SignupFormProps) {
         setPassword("");
       }
     } catch (error) {
+      console.error('Unexpected signup error:', error);
       toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);

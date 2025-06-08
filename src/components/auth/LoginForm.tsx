@@ -35,6 +35,9 @@ export function LoginForm({ isLoading, setIsLoading }: LoginFormProps) {
       }
 
       if (data.user) {
+        console.log('Login successful, fetching user profile');
+        
+        // Get user role to determine redirect
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
@@ -43,15 +46,21 @@ export function LoginForm({ isLoading, setIsLoading }: LoginFormProps) {
 
         // Safely access role with fallback
         const userRole = (profile as any)?.role || 'user';
+        console.log('User role from profile:', userRole);
+        
         toast.success('Welcome back!');
 
+        // Navigate based on role
         if (userRole === 'admin') {
-          navigate("/admin");
+          console.log('Navigating to admin dashboard');
+          navigate("/admin", { replace: true });
         } else {
-          navigate("/dashboard");
+          console.log('Navigating to client dashboard');
+          navigate("/dashboard", { replace: true });
         }
       }
     } catch (error) {
+      console.error('Login error:', error);
       toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);

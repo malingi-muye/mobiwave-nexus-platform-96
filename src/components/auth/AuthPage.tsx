@@ -15,14 +15,27 @@ export const AuthPage = () => {
   const { user, userRole, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
+    console.log('AuthPage effect:', { user: user?.email, userRole, authLoading });
+    
     if (!authLoading && user && userRole) {
+      console.log('Redirecting user based on role:', userRole);
       if (userRole === 'admin') {
-        navigate("/admin");
+        console.log('Redirecting to admin dashboard');
+        navigate("/admin", { replace: true });
       } else {
-        navigate("/dashboard");
+        console.log('Redirecting to client dashboard');
+        navigate("/dashboard", { replace: true });
       }
     }
   }, [user, userRole, authLoading, navigate]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">

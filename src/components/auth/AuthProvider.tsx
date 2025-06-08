@@ -74,6 +74,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -81,6 +82,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // Use setTimeout to avoid potential deadlocks
           setTimeout(async () => {
             const role = await fetchUserRole(session.user.id);
+            console.log('User role fetched:', role);
             setUserRole(role);
           }, 0);
         } else {
@@ -98,11 +100,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (error) {
           console.error('Error getting session:', error);
         } else {
+          console.log('Initial session check:', session?.user?.email);
           setSession(session);
           setUser(session?.user ?? null);
           
           if (session?.user) {
             const role = await fetchUserRole(session.user.id);
+            console.log('Initial role fetched:', role);
             setUserRole(role);
           }
         }
@@ -128,11 +132,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (error) throw error;
 
+      console.log('Login successful:', data.user?.email);
       setSession(data.session);
       setUser(data.user);
       
       if (data.user) {
         const role = await fetchUserRole(data.user.id);
+        console.log('Login role fetched:', role);
         setUserRole(role);
       }
     } catch (error) {

@@ -83,8 +83,8 @@ const fetchUserServices = async (): Promise<UserService[]> => {
     // Extract profiles data safely with proper type checking
     const profilesData = item.profiles;
     
-    // Check if profilesData is a valid object with email property
-    if (profilesData && 
+    // Check if profilesData is a valid object with email property and is not null
+    if (profilesData !== null && 
         typeof profilesData === 'object' && 
         'email' in profilesData &&
         typeof profilesData.email === 'string') {

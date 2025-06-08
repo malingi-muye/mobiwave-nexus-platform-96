@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -68,7 +67,7 @@ const fetchUserServices = async (): Promise<UserService[]> => {
     .select(`
       *,
       services(*),
-      user_profile:profiles(email, first_name, last_name)
+      profiles!user_services_user_id_fkey(email, first_name, last_name)
     `)
     .order('user_id');
 
@@ -77,13 +76,15 @@ const fetchUserServices = async (): Promise<UserService[]> => {
     return [];
   }
   
-  // Filter out any items where the join failed
-  return (data || []).filter(item => 
-    item && 
-    typeof item === 'object' && 
-    'user_id' in item && 
-    'service_id' in item
-  ) as UserService[];
+  // Transform the data to match our interface, handling potential join failures
+  const transformedData = (data || []).map(item => ({
+    ...item,
+    user_profile: item.profiles && typeof item.profiles === 'object' && 'email' in item.profiles 
+      ? item.profiles 
+      : null
+  }));
+
+  return transformedData as UserService[];
 };
 
 export function ServicesManagement() {

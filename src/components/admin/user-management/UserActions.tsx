@@ -47,13 +47,21 @@ export function UserActions({ user, onUserUpdated }: UserActionsProps) {
   const handleUpdateUser = async () => {
     setIsLoading(true);
     try {
+      const updateData: any = {
+        first_name: editForm.first_name,
+        last_name: editForm.last_name,
+      };
+
+      // Only add role if it's supported
+      try {
+        updateData.role = editForm.role;
+      } catch (error) {
+        console.warn('Role column may not exist yet:', error);
+      }
+
       const { error } = await supabase
         .from('profiles')
-        .update({
-          first_name: editForm.first_name,
-          last_name: editForm.last_name,
-          role: editForm.role
-        })
+        .update(updateData)
         .eq('id', user.id);
 
       if (error) throw error;

@@ -37,11 +37,12 @@ export function LoginForm({ isLoading, setIsLoading }: LoginFormProps) {
       if (data.user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('role')
+          .select('*')
           .eq('id', data.user.id)
           .single();
 
-        const userRole = profile?.role || 'user';
+        // Safely access role with fallback
+        const userRole = (profile as any)?.role || 'user';
         toast.success('Welcome back!');
 
         if (userRole === 'admin') {

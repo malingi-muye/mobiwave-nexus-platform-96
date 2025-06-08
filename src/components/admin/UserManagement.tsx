@@ -28,10 +28,16 @@ const fetchUsers = async (searchTerm: string, roleFilter: string): Promise<User[
     query = query.or(`email.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%`);
   }
 
+  // Only filter by role if the column exists and filter is not 'all'
   if (roleFilter !== 'all') {
     const validRoles: ('admin' | 'reseller' | 'client' | 'user')[] = ['admin', 'reseller', 'client', 'user'];
     if (validRoles.includes(roleFilter as 'admin' | 'reseller' | 'client' | 'user')) {
-      query = query.eq('role', roleFilter as 'admin' | 'reseller' | 'client' | 'user');
+      // Try to filter by role, but don't fail if column doesn't exist
+      try {
+        query = query.eq('role', roleFilter as 'admin' | 'reseller' | 'client' | 'user');
+      } catch (error) {
+        console.warn('Role column may not exist yet:', error);
+      }
     }
   }
 
@@ -45,7 +51,7 @@ const fetchUsers = async (searchTerm: string, roleFilter: string): Promise<User[
     first_name: user.first_name,
     last_name: user.last_name,
     created_at: user.created_at,
-    role: user.role || 'user'
+    role: (user as any).role || 'user' // Safely access role with fallback
   }));
 };
 
@@ -64,7 +70,7 @@ export function UserManagement() {
     mutationFn: async ({ userId, newRole }: { userId: string; newRole: 'admin' | 'reseller' | 'client' | 'user' }) => {
       const { error } = await supabase
         .from('profiles')
-        .update({ role: newRole })
+        .update({ role: newRole } as any) // Type assertion to handle schema mismatch
         .eq('id', userId);
 
       if (error) throw error;

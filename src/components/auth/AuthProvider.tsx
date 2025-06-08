@@ -51,15 +51,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return (userRoles[0] as any).roles.name;
       }
 
-      // Fallback to profile role
+      // Fallback to profile role with safe access
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('role')
+        .select('*')
         .eq('id', userId)
         .single();
 
-      if (!profileError && profile?.role) {
-        return profile.role;
+      if (!profileError && profile) {
+        // Safely access role property with fallback
+        return (profile as any).role || 'user';
       }
 
       return 'user'; // Default role

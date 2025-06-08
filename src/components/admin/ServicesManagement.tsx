@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -79,7 +80,10 @@ const fetchUserServices = async (): Promise<UserService[]> => {
   // Transform the data to match our interface, handling potential join failures
   const transformedData = (data || []).map(item => ({
     ...item,
-    user_profile: item.profiles && typeof item.profiles === 'object' && 'email' in item.profiles 
+    user_profile: item.profiles && 
+                  item.profiles !== null && 
+                  typeof item.profiles === 'object' && 
+                  'email' in item.profiles 
       ? item.profiles 
       : null
   }));

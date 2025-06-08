@@ -78,22 +78,29 @@ const fetchUserServices = async (): Promise<UserService[]> => {
   
   // Transform the data to match our interface, handling potential join failures
   const transformedData = (data || []).map(item => {
-    // Extract profiles data safely
+    // Extract profiles data safely with proper type checking
     const profilesData = item.profiles;
-    const hasValidProfile = profilesData && 
-                           typeof profilesData === 'object' && 
-                           profilesData !== null &&
-                           'email' in profilesData;
+    
+    // Check if profilesData is a valid object with email property
+    if (profilesData && 
+        typeof profilesData === 'object' && 
+        profilesData !== null &&
+        'email' in profilesData) {
+      
+      return {
+        ...item,
+        user_profile: {
+          email: profilesData.email,
+          first_name: profilesData.first_name || undefined,
+          last_name: profilesData.last_name || undefined
+        }
+      };
+    }
 
+    // If no valid profile data, return with null user_profile
     return {
       ...item,
-      user_profile: hasValidProfile
-        ? {
-            email: profilesData.email,
-            first_name: profilesData.first_name || undefined,
-            last_name: profilesData.last_name || undefined
-          }
-        : null
+      user_profile: null
     };
   });
 

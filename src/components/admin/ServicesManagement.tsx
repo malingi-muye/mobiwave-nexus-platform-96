@@ -28,11 +28,11 @@ interface UserService {
   service_id: string;
   is_enabled: boolean;
   services: Service;
-  user_profile: {
+  user_profile?: {
     email: string;
     first_name?: string;
     last_name?: string;
-  };
+  } | null;
 }
 
 interface User {
@@ -68,16 +68,22 @@ const fetchUserServices = async (): Promise<UserService[]> => {
     .select(`
       *,
       services(*),
-      user_profile:profiles!user_services_user_id_fkey(email, first_name, last_name)
+      user_profile:profiles(email, first_name, last_name)
     `)
     .order('user_id');
 
   if (error) {
     console.error('Error fetching user services:', error);
-    // Return empty array if there's an error to prevent app crash
     return [];
   }
-  return data || [];
+  
+  // Filter out any items where the join failed
+  return (data || []).filter(item => 
+    item && 
+    typeof item === 'object' && 
+    'user_id' in item && 
+    'service_id' in item
+  ) as UserService[];
 };
 
 export function ServicesManagement() {

@@ -8,10 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Users, Search, Shield, Crown } from 'lucide-react';
+import { Settings, Users, Search, Crown } from 'lucide-react';
 
 interface Service {
   id: string;
@@ -29,7 +28,7 @@ interface UserService {
   service_id: string;
   is_enabled: boolean;
   services: Service;
-  profiles: {
+  user_profile: {
     email: string;
     first_name?: string;
     last_name?: string;
@@ -69,17 +68,20 @@ const fetchUserServices = async (): Promise<UserService[]> => {
     .select(`
       *,
       services(*),
-      profiles:user_id(email, first_name, last_name)
+      user_profile:profiles!user_services_user_id_fkey(email, first_name, last_name)
     `)
     .order('user_id');
 
-  if (error) throw error;
+  if (error) {
+    console.error('Error fetching user services:', error);
+    // Return empty array if there's an error to prevent app crash
+    return [];
+  }
   return data || [];
 };
 
 export function ServicesManagement() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedUser, setSelectedUser] = useState<string>('all');
   const queryClient = useQueryClient();
 
   const { data: services = [], isLoading: servicesLoading } = useQuery({
@@ -118,19 +120,18 @@ export function ServicesManagement() {
   const toggleUserService = useMutation({
     mutationFn: async ({ userId, serviceId, enabled }: { userId: string; serviceId: string; enabled: boolean }) => {
       if (enabled) {
-        // Enable service for user
+        const currentUser = await supabase.auth.getUser();
         const { error } = await supabase
           .from('user_services')
           .upsert({
             user_id: userId,
             service_id: serviceId,
             is_enabled: true,
-            enabled_by: (await supabase.auth.getUser()).data.user?.id
+            enabled_by: currentUser.data.user?.id
           });
 
         if (error) throw error;
       } else {
-        // Disable service for user
         const { error } = await supabase
           .from('user_services')
           .delete()
@@ -151,12 +152,12 @@ export function ServicesManagement() {
 
   const enableAllServicesForUser = useMutation({
     mutationFn: async (userId: string) => {
-      const currentUser = (await supabase.auth.getUser()).data.user;
+      const currentUser = await supabase.auth.getUser();
       const servicesToInsert = services.filter(s => s.is_active).map(service => ({
         user_id: userId,
         service_id: service.id,
         is_enabled: true,
-        enabled_by: currentUser?.id
+        enabled_by: currentUser.data.user?.id
       }));
 
       const { error } = await supabase
@@ -184,7 +185,7 @@ export function ServicesManagement() {
 
   const filteredUsers = users.filter(user => 
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
+    `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (servicesLoading || usersLoading || userServicesLoading) {
@@ -248,7 +249,6 @@ export function ServicesManagement() {
                 </TableHeader>
                 <TableBody>
                   {filteredUsers.map((user) => {
-                    const userServicesList = getUserServices(user.id);
                     return (
                       <TableRow key={user.id}>
                         <TableCell>

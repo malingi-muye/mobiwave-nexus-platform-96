@@ -79,14 +79,17 @@ const fetchUserServices = async (): Promise<UserService[]> => {
   
   // Transform the data to match our interface, handling potential join failures
   const transformedData = (data || []).map(item => {
-    const profiles = item.profiles;
     return {
       ...item,
-      user_profile: profiles && 
-                    profiles !== null && 
-                    typeof profiles === 'object' && 
-                    'email' in profiles 
-        ? profiles 
+      user_profile: item.profiles && 
+                    typeof item.profiles === 'object' && 
+                    item.profiles !== null &&
+                    'email' in item.profiles
+        ? {
+            email: item.profiles.email,
+            first_name: item.profiles.first_name || undefined,
+            last_name: item.profiles.last_name || undefined
+          }
         : null
     };
   });

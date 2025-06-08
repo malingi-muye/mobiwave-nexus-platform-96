@@ -1,5 +1,4 @@
 
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -83,18 +82,21 @@ const fetchUserServices = async (): Promise<UserService[]> => {
     // Extract profiles data safely with proper type checking
     const profilesData = item.profiles;
     
-    // Check if profilesData is a valid object with email property and is not null
+    // Check if profilesData has the expected structure
     if (profilesData !== null && 
         typeof profilesData === 'object' && 
         'email' in profilesData &&
-        typeof profilesData.email === 'string') {
+        typeof (profilesData as any).email === 'string') {
+      
+      // Type assertion after null check
+      const validProfile = profilesData as { email: string; first_name?: string; last_name?: string };
       
       return {
         ...item,
         user_profile: {
-          email: profilesData.email,
-          first_name: profilesData.first_name || undefined,
-          last_name: profilesData.last_name || undefined
+          email: validProfile.email,
+          first_name: validProfile.first_name || undefined,
+          last_name: validProfile.last_name || undefined
         }
       };
     }
@@ -406,4 +408,3 @@ export function ServicesManagement() {
     </div>
   );
 }
-

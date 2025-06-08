@@ -503,7 +503,6 @@ export type Database = {
       }
       profiles: {
         Row: {
-          account_type: Database["public"]["Enums"]["account_type"] | null
           company: string | null
           created_at: string | null
           email: string
@@ -513,11 +512,9 @@ export type Database = {
           last_name: string | null
           parent_account_id: string | null
           phone: string | null
-          role: Database["public"]["Enums"]["user_role"] | null
           updated_at: string | null
         }
         Insert: {
-          account_type?: Database["public"]["Enums"]["account_type"] | null
           company?: string | null
           created_at?: string | null
           email: string
@@ -527,11 +524,9 @@ export type Database = {
           last_name?: string | null
           parent_account_id?: string | null
           phone?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string | null
         }
         Update: {
-          account_type?: Database["public"]["Enums"]["account_type"] | null
           company?: string | null
           created_at?: string | null
           email?: string
@@ -541,7 +536,6 @@ export type Database = {
           last_name?: string | null
           parent_account_id?: string | null
           phone?: string | null
-          role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string | null
         }
         Relationships: [
@@ -757,7 +751,7 @@ export type Database = {
       }
     }
     Enums: {
-      account_type: "main" | "sub_account" | "reseller_client"
+      account_type: "main" | "sub"
       app_role: "super_admin" | "admin" | "manager" | "user" | "readonly"
       campaign_status: "draft" | "active" | "paused" | "completed" | "failed"
       message_status: "pending" | "sent" | "delivered" | "failed" | "bounced"
@@ -877,7 +871,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      account_type: ["main", "sub_account", "reseller_client"],
+      account_type: ["main", "sub"],
       app_role: ["super_admin", "admin", "manager", "user", "readonly"],
       campaign_status: ["draft", "active", "paused", "completed", "failed"],
       message_status: ["pending", "sent", "delivered", "failed", "bounced"],

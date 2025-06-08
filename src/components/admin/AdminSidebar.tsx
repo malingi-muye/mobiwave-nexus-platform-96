@@ -17,13 +17,15 @@ import {
   BarChart,
   TrendingUp,
   MessageSquare,
-  Activity
+  Activity,
+  Layers
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const adminSidebarItems = [
   { title: "Admin Dashboard", icon: Shield, badge: null, path: "/admin", color: "bg-red-500" },
   { title: "User Management", icon: Users, badge: null, path: "/admin/users", color: "bg-blue-500" },
+  { title: "Services Management", icon: Layers, badge: null, path: "/admin/services", color: "bg-purple-500" },
   { title: "System Settings", icon: Settings, badge: null, path: "/admin/settings", color: "bg-gray-500" },
   { title: "Database Admin", icon: Database, badge: null, path: "/admin/database", color: "bg-green-500" },
   { title: "Analytics", icon: BarChart, badge: null, path: "/admin/analytics", color: "bg-purple-500" },

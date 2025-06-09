@@ -56,29 +56,13 @@ export function SignupForm({ isLoading, setIsLoading }: SignupFormProps) {
           return;
         }
 
-        // If session exists (auto-confirmed), get user role and redirect
+        // If session exists (auto-confirmed), show success and let AuthProvider handle routing
         if (data.session) {
-          console.log('User auto-confirmed, fetching profile');
-          
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', data.user.id)
-            .single();
-
-          const userRole = profile?.role || 'user';
-          console.log('Signup user role:', userRole);
-          
+          console.log('User auto-confirmed, session created');
           toast.success('Account created successfully! Welcome!');
           
-          // Navigate based on role
-          if (userRole === 'admin') {
-            console.log('Redirecting new admin to admin dashboard');
-            navigate("/admin", { replace: true });
-          } else {
-            console.log('Redirecting new user to client dashboard');
-            navigate("/dashboard", { replace: true });
-          }
+          // The AuthProvider will handle the redirect based on role
+          // No need to manually redirect here as the AuthPage useEffect will handle it
         }
       }
     } catch (error) {

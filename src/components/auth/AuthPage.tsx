@@ -21,13 +21,16 @@ export const AuthPage = () => {
     if (!authLoading && user && userRole) {
       console.log('Redirecting user based on role:', userRole);
       
-      if (userRole === 'admin') {
-        console.log('Redirecting admin to /admin');
-        navigate("/admin", { replace: true });
-      } else {
-        console.log('Redirecting user to /dashboard');
-        navigate("/dashboard", { replace: true });
-      }
+      // Add a small delay to ensure state is fully updated
+      setTimeout(() => {
+        if (userRole === 'admin') {
+          console.log('Redirecting admin to /admin');
+          navigate("/admin", { replace: true });
+        } else {
+          console.log('Redirecting user to /dashboard');
+          navigate("/dashboard", { replace: true });
+        }
+      }, 100);
     }
   }, [user, userRole, authLoading, navigate]);
 
@@ -41,7 +44,7 @@ export const AuthPage = () => {
   }
 
   // Don't render the auth form if user is already authenticated (prevents flash)
-  if (user) {
+  if (user && userRole) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>

@@ -35,28 +35,11 @@ export function LoginForm({ isLoading, setIsLoading }: LoginFormProps) {
       }
 
       if (data.user) {
-        console.log('Login successful, checking user role');
-        
-        // Get user role to determine redirect
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .single();
-
-        const userRole = profile?.role || 'user';
-        console.log('User role after login:', userRole);
-        
+        console.log('Login successful, user:', data.user.email);
         toast.success('Welcome back!');
-
-        // Navigate based on role
-        if (userRole === 'admin') {
-          console.log('Navigating admin to /admin');
-          navigate("/admin", { replace: true });
-        } else {
-          console.log('Navigating user to /dashboard');
-          navigate("/dashboard", { replace: true });
-        }
+        
+        // The AuthProvider will handle the redirect based on role
+        // No need to manually redirect here as the AuthPage useEffect will handle it
       }
     } catch (error) {
       console.error('Login error:', error);

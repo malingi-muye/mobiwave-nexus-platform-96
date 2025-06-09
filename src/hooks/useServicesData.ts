@@ -70,22 +70,27 @@ const fetchUserServices = async (): Promise<UserService[]> => {
   
   // Transform the data to match our interface with proper null checking
   const transformedData = (data || []).map(item => {
-    // Safe access to profiles data with null checks
+    // Safe access to profiles data with comprehensive null checks
     const profilesData = item.profiles;
     
-    // Validate that profilesData exists and has the required email field
+    // Check if profilesData exists, is an object, and has email
     if (profilesData && 
         typeof profilesData === 'object' && 
+        profilesData !== null &&
         'email' in profilesData &&
-        profilesData.email &&
-        typeof profilesData.email === 'string') {
+        typeof profilesData.email === 'string' &&
+        profilesData.email.length > 0) {
       
       return {
         ...item,
         user_profile: {
           email: profilesData.email,
-          first_name: profilesData.first_name || undefined,
-          last_name: profilesData.last_name || undefined
+          first_name: ('first_name' in profilesData && typeof profilesData.first_name === 'string') 
+            ? profilesData.first_name 
+            : undefined,
+          last_name: ('last_name' in profilesData && typeof profilesData.last_name === 'string') 
+            ? profilesData.last_name 
+            : undefined
         }
       };
     }

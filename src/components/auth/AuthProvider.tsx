@@ -37,14 +37,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log('Fetching role for user:', userId);
       
-      // Try to get role from the profiles table
+      // Get role from the profiles table
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', userId)
         .single();
 
-      if (!profileError && profile?.role) {
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+        return 'user';
+      }
+
+      if (profile?.role) {
         console.log('User role from profiles:', profile.role);
         return profile.role;
       }
@@ -75,6 +80,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             const role = await fetchUserRole(session.user.id);
             if (mounted) {
               setUserRole(role);
+              console.log('Set user role to:', role);
             }
           } catch (error) {
             console.error('Error fetching role during auth change:', error);
@@ -103,28 +109,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         if (error) {
           console.error('Error getting session:', error);
-        } else {
-          console.log('Initial session check:', session?.user?.email);
-          setSession(session);
-          setUser(session?.user ?? null);
-          
-          if (session?.user) {
-            try {
-              const role = await fetchUserRole(session.user.id);
-              if (mounted) {
-                setUserRole(role);
-              }
-            } catch (error) {
-              console.error('Error fetching role during session check:', error);
-              if (mounted) {
-                setUserRole('user');
-              }
+          setIsLoading(false);
+          return;
+        }
+
+        console.log('Initial session check:', session?.user?.email);
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          try {
+            const role = await fetchUserRole(session.user.id);
+            if (mounted) {
+              setUserRole(role);
+              console.log('Initial role set to:', role);
+            }
+          } catch (error) {
+            console.error('Error fetching role during session check:', error);
+            if (mounted) {
+              setUserRole('user');
             }
           }
         }
+        
+        if (mounted) {
+          setIsLoading(false);
+        }
       } catch (error) {
         console.error('Session check failed:', error);
-      } finally {
         if (mounted) {
           setIsLoading(false);
         }

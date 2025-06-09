@@ -78,7 +78,6 @@ export function UserServiceGrid({
                         onToggleUserService(user.id, service.id, checked)
                       }
                       disabled={!service.is_active}
-                      size="sm"
                     />
                   </div>
                 );

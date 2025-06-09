@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -76,6 +75,7 @@ const fetchUserServices = async (): Promise<UserService[]> => {
     // Check if profilesData exists and has required properties
     if (profilesData && 
         typeof profilesData === 'object' && 
+        profilesData !== null &&
         'email' in profilesData &&
         typeof profilesData.email === 'string' &&
         profilesData.email.length > 0) {

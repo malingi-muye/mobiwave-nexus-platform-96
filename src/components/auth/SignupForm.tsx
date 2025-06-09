@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import { toast } from 'sonner';
 
 interface SignupFormProps {
@@ -18,6 +19,7 @@ export function SignupForm({ isLoading, setIsLoading }: SignupFormProps) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,13 +44,45 @@ export function SignupForm({ isLoading, setIsLoading }: SignupFormProps) {
       }
 
       if (data.user) {
-        toast.success('Account created successfully! You can now log in.');
-        setFirstName("");
-        setLastName("");
-        setEmail("");
-        setPassword("");
+        console.log('Signup successful for:', data.user.email);
+        
+        // Check if email confirmation is required
+        if (!data.session) {
+          toast.success('Please check your email to confirm your account before signing in.');
+          setFirstName("");
+          setLastName("");
+          setEmail("");
+          setPassword("");
+          return;
+        }
+
+        // If session exists (auto-confirmed), get user role and redirect
+        if (data.session) {
+          console.log('User auto-confirmed, fetching profile');
+          
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', data.user.id)
+            .single();
+
+          const userRole = (profile as any)?.role || 'user';
+          console.log('Signup user role:', userRole);
+          
+          toast.success('Account created successfully! Welcome!');
+          
+          // Navigate based on role
+          if (userRole === 'admin') {
+            console.log('Redirecting new admin to admin dashboard');
+            navigate("/admin", { replace: true });
+          } else {
+            console.log('Redirecting new user to client dashboard');
+            navigate("/dashboard", { replace: true });
+          }
+        }
       }
     } catch (error) {
+      console.error('Signup error:', error);
       toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);

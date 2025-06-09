@@ -1,208 +1,25 @@
+
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Users, Search, Crown } from 'lucide-react';
-
-interface Service {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  route: string;
-  is_active: boolean;
-  is_premium: boolean;
-}
-
-interface UserService {
-  id: string;
-  user_id: string;
-  service_id: string;
-  is_enabled: boolean;
-  services: Service;
-  user_profile?: {
-    email: string;
-    first_name?: string;
-    last_name?: string;
-  } | null;
-}
-
-interface User {
-  id: string;
-  email: string;
-  first_name?: string;
-  last_name?: string;
-}
-
-const fetchServices = async (): Promise<Service[]> => {
-  const { data, error } = await supabase
-    .from('services')
-    .select('*')
-    .order('name');
-
-  if (error) throw error;
-  return data || [];
-};
-
-const fetchUsers = async (): Promise<User[]> => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id, email, first_name, last_name')
-    .order('email');
-
-  if (error) throw error;
-  return data || [];
-};
-
-const fetchUserServices = async (): Promise<UserService[]> => {
-  const { data, error } = await supabase
-    .from('user_services')
-    .select(`
-      *,
-      services(*),
-      profiles!user_services_user_id_fkey(email, first_name, last_name)
-    `)
-    .order('user_id');
-
-  if (error) {
-    console.error('Error fetching user services:', error);
-    return [];
-  }
-  
-  // Transform the data to match our interface, handling potential join failures
-  const transformedData = (data || []).map(item => {
-    // Extract profiles data safely with proper type checking
-    const profilesData = item.profiles;
-    
-    // Check if profilesData has the expected structure and is not null
-    if (profilesData && 
-        typeof profilesData === 'object' && 
-        'email' in profilesData) {
-      
-      // Type assertion after null and structure check
-      const validProfile = profilesData as { email: string; first_name?: string; last_name?: string };
-      
-      return {
-        ...item,
-        user_profile: {
-          email: validProfile.email,
-          first_name: validProfile.first_name || undefined,
-          last_name: validProfile.last_name || undefined
-        }
-      };
-    }
-
-    // If no valid profile data, return with null user_profile
-    return {
-      ...item,
-      user_profile: null
-    };
-  });
-
-  return transformedData as UserService[];
-};
+import { Settings, Users, Search } from 'lucide-react';
+import { useServicesData } from '@/hooks/useServicesData';
+import { UserServiceRow } from './services/UserServiceRow';
+import { GlobalServiceRow } from './services/GlobalServiceRow';
 
 export function ServicesManagement() {
   const [searchTerm, setSearchTerm] = useState('');
-  const queryClient = useQueryClient();
-
-  const { data: services = [], isLoading: servicesLoading } = useQuery({
-    queryKey: ['admin-services'],
-    queryFn: fetchServices
-  });
-
-  const { data: users = [], isLoading: usersLoading } = useQuery({
-    queryKey: ['admin-users-simple'],
-    queryFn: fetchUsers
-  });
-
-  const { data: userServices = [], isLoading: userServicesLoading } = useQuery({
-    queryKey: ['admin-user-services'],
-    queryFn: fetchUserServices
-  });
-
-  const updateServiceStatus = useMutation({
-    mutationFn: async ({ serviceId, isActive }: { serviceId: string; isActive: boolean }) => {
-      const { error } = await supabase
-        .from('services')
-        .update({ is_active: isActive })
-        .eq('id', serviceId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-services'] });
-      toast.success('Service status updated');
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to update service: ${error.message}`);
-    }
-  });
-
-  const toggleUserService = useMutation({
-    mutationFn: async ({ userId, serviceId, enabled }: { userId: string; serviceId: string; enabled: boolean }) => {
-      if (enabled) {
-        const currentUser = await supabase.auth.getUser();
-        const { error } = await supabase
-          .from('user_services')
-          .upsert({
-            user_id: userId,
-            service_id: serviceId,
-            is_enabled: true,
-            enabled_by: currentUser.data.user?.id
-          });
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('user_services')
-          .delete()
-          .eq('user_id', userId)
-          .eq('service_id', serviceId);
-
-        if (error) throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-user-services'] });
-      toast.success('User service updated');
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to update user service: ${error.message}`);
-    }
-  });
-
-  const enableAllServicesForUser = useMutation({
-    mutationFn: async (userId: string) => {
-      const currentUser = await supabase.auth.getUser();
-      const servicesToInsert = services.filter(s => s.is_active).map(service => ({
-        user_id: userId,
-        service_id: service.id,
-        is_enabled: true,
-        enabled_by: currentUser.data.user?.id
-      }));
-
-      const { error } = await supabase
-        .from('user_services')
-        .upsert(servicesToInsert, { onConflict: 'user_id,service_id' });
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-user-services'] });
-      toast.success('All services enabled for user');
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to enable services: ${error.message}`);
-    }
-  });
+  const {
+    services,
+    users,
+    userServices,
+    isLoading,
+    updateServiceStatus,
+    toggleUserService,
+    enableAllServicesForUser
+  } = useServicesData();
 
   const getUserServices = (userId: string) => {
     return userServices.filter(us => us.user_id === userId);
@@ -217,7 +34,7 @@ export function ServicesManagement() {
     `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (servicesLoading || usersLoading || userServicesLoading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -277,61 +94,21 @@ export function ServicesManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredUsers.map((user) => {
-                    return (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">
-                              {user.first_name || user.last_name 
-                                ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
-                                : user.email.split('@')[0]
-                              }
-                            </div>
-                            <div className="text-sm text-gray-500">{user.email}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-2">
-                            {services.map((service) => {
-                              const isEnabled = isServiceEnabledForUser(user.id, service.id);
-                              return (
-                                <div key={service.id} className="flex items-center gap-2">
-                                  <Switch
-                                    checked={isEnabled}
-                                    onCheckedChange={(checked) => 
-                                      toggleUserService.mutate({
-                                        userId: user.id,
-                                        serviceId: service.id,
-                                        enabled: checked
-                                      })
-                                    }
-                                    disabled={!service.is_active}
-                                  />
-                                  <Badge
-                                    variant={isEnabled ? "default" : "secondary"}
-                                    className={`text-xs ${service.is_premium ? 'bg-yellow-100 text-yellow-800' : ''}`}
-                                  >
-                                    {service.name}
-                                    {service.is_premium && <Crown className="w-3 h-3 ml-1" />}
-                                  </Badge>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            size="sm"
-                            onClick={() => enableAllServicesForUser.mutate(user.id)}
-                            disabled={enableAllServicesForUser.isPending}
-                          >
-                            Enable All
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
+                  {filteredUsers.map((user) => (
+                    <UserServiceRow
+                      key={user.id}
+                      user={user}
+                      services={services}
+                      isServiceEnabledForUser={isServiceEnabledForUser}
+                      onToggleUserService={(userId, serviceId, enabled) =>
+                        toggleUserService.mutate({ userId, serviceId, enabled })
+                      }
+                      onEnableAllServices={(userId) =>
+                        enableAllServicesForUser.mutate(userId)
+                      }
+                      isEnablingAll={enableAllServicesForUser.isPending}
+                    />
+                  ))}
                 </TableBody>
               </Table>
             </CardContent>
@@ -359,43 +136,13 @@ export function ServicesManagement() {
                 </TableHeader>
                 <TableBody>
                   {services.map((service) => (
-                    <TableRow key={service.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium flex items-center gap-2">
-                            {service.name}
-                            {service.is_premium && <Crown className="w-4 h-4 text-yellow-600" />}
-                          </div>
-                          <div className="text-sm text-gray-500">{service.description}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <code className="text-sm bg-gray-100 px-2 py-1 rounded">
-                          {service.route}
-                        </code>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={service.is_premium ? "default" : "secondary"}>
-                          {service.is_premium ? 'Premium' : 'Standard'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={service.is_active ? "default" : "destructive"}>
-                          {service.is_active ? 'Active' : 'Inactive'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Switch
-                          checked={service.is_active}
-                          onCheckedChange={(checked) => 
-                            updateServiceStatus.mutate({
-                              serviceId: service.id,
-                              isActive: checked
-                            })
-                          }
-                        />
-                      </TableCell>
-                    </TableRow>
+                    <GlobalServiceRow
+                      key={service.id}
+                      service={service}
+                      onUpdateServiceStatus={(serviceId, isActive) =>
+                        updateServiceStatus.mutate({ serviceId, isActive })
+                      }
+                    />
                   ))}
                 </TableBody>
               </Table>

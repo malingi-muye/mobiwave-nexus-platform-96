@@ -37,24 +37,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log('Fetching role for user:', userId);
       
-      // Get role from the profiles table
+      // First try to get role from profiles table
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', userId)
         .single();
 
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
-        return 'user';
-      }
-
-      if (profile?.role) {
+      if (!profileError && profile?.role) {
         console.log('User role from profiles:', profile.role);
         return profile.role;
       }
 
-      console.log('No role found in profiles, defaulting to user');
+      // If not found in profiles, try the database function
+      const { data: roleData, error: roleError } = await supabase
+        .rpc('get_current_user_role');
+
+      if (!roleError && roleData) {
+        console.log('User role from function:', roleData);
+        return roleData;
+      }
+
+      console.log('No role found, defaulting to user');
       return 'user';
     } catch (error) {
       console.error('Error fetching user role:', error);

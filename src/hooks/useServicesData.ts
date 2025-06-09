@@ -73,10 +73,9 @@ const fetchUserServices = async (): Promise<UserService[]> => {
     // Safe access to profiles data with comprehensive null checks
     const profilesData = item.profiles;
     
-    // Check if profilesData exists, is an object, and has email
+    // Check if profilesData exists and has required properties
     if (profilesData && 
         typeof profilesData === 'object' && 
-        profilesData !== null &&
         'email' in profilesData &&
         typeof profilesData.email === 'string' &&
         profilesData.email.length > 0) {

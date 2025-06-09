@@ -14,7 +14,9 @@ export const RoleBasedRoute: React.FC<RoleBasedRouteProps> = ({
   allowedRoles = [],
   redirectTo = '/dashboard'
 }) => {
-  const { user, isLoading } = useAuth();
+  const { user, userRole, isLoading } = useAuth();
+
+  console.log('RoleBasedRoute - User role:', userRole, 'Allowed roles:', allowedRoles);
 
   if (isLoading) {
     return (
@@ -28,11 +30,9 @@ export const RoleBasedRoute: React.FC<RoleBasedRouteProps> = ({
     return <Navigate to="/auth" replace />;
   }
 
-  // For now, we'll assume all authenticated users can access both dashboards
-  // In a real app, you'd check user.user_metadata.role or a separate roles table
-  const userRole = user.user_metadata?.role || 'user';
-
-  if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
+  // Check if user has one of the allowed roles
+  if (allowedRoles.length > 0 && userRole && !allowedRoles.includes(userRole)) {
+    console.log('Access denied. User role:', userRole, 'Required roles:', allowedRoles);
     return <Navigate to={redirectTo} replace />;
   }
 

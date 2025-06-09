@@ -117,59 +117,59 @@ function App() {
                 </ProtectedRoute>
               } />
 
-              {/* Admin protected routes */}
+              {/* Admin protected routes - Allow super_admin, admin, and manager */}
               <Route path="/admin" element={
-                <RoleBasedRoute allowedRoles={['admin']}>
+                <RoleBasedRoute allowedRoles={['super_admin', 'admin', 'manager']}>
                   <AdminDashboard />
                 </RoleBasedRoute>
               } />
               <Route path="/admin/users" element={
-                <RoleBasedRoute allowedRoles={['admin']}>
+                <RoleBasedRoute allowedRoles={['super_admin', 'admin', 'manager']}>
                   <UserManagement />
                 </RoleBasedRoute>
               } />
               <Route path="/admin/services" element={
-                <RoleBasedRoute allowedRoles={['admin']}>
+                <RoleBasedRoute allowedRoles={['super_admin', 'admin', 'manager']}>
                   <ServicesManagement />
                 </RoleBasedRoute>
               } />
               <Route path="/admin/settings" element={
-                <RoleBasedRoute allowedRoles={['admin']}>
+                <RoleBasedRoute allowedRoles={['super_admin', 'admin']}>
                   <SystemSettings />
                 </RoleBasedRoute>
               } />
               <Route path="/admin/analytics" element={
-                <RoleBasedRoute allowedRoles={['admin']}>
+                <RoleBasedRoute allowedRoles={['super_admin', 'admin', 'manager']}>
                   <Analytics />
                 </RoleBasedRoute>
               } />
               <Route path="/admin/logs" element={
-                <RoleBasedRoute allowedRoles={['admin']}>
+                <RoleBasedRoute allowedRoles={['super_admin', 'admin']}>
                   <SystemLogs />
                 </RoleBasedRoute>
               } />
               <Route path="/admin/security" element={
-                <RoleBasedRoute allowedRoles={['admin']}>
+                <RoleBasedRoute allowedRoles={['super_admin', 'admin']}>
                   <SecurityConfig />
                 </RoleBasedRoute>
               } />
               <Route path="/admin/monitoring" element={
-                <RoleBasedRoute allowedRoles={['admin']}>
+                <RoleBasedRoute allowedRoles={['super_admin', 'admin', 'manager']}>
                   <Monitoring />
                 </RoleBasedRoute>
               } />
               <Route path="/admin/database" element={
-                <RoleBasedRoute allowedRoles={['admin']}>
+                <RoleBasedRoute allowedRoles={['super_admin']}>
                   <DatabaseAdmin />
                 </RoleBasedRoute>
               } />
               <Route path="/admin/revenue" element={
-                <RoleBasedRoute allowedRoles={['admin']}>
+                <RoleBasedRoute allowedRoles={['super_admin', 'admin', 'manager']}>
                   <RevenueReports />
                 </RoleBasedRoute>
               } />
               <Route path="/admin/projects" element={
-                <RoleBasedRoute allowedRoles={['admin']}>
+                <RoleBasedRoute allowedRoles={['super_admin', 'admin', 'manager']}>
                   <ProjectProgress />
                 </RoleBasedRoute>
               } />

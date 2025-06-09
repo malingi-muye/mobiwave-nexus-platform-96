@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,10 +44,21 @@ export function LoginForm({ isLoading, setIsLoading }: LoginFormProps) {
         const userRole = (profile as any)?.role || 'user';
         toast.success('Welcome back!');
 
-        if (userRole === 'admin') {
-          navigate("/admin");
-        } else {
-          navigate("/dashboard");
+        // Handle routing for all roles
+        switch (userRole) {
+          case 'super_admin':
+          case 'admin':
+            navigate("/admin");
+            break;
+          case 'manager':
+            // Managers could go to admin dashboard or a specific manager dashboard
+            // For now, routing to admin dashboard - can be customized later
+            navigate("/admin");
+            break;
+          case 'user':
+          default:
+            navigate("/dashboard");
+            break;
         }
       }
     } catch (error) {

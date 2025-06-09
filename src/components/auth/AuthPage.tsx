@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,10 +15,17 @@ export const AuthPage = () => {
 
   useEffect(() => {
     if (!authLoading && user && userRole) {
-      if (userRole === 'admin') {
-        navigate("/admin");
-      } else {
-        navigate("/dashboard");
+      // Handle routing for all roles
+      switch (userRole) {
+        case 'super_admin':
+        case 'admin':
+        case 'manager':
+          navigate("/admin");
+          break;
+        case 'user':
+        default:
+          navigate("/dashboard");
+          break;
       }
     }
   }, [user, userRole, authLoading, navigate]);

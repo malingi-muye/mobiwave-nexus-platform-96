@@ -35,14 +35,23 @@ export function LoginForm({ isLoading, setIsLoading }: LoginFormProps) {
       }
 
       if (data.user) {
-        console.log('Login successful, user:', data.user.email);
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+
+        // Safely access role with fallback
+        const userRole = (profile as any)?.role || 'user';
         toast.success('Welcome back!');
-        
-        // The AuthProvider will handle the redirect based on role
-        // No need to manually redirect here as the AuthPage useEffect will handle it
+
+        if (userRole === 'admin') {
+          navigate("/admin");
+        } else {
+          navigate("/dashboard");
+        }
       }
     } catch (error) {
-      console.error('Login error:', error);
       toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);

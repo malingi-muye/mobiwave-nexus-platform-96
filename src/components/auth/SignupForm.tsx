@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 import { toast } from 'sonner';
 
 interface SignupFormProps {
@@ -19,7 +18,6 @@ export function SignupForm({ isLoading, setIsLoading }: SignupFormProps) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,29 +42,13 @@ export function SignupForm({ isLoading, setIsLoading }: SignupFormProps) {
       }
 
       if (data.user) {
-        console.log('Signup successful for:', data.user.email);
-        
-        // Check if email confirmation is required
-        if (!data.session) {
-          toast.success('Please check your email to confirm your account before signing in.');
-          setFirstName("");
-          setLastName("");
-          setEmail("");
-          setPassword("");
-          return;
-        }
-
-        // If session exists (auto-confirmed), show success and let AuthProvider handle routing
-        if (data.session) {
-          console.log('User auto-confirmed, session created');
-          toast.success('Account created successfully! Welcome!');
-          
-          // The AuthProvider will handle the redirect based on role
-          // No need to manually redirect here as the AuthPage useEffect will handle it
-        }
+        toast.success('Account created successfully! You can now log in.');
+        setFirstName("");
+        setLastName("");
+        setEmail("");
+        setPassword("");
       }
     } catch (error) {
-      console.error('Signup error:', error);
       toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);

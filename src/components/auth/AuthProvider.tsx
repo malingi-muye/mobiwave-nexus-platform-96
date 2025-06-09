@@ -33,126 +33,89 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
 
-  const fetchUserRole = async (userId: string): Promise<string> => {
+  const fetchUserRole = async (userId: string) => {
     try {
-      console.log('Fetching role for user:', userId);
-      
-      // First try to get role from profiles table
+      // First try to get role from the new roles system
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select(`
+          roles (
+            name
+          )
+        `)
+        .eq('user_id', userId)
+        .order('assigned_at', { ascending: false })
+        .limit(1);
+
+      if (!rolesError && userRoles && userRoles.length > 0) {
+        return (userRoles[0] as any).roles.name;
+      }
+
+      // Fallback to profile role with safe access
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('role')
+        .select('*')
         .eq('id', userId)
         .single();
 
-      if (!profileError && profile?.role) {
-        console.log('User role from profiles:', profile.role);
-        return profile.role;
+      if (!profileError && profile) {
+        // Safely access role property with fallback
+        return (profile as any).role || 'user';
       }
 
-      // If not found in profiles, try the database function
-      const { data: roleData, error: roleError } = await supabase
-        .rpc('get_current_user_role');
-
-      if (!roleError && roleData) {
-        console.log('User role from function:', roleData);
-        return roleData;
-      }
-
-      console.log('No role found, defaulting to user');
-      return 'user';
+      return 'user'; // Default role
     } catch (error) {
-      console.error('Error fetching user role:', error);
+      console.error('Role fetch failed:', error);
       return 'user';
     }
   };
 
   useEffect(() => {
-    let mounted = true;
-
-    // Set up auth state listener
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state change:', event, session?.user?.email);
-        
-        if (!mounted) return;
-
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          try {
+          // Use setTimeout to avoid potential deadlocks
+          setTimeout(async () => {
             const role = await fetchUserRole(session.user.id);
-            if (mounted) {
-              setUserRole(role);
-              console.log('Set user role to:', role);
-            }
-          } catch (error) {
-            console.error('Error fetching role during auth change:', error);
-            if (mounted) {
-              setUserRole('user');
-            }
-          }
+            setUserRole(role);
+          }, 0);
         } else {
-          if (mounted) {
-            setUserRole(null);
-          }
+          setUserRole(null);
         }
         
-        if (mounted) {
-          setIsLoading(false);
-        }
+        setIsLoading(false);
       }
     );
 
-    // Check for existing session
+    // THEN check for existing session
     const getSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (!mounted) return;
-
         if (error) {
           console.error('Error getting session:', error);
-          setIsLoading(false);
-          return;
-        }
-
-        console.log('Initial session check:', session?.user?.email);
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          try {
+        } else {
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          if (session?.user) {
             const role = await fetchUserRole(session.user.id);
-            if (mounted) {
-              setUserRole(role);
-              console.log('Initial role set to:', role);
-            }
-          } catch (error) {
-            console.error('Error fetching role during session check:', error);
-            if (mounted) {
-              setUserRole('user');
-            }
+            setUserRole(role);
           }
-        }
-        
-        if (mounted) {
-          setIsLoading(false);
         }
       } catch (error) {
         console.error('Session check failed:', error);
-        if (mounted) {
-          setIsLoading(false);
-        }
+      } finally {
+        setIsLoading(false);
       }
     };
 
     getSession();
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -165,7 +128,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (error) throw error;
 
-      console.log('Login successful:', data.user?.email);
+      setSession(data.session);
+      setUser(data.user);
+      
+      if (data.user) {
+        const role = await fetchUserRole(data.user.id);
+        setUserRole(role);
+      }
     } catch (error) {
       console.error('Login failed:', error);
       throw error;

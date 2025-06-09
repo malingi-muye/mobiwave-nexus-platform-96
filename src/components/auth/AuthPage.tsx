@@ -15,42 +15,14 @@ export const AuthPage = () => {
   const { user, userRole, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
-    console.log('AuthPage effect - user:', user?.email, 'role:', userRole, 'loading:', authLoading);
-    
-    // Only redirect if we have both user and role, and auth is not loading
     if (!authLoading && user && userRole) {
-      console.log('Redirecting user based on role:', userRole);
-      
-      // Add a small delay to ensure state is fully updated
-      setTimeout(() => {
-        if (userRole === 'admin') {
-          console.log('Redirecting admin to /admin');
-          navigate("/admin", { replace: true });
-        } else {
-          console.log('Redirecting user to /dashboard');
-          navigate("/dashboard", { replace: true });
-        }
-      }, 100);
+      if (userRole === 'admin') {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
     }
   }, [user, userRole, authLoading, navigate]);
-
-  // Show loading spinner while auth is loading
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  // Don't render the auth form if user is already authenticated (prevents flash)
-  if (user && userRole) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">

@@ -68,31 +68,29 @@ const fetchUserServices = async (): Promise<UserService[]> => {
     return [];
   }
   
-  // Transform the data to match our interface, handling potential join failures
+  // Transform the data to match our interface with proper null checking
   const transformedData = (data || []).map(item => {
-    // Extract profiles data safely with proper type checking
+    // Safe access to profiles data with null checks
     const profilesData = item.profiles;
     
-    // Check if profilesData exists and has the expected structure
+    // Validate that profilesData exists and has the required email field
     if (profilesData && 
         typeof profilesData === 'object' && 
         'email' in profilesData &&
+        profilesData.email &&
         typeof profilesData.email === 'string') {
-      
-      // Safe type assertion after thorough validation
-      const validProfile = profilesData as { email: string; first_name?: string | null; last_name?: string | null };
       
       return {
         ...item,
         user_profile: {
-          email: validProfile.email,
-          first_name: validProfile.first_name || undefined,
-          last_name: validProfile.last_name || undefined
+          email: profilesData.email,
+          first_name: profilesData.first_name || undefined,
+          last_name: profilesData.last_name || undefined
         }
       };
     }
 
-    // If no valid profile data, return with null user_profile
+    // Return with null user_profile if validation fails
     return {
       ...item,
       user_profile: null

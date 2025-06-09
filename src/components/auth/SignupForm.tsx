@@ -60,13 +60,13 @@ export function SignupForm({ isLoading, setIsLoading }: SignupFormProps) {
         if (data.session) {
           console.log('User auto-confirmed, fetching profile');
           
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('*')
+            .select('role')
             .eq('id', data.user.id)
             .single();
 
-          const userRole = (profile as any)?.role || 'user';
+          const userRole = profile?.role || 'user';
           console.log('Signup user role:', userRole);
           
           toast.success('Account created successfully! Welcome!');

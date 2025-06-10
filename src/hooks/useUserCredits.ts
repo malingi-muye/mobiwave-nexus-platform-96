@@ -7,7 +7,6 @@ interface UserCredits {
   id: string;
   user_id: string;
   credits_remaining: number;
-  credits_used: number;
   total_purchased: number;
   last_updated: string;
 }
@@ -38,7 +37,6 @@ export const useUserCredits = () => {
           .insert({
             user_id: user.id,
             credits_remaining: 10.00,
-            credits_used: 0,
             credits_purchased: 10.00
           })
           .select()
@@ -51,7 +49,6 @@ export const useUserCredits = () => {
           id: newCredits.id,
           user_id: newCredits.user_id,
           credits_remaining: newCredits.credits_remaining || 0,
-          credits_used: newCredits.credits_used,
           total_purchased: newCredits.credits_purchased,
           last_updated: newCredits.updated_at
         };
@@ -62,7 +59,6 @@ export const useUserCredits = () => {
         id: data.id,
         user_id: data.user_id,
         credits_remaining: data.credits_remaining || 0,
-        credits_used: data.credits_used,
         total_purchased: data.credits_purchased,
         last_updated: data.updated_at
       };
@@ -91,7 +87,6 @@ export const useUserCredits = () => {
         id: data.id,
         user_id: data.user_id,
         credits_remaining: data.credits_remaining || 0,
-        credits_used: data.credits_used,
         total_purchased: data.credits_purchased,
         last_updated: data.updated_at
       };

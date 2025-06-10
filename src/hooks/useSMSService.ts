@@ -26,13 +26,23 @@ export const useSMSService = () => {
     isLoading: realSMSService.isLoading,
     getDeliveryReport: async (messageId: string) => {
       try {
-        const { data: message } = await supabase
-          .from('message_history')
-          .select('*')
-          .eq('id', messageId)
-          .single();
+        // Since we don't have message_history table, check campaigns metadata
+        const { data: campaigns } = await supabase
+          .from('campaigns')
+          .select('metadata')
+          .neq('metadata', null);
 
-        return message;
+        // Search through campaign metadata for the message
+        for (const campaign of campaigns || []) {
+          const metadata = campaign.metadata as any;
+          const messages = metadata?.messages || [];
+          const message = messages.find((m: any) => m.provider_message_id === messageId);
+          if (message) {
+            return message;
+          }
+        }
+
+        return null;
       } catch (error) {
         console.error('Error getting delivery report:', error);
         throw error;

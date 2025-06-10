@@ -44,7 +44,7 @@ export const useRealSMSService = () => {
           const cost = 0.05; // Fixed cost per SMS
           totalCost += cost;
 
-          // For now, we'll store campaign metadata instead of using message_history table
+          // Store message data in campaign metadata
           const messageData = {
             user_id: user.id,
             campaign_id: campaignId,

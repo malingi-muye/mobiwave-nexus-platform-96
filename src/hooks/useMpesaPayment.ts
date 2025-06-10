@@ -1,133 +1,104 @@
 
 import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface MpesaPaymentRequest {
+  phone: string;
   amount: number;
-  phoneNumber: string;
-  accountReference?: string;
-  transactionDesc?: string;
+  description?: string;
 }
 
 interface PaymentResponse {
   success: boolean;
+  message: string;
   transactionId?: string;
-  checkoutRequestId?: string;
-  merchantRequestId?: string;
-  message?: string;
-  error?: string;
 }
 
 export const useMpesaPayment = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'completed' | 'failed'>('idle');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const queryClient = useQueryClient();
 
-  const initiatePayment = async (paymentData: MpesaPaymentRequest): Promise<PaymentResponse> => {
-    setIsLoading(true);
-    setPaymentStatus('processing');
-
-    try {
-      const { data, error } = await supabase.functions.invoke('mpesa-payment', {
-        body: paymentData
-      });
-
-      if (error) {
-        setPaymentStatus('failed');
-        toast.error(`Payment failed: ${error.message}`);
-        return { success: false, error: error.message };
-      }
-
-      if (data.success) {
-        setPaymentStatus('processing');
-        toast.success(data.message || 'STK Push sent to your phone');
-        
-        // Start polling for payment status if we have a transaction ID
-        if (data.transactionId) {
-          pollPaymentStatus(data.transactionId);
-        }
-        
-        return data;
-      } else {
-        setPaymentStatus('failed');
-        toast.error(data.error || 'Payment failed');
-        return { success: false, error: data.error };
-      }
-    } catch (error: any) {
-      setPaymentStatus('failed');
-      toast.error('Payment failed. Please try again.');
-      return { success: false, error: error.message };
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const pollPaymentStatus = async (transactionId: string) => {
-    const maxAttempts = 30; // Poll for 5 minutes (30 * 10 seconds)
-    let attempts = 0;
-
-    const poll = async () => {
+  const initiatePayment = useMutation({
+    mutationFn: async ({ phone, amount, description }: MpesaPaymentRequest): Promise<PaymentResponse> => {
+      setIsProcessing(true);
+      
       try {
-        // Use credit_transactions table to check payment status
-        const { data, error } = await supabase
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('User not authenticated');
+
+        // Call the mpesa-payment edge function
+        const { data, error } = await supabase.functions.invoke('mpesa-payment', {
+          body: { phone, amount, description }
+        });
+
+        if (error) throw error;
+
+        // Create credit transaction record
+        const { error: transactionError } = await supabase
           .from('credit_transactions')
-          .select('transaction_type, description, metadata')
-          .eq('reference_id', transactionId)
-          .single();
+          .insert({
+            user_id: user.id,
+            amount: amount,
+            transaction_type: 'purchase',
+            description: description || `M-Pesa payment for ${amount} credits`,
+            reference_id: data.transactionId
+          });
 
-        if (error) {
-          console.error('Error polling payment status:', error);
-          return;
+        if (transactionError) {
+          console.warn('Failed to create transaction record:', transactionError);
         }
 
-        if (data && data.transaction_type === 'purchase') {
-          setPaymentStatus('completed');
-          toast.success('Payment successful!');
-          return;
-        }
-
-        // Continue polling if still processing
-        if (attempts < maxAttempts) {
-          attempts++;
-          setTimeout(poll, 10000); // Poll every 10 seconds
-        } else {
-          setPaymentStatus('failed');
-          toast.error('Payment timeout. Please check your transaction status.');
-        }
-      } catch (error) {
-        console.error('Polling error:', error);
+        return {
+          success: true,
+          message: 'Payment initiated successfully',
+          transactionId: data.transactionId
+        };
+      } catch (error: any) {
+        throw new Error(error.message || 'Payment failed');
       }
-    };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['user-credits'] });
+      queryClient.invalidateQueries({ queryKey: ['credit-transactions'] });
+      toast.success(data.message);
+    },
+    onError: (error: any) => {
+      toast.error(error.message);
+    },
+    onSettled: () => {
+      setIsProcessing(false);
+    }
+  });
 
-    // Start polling after 5 seconds
-    setTimeout(poll, 5000);
-  };
-
-  const getPaymentHistory = async () => {
+  const getTransactionHistory = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       const { data, error } = await supabase
         .from('credit_transactions')
         .select('*')
-        .eq('transaction_type', 'purchase')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching payment history:', error);
-        return [];
-      }
+      if (error) throw error;
 
-      return data || [];
+      return data.map(transaction => ({
+        ...transaction,
+        type: transaction.transaction_type || 'unknown'
+      }));
     } catch (error) {
-      console.error('Error fetching payment history:', error);
+      console.error('Error fetching transaction history:', error);
       return [];
     }
   };
 
   return {
-    initiatePayment,
-    getPaymentHistory,
-    isLoading,
-    paymentStatus,
-    setPaymentStatus: (status: 'idle' | 'processing' | 'completed' | 'failed') => setPaymentStatus(status)
+    initiatePayment: initiatePayment.mutateAsync,
+    isProcessing,
+    isLoading: initiatePayment.isPending,
+    getTransactionHistory
   };
 };

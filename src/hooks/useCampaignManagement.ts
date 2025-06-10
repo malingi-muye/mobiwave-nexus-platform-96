@@ -71,19 +71,21 @@ export const useCampaignManagement = () => {
 
       if (campaignError) throw campaignError;
 
-      // Create campaign recipients with proper types
-      const recipients = campaignData.recipients.map(recipient => ({
-        campaign_id: campaign.id,
-        recipient_type: campaignData.type === 'sms' ? 'phone' : 'email',
-        recipient_value: recipient,
-        status: 'pending' as const
-      }));
+      // Note: Since campaign_recipients table doesn't exist, we'll store recipients in metadata
+      const { error: updateError } = await supabase
+        .from('campaigns')
+        .update({
+          metadata: {
+            recipients: campaignData.recipients.map(recipient => ({
+              recipient_type: campaignData.type === 'sms' ? 'phone' : 'email',
+              recipient_value: recipient,
+              status: 'pending'
+            }))
+          }
+        })
+        .eq('id', campaign.id);
 
-      const { error: recipientsError } = await supabase
-        .from('campaign_recipients')
-        .insert(recipients);
-
-      if (recipientsError) throw recipientsError;
+      if (updateError) throw updateError;
 
       return campaign;
     },
@@ -101,7 +103,7 @@ export const useCampaignManagement = () => {
       const updateData: any = { status, updated_at: new Date().toISOString() };
       
       if (status === 'active') {
-        updateData.started_at = new Date().toISOString();
+        updateData.sent_at = new Date().toISOString();
       } else if (status === 'completed') {
         updateData.completed_at = new Date().toISOString();
       }
@@ -144,14 +146,25 @@ export const useCampaignManagement = () => {
     return useQuery({
       queryKey: ['campaign-recipients', campaignId],
       queryFn: async (): Promise<CampaignRecipient[]> => {
-        const { data, error } = await supabase
-          .from('campaign_recipients')
-          .select('*')
-          .eq('campaign_id', campaignId)
-          .order('created_at', { ascending: false });
+        // Since campaign_recipients table doesn't exist, get recipients from metadata
+        const { data: campaign, error } = await supabase
+          .from('campaigns')
+          .select('metadata')
+          .eq('id', campaignId)
+          .single();
 
         if (error) throw error;
-        return data || [];
+
+        const metadata = campaign?.metadata as any;
+        const recipients = metadata?.recipients || [];
+        
+        return recipients.map((recipient: any, index: number) => ({
+          id: `${campaignId}-${index}`,
+          campaign_id: campaignId,
+          recipient_type: recipient.recipient_type || 'email',
+          recipient_value: recipient.recipient_value || '',
+          status: recipient.status || 'pending'
+        }));
       },
       enabled: !!campaignId
     });

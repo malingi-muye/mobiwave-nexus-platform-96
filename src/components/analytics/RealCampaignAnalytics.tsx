@@ -17,16 +17,19 @@ export function RealCampaignAnalytics() {
   const [selectedTimeframe, setSelectedTimeframe] = useState('7d');
   const [selectedCampaignType, setSelectedCampaignType] = useState('all');
 
-  // Fetch message history for detailed analytics
-  const { data: messageHistory, isLoading: messagesLoading } = useQuery({
-    queryKey: ['message-history'],
+  // Fetch audit logs as a substitute for message history
+  const { data: auditLogs, isLoading: logsLoading } = useQuery({
+    queryKey: ['audit-logs-analytics'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('message_history')
+        .from('audit_logs')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.warn('Error fetching audit logs:', error);
+        return [];
+      }
       return data || [];
     }
   });
@@ -39,12 +42,15 @@ export function RealCampaignAnalytics() {
         .from('user_credits')
         .select('*');
 
-      if (error) throw error;
+      if (error) {
+        console.warn('Error fetching user credits:', error);
+        return [];
+      }
       return data || [];
     }
   });
 
-  if (campaignsLoading || messagesLoading) {
+  if (campaignsLoading || logsLoading) {
     return (
       <div className="space-y-4">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -68,59 +74,39 @@ export function RealCampaignAnalytics() {
     return isInTimeframe && isCorrectType;
   });
 
-  const filteredMessages = (messageHistory || []).filter(message => {
-    const messageDate = new Date(message.created_at);
-    return messageDate >= startDate;
-  });
-
-  // Calculate metrics
+  // Calculate metrics from campaign data
   const totalCampaigns = filteredCampaigns.length;
-  const totalMessages = filteredMessages.length;
-  const successfulMessages = filteredMessages.filter(m => m.status === 'delivered').length;
-  const failedMessages = filteredMessages.filter(m => m.status === 'failed').length;
-  const pendingMessages = filteredMessages.filter(m => m.status === 'pending').length;
-  const totalCost = filteredMessages.reduce((sum, m) => sum + (Number(m.cost) || 0), 0);
+  const totalMessages = filteredCampaigns.reduce((sum, c) => sum + (c.sent_count || 0), 0);
+  const successfulMessages = filteredCampaigns.reduce((sum, c) => sum + (c.delivered_count || 0), 0);
+  const failedMessages = filteredCampaigns.reduce((sum, c) => sum + (c.failed_count || 0), 0);
+  const pendingMessages = totalMessages - successfulMessages - failedMessages;
+  const totalCost = filteredCampaigns.reduce((sum, c) => sum + (Number(c.cost) || 0), 0);
   const deliveryRate = totalMessages > 0 ? (successfulMessages / totalMessages) * 100 : 0;
 
   // Campaign status distribution
   const campaignStatusData = [
-    { name: 'Completed', value: filteredCampaigns.filter(c => c.status === 'completed').length, color: '#00C49F' },
-    { name: 'Active', value: filteredCampaigns.filter(c => c.status === 'active').length, color: '#0088FE' },
+    { name: 'Sent', value: filteredCampaigns.filter(c => c.status === 'sent').length, color: '#00C49F' },
+    { name: 'Sending', value: filteredCampaigns.filter(c => c.status === 'sending').length, color: '#0088FE' },
     { name: 'Draft', value: filteredCampaigns.filter(c => c.status === 'draft').length, color: '#FFBB28' },
     { name: 'Failed', value: filteredCampaigns.filter(c => c.status === 'failed').length, color: '#FF8042' },
   ].filter(item => item.value > 0);
 
-  // Daily message volume
+  // Daily campaign volume based on campaign creation dates
   const dailyData = Array.from({ length: timeframeDays }, (_, i) => {
     const date = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000);
-    const dayMessages = filteredMessages.filter(m => {
-      const msgDate = new Date(m.created_at);
-      return msgDate.toDateString() === date.toDateString();
+    const dayCampaigns = filteredCampaigns.filter(c => {
+      const campaignDate = new Date(c.created_at);
+      return campaignDate.toDateString() === date.toDateString();
     });
     
     return {
       date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      messages: dayMessages.length,
-      delivered: dayMessages.filter(m => m.status === 'delivered').length,
-      failed: dayMessages.filter(m => m.status === 'failed').length,
-      cost: dayMessages.reduce((sum, m) => sum + (Number(m.cost) || 0), 0)
+      messages: dayCampaigns.reduce((sum, c) => sum + (c.sent_count || 0), 0),
+      delivered: dayCampaigns.reduce((sum, c) => sum + (c.delivered_count || 0), 0),
+      failed: dayCampaigns.reduce((sum, c) => sum + (c.failed_count || 0), 0),
+      cost: dayCampaigns.reduce((sum, c) => sum + (Number(c.cost) || 0), 0)
     };
   });
-
-  // Campaign performance data
-  const campaignPerformanceData = filteredCampaigns.map(campaign => {
-    const campaignMessages = filteredMessages.filter(m => m.campaign_id === campaign.id);
-    const delivered = campaignMessages.filter(m => m.status === 'delivered').length;
-    const total = campaignMessages.length;
-    
-    return {
-      name: campaign.name.length > 15 ? campaign.name.substring(0, 15) + '...' : campaign.name,
-      sent: total,
-      delivered: delivered,
-      rate: total > 0 ? Math.round((delivered / total) * 100) : 0,
-      cost: campaignMessages.reduce((sum, m) => sum + (Number(m.cost) || 0), 0)
-    };
-  }).slice(0, 10); // Show top 10 campaigns
 
   return (
     <div className="space-y-6">
@@ -282,16 +268,15 @@ export function RealCampaignAnalytics() {
             </TableHeader>
             <TableBody>
               {filteredCampaigns.slice(0, 10).map((campaign) => {
-                const campaignMessages = filteredMessages.filter(m => m.campaign_id === campaign.id);
-                const delivered = campaignMessages.filter(m => m.status === 'delivered').length;
-                const total = campaignMessages.length;
+                const delivered = campaign.delivered_count || 0;
+                const total = campaign.sent_count || 0;
                 const rate = total > 0 ? (delivered / total) * 100 : 0;
-                const cost = campaignMessages.reduce((sum, m) => sum + (Number(m.cost) || 0), 0);
+                const cost = Number(campaign.cost) || 0;
 
                 const getStatusColor = (status: string) => {
                   switch (status) {
-                    case 'completed': return 'bg-green-100 text-green-800';
-                    case 'active': return 'bg-blue-100 text-blue-800';
+                    case 'sent': return 'bg-green-100 text-green-800';
+                    case 'sending': return 'bg-blue-100 text-blue-800';
                     case 'draft': return 'bg-yellow-100 text-yellow-800';
                     case 'failed': return 'bg-red-100 text-red-800';
                     default: return 'bg-gray-100 text-gray-800';

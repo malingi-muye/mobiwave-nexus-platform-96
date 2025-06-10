@@ -17,7 +17,7 @@ interface User {
 interface UserTableProps {
   users: User[];
   isLoading: boolean;
-  onRoleUpdate: (userId: string, newRole: 'admin' | 'reseller' | 'client' | 'user') => void;
+  onRoleUpdate: (userId: string, newRole: 'super_admin' | 'admin' | 'manager' | 'user') => void;
   onUserUpdated: () => void;
 }
 

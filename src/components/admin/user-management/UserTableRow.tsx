@@ -16,16 +16,16 @@ interface User {
 
 interface UserTableRowProps {
   user: User;
-  onRoleUpdate: (userId: string, newRole: 'admin' | 'reseller' | 'client' | 'user') => void;
+  onRoleUpdate: (userId: string, newRole: 'super_admin' | 'admin' | 'manager' | 'user') => void;
   onUserUpdated: () => void;
 }
 
 export function UserTableRow({ user, onRoleUpdate, onUserUpdated }: UserTableRowProps) {
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
+      case 'super_admin': return 'bg-purple-100 text-purple-800';
       case 'admin': return 'bg-red-100 text-red-800';
-      case 'reseller': return 'bg-yellow-100 text-yellow-800';
-      case 'client': return 'bg-green-100 text-green-800';
+      case 'manager': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-blue-100 text-blue-800';
     }
   };
@@ -46,7 +46,7 @@ export function UserTableRow({ user, onRoleUpdate, onUserUpdated }: UserTableRow
       <TableCell>
         <Select
           value={user.role || 'user'}
-          onValueChange={(value) => onRoleUpdate(user.id, value as 'admin' | 'reseller' | 'client' | 'user')}
+          onValueChange={(value) => onRoleUpdate(user.id, value as 'super_admin' | 'admin' | 'manager' | 'user')}
         >
           <SelectTrigger className="w-32">
             <SelectValue>
@@ -57,9 +57,9 @@ export function UserTableRow({ user, onRoleUpdate, onUserUpdated }: UserTableRow
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="user">User</SelectItem>
-            <SelectItem value="client">Client</SelectItem>
-            <SelectItem value="reseller">Reseller</SelectItem>
+            <SelectItem value="manager">Manager</SelectItem>
             <SelectItem value="admin">Admin</SelectItem>
+            <SelectItem value="super_admin">Super Admin</SelectItem>
           </SelectContent>
         </Select>
       </TableCell>

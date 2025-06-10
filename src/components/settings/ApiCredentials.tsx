@@ -44,7 +44,7 @@ export function ApiCredentials() {
         .from('api_credentials')
         .select('*')
         .eq('user_id', user.id)
-        .eq('provider', 'mspace')
+        .eq('service_name', 'mspace')
         .single();
 
       if (error && error.code !== 'PGRST116') {
@@ -54,10 +54,12 @@ export function ApiCredentials() {
       }
 
       if (data) {
+        // Extract from additional_config since the table uses encrypted fields
+        const config = data.additional_config as any || {};
         setCredentials({
-          api_key: data.api_key || '',
-          username: data.username || '',
-          sender_id: data.sender_id || '',
+          api_key: config.api_key || '',
+          username: config.username || '',
+          sender_id: config.sender_id || '',
           is_active: data.is_active || false
         });
       }
@@ -76,17 +78,20 @@ export function ApiCredentials() {
     try {
       const credentialsData = {
         user_id: user.id,
-        provider: 'mspace',
-        api_key: credentials.api_key,
-        username: credentials.username,
-        sender_id: credentials.sender_id,
+        service_name: 'mspace',
+        api_key_encrypted: credentials.api_key, // Store in encrypted field for now
+        additional_config: {
+          api_key: credentials.api_key,
+          username: credentials.username,
+          sender_id: credentials.sender_id
+        },
         is_active: true
       };
 
       const { error } = await supabase
         .from('api_credentials')
         .upsert(credentialsData, {
-          onConflict: 'user_id,provider'
+          onConflict: 'user_id,service_name'
         });
 
       if (error) {

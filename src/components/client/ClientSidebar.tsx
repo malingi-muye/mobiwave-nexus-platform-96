@@ -63,32 +63,80 @@ const iconMap: Record<string, any> = {
   'BarChart3': BarChart3
 };
 
-const fetchUserServices = async (userId: string): Promise<Service[]> => {
-  const { data, error } = await supabase
-    .from('user_services')
-    .select(`
-      services(*)
-    `)
-    .eq('user_id', userId)
-    .eq('is_enabled', true);
-
-  if (error) throw error;
-  
-  return (data || [])
-    .map(item => (item as any).services)
-    .filter(service => service?.is_active)
-    .sort((a, b) => a.name.localeCompare(b.name));
-};
+// Mock services data since user_services table doesn't exist
+const mockUserServices: Service[] = [
+  {
+    id: '1',
+    name: 'Dashboard',
+    description: 'Main dashboard',
+    icon: 'LayoutDashboard',
+    route: '/dashboard',
+    is_active: true,
+    is_premium: false
+  },
+  {
+    id: '2',
+    name: 'Bulk SMS',
+    description: 'Send bulk SMS',
+    icon: 'MessageSquare',
+    route: '/sms',
+    is_active: true,
+    is_premium: false
+  },
+  {
+    id: '3',
+    name: 'Bulk Email',
+    description: 'Send bulk emails',
+    icon: 'Mail',
+    route: '/email-campaigns',
+    is_active: true,
+    is_premium: false
+  },
+  {
+    id: '4',
+    name: 'WhatsApp',
+    description: 'WhatsApp messaging',
+    icon: 'Phone',
+    route: '/whatsapp-campaigns',
+    is_active: true,
+    is_premium: true
+  },
+  {
+    id: '5',
+    name: 'Surveys',
+    description: 'Create surveys',
+    icon: 'FileText',
+    route: '/survey-builder',
+    is_active: true,
+    is_premium: false
+  },
+  {
+    id: '6',
+    name: 'M-Pesa',
+    description: 'Payment integration',
+    icon: 'CreditCard',
+    route: '/billing',
+    is_active: true,
+    is_premium: true
+  },
+  {
+    id: '7',
+    name: 'Account Settings',
+    description: 'Account configuration',
+    icon: 'Settings',
+    route: '/settings',
+    is_active: true,
+    is_premium: false
+  }
+];
 
 export function ClientSidebar() {
   const location = useLocation();
   const { user } = useAuth();
 
-  const { data: userServices = [], isLoading } = useQuery({
-    queryKey: ['user-services', user?.id],
-    queryFn: () => fetchUserServices(user!.id),
-    enabled: !!user?.id
-  });
+  // Use mock data instead of querying non-existent table
+  const userServices = mockUserServices;
+  const isLoading = false;
 
   const isActive = (path: string) => {
     return location.pathname === path;

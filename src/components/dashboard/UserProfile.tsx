@@ -8,15 +8,13 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { User, Phone, Mail, Building } from 'lucide-react';
+import { User, Mail } from 'lucide-react';
 
 interface Profile {
   id: string;
   email: string;
   first_name?: string;
   last_name?: string;
-  phone?: string;
-  company?: string;
   avatar_url?: string;
 }
 
@@ -27,8 +25,6 @@ export function UserProfile() {
     email: '',
     first_name: '',
     last_name: '',
-    phone: '',
-    company: '',
     avatar_url: ''
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -63,8 +59,6 @@ export function UserProfile() {
           email: data.email,
           first_name: data.first_name || '',
           last_name: data.last_name || '',
-          phone: data.phone || '',
-          company: data.company || '',
           avatar_url: ''
         });
       }
@@ -86,8 +80,6 @@ export function UserProfile() {
         .update({
           first_name: profile.first_name,
           last_name: profile.last_name,
-          phone: profile.phone,
-          company: profile.company,
         })
         .eq('id', user.id);
 
@@ -177,7 +169,7 @@ export function UserProfile() {
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 md:col-span-2">
             <Label htmlFor="email">Email</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -187,34 +179,6 @@ export function UserProfile() {
                 value={profile.email}
                 disabled
                 className="pl-10 bg-gray-50"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone</Label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                id="phone"
-                value={profile.phone}
-                onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
-                className="pl-10"
-                placeholder="Phone number"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="company">Company</Label>
-            <div className="relative">
-              <Building className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                id="company"
-                value={profile.company}
-                onChange={(e) => setProfile(prev => ({ ...prev, company: e.target.value }))}
-                className="pl-10"
-                placeholder="Company name"
               />
             </div>
           </div>

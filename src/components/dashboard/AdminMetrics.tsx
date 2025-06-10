@@ -81,9 +81,11 @@ const fetchSystemMetrics = async () => {
       .from('campaigns')
       .select('*', { count: 'exact', head: true });
 
+    // Use campaigns table instead of non-existent message_history
     const { count: messageCount } = await supabase
-      .from('message_history')
-      .select('*', { count: 'exact', head: true });
+      .from('campaigns')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'sent');
 
     return [
       {

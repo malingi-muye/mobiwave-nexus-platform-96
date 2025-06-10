@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,18 +23,18 @@ export function RealTimeTracker() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load initial messages
+    // Load initial messages from campaigns table
     loadMessages();
 
-    // Set up real-time subscription
+    // Set up real-time subscription for campaigns
     const channel = supabase
-      .channel('message-updates')
+      .channel('campaign-updates')
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'message_history'
+          table: 'campaigns'
         },
         (payload) => {
           console.log('Real-time update:', payload);
@@ -49,15 +50,27 @@ export function RealTimeTracker() {
 
   const loadMessages = async () => {
     try {
+      // Use campaigns table instead of message_history
       const { data, error } = await supabase
-        .from('message_history')
+        .from('campaigns')
         .select('*')
         .eq('type', 'sms')
         .order('created_at', { ascending: false })
         .limit(50);
 
       if (error) throw error;
-      setMessages(data || []);
+      
+      // Transform campaign data to message format
+      const transformedMessages: MessageStatus[] = (data || []).map(campaign => ({
+        id: campaign.id,
+        recipient: `${campaign.recipient_count} recipients`,
+        content: campaign.content,
+        status: campaign.status === 'sent' ? 'delivered' : campaign.status,
+        sent_at: campaign.sent_at || campaign.created_at,
+        provider_message_id: campaign.id
+      }));
+      
+      setMessages(transformedMessages);
     } catch (error) {
       console.error('Error loading messages:', error);
     } finally {
@@ -68,10 +81,11 @@ export function RealTimeTracker() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'delivered':
+      case 'sent':
         return <CheckCircle className="w-4 h-4 text-green-600" />;
       case 'failed':
         return <XCircle className="w-4 h-4 text-red-600" />;
-      case 'sent':
+      case 'sending':
         return <Send className="w-4 h-4 text-blue-600" />;
       default:
         return <Clock className="w-4 h-4 text-yellow-600" />;
@@ -81,9 +95,11 @@ export function RealTimeTracker() {
   const getStatusBadge = (status: string) => {
     const variants = {
       delivered: 'bg-green-100 text-green-800 border-green-200',
+      sent: 'bg-green-100 text-green-800 border-green-200',
       failed: 'bg-red-100 text-red-800 border-red-200',
-      sent: 'bg-blue-100 text-blue-800 border-blue-200',
-      pending: 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      sending: 'bg-blue-100 text-blue-800 border-blue-200',
+      pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      draft: 'bg-gray-100 text-gray-800 border-gray-200'
     };
 
     return (
@@ -99,9 +115,9 @@ export function RealTimeTracker() {
 
   const getStats = () => {
     const total = messages.length;
-    const delivered = messages.filter(m => m.status === 'delivered').length;
+    const delivered = messages.filter(m => m.status === 'delivered' || m.status === 'sent').length;
     const failed = messages.filter(m => m.status === 'failed').length;
-    const pending = messages.filter(m => m.status === 'sent' || m.status === 'pending').length;
+    const pending = messages.filter(m => m.status === 'draft' || m.status === 'sending').length;
 
     return { total, delivered, failed, pending };
   };
@@ -115,13 +131,13 @@ export function RealTimeTracker() {
         <Card className="border-0 shadow-sm bg-white/50">
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-            <div className="text-sm text-gray-600">Total Messages</div>
+            <div className="text-sm text-gray-600">Total Campaigns</div>
           </CardContent>
         </Card>
         <Card className="border-0 shadow-sm bg-green-50">
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-green-600">{stats.delivered}</div>
-            <div className="text-sm text-green-700">Delivered</div>
+            <div className="text-sm text-green-700">Sent</div>
           </CardContent>
         </Card>
         <Card className="border-0 shadow-sm bg-yellow-50">
@@ -145,10 +161,10 @@ export function RealTimeTracker() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="w-5 h-5 text-blue-600" />
-                Real-time Message Tracking
+                Campaign Tracking
               </CardTitle>
               <CardDescription>
-                Live updates of SMS delivery status via Mspace API
+                Live updates of SMS campaign status
               </CardDescription>
             </div>
             <Button 
@@ -167,8 +183,8 @@ export function RealTimeTracker() {
             {messages.length === 0 ? (
               <div className="text-center text-gray-500 py-8">
                 <Send className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-lg font-medium">No messages sent yet</p>
-                <p className="text-sm">Create a campaign to start tracking messages</p>
+                <p className="text-lg font-medium">No campaigns yet</p>
+                <p className="text-sm">Create a campaign to start tracking</p>
               </div>
             ) : (
               messages.map((message) => (
@@ -201,7 +217,7 @@ export function RealTimeTracker() {
                         ? `Delivered: ${formatTime(message.delivered_at)}`
                         : message.failed_at
                         ? `Failed: ${formatTime(message.failed_at)}`
-                        : `Sent: ${formatTime(message.sent_at)}`
+                        : `Created: ${formatTime(message.sent_at)}`
                       }
                     </div>
                   </div>

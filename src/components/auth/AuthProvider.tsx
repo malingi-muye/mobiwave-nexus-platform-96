@@ -35,6 +35,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const fetchUserRole = async (userId: string) => {
     try {
+      console.log('Fetching user role for:', userId);
+      
       // First try to get role from the new roles system
       const { data: userRoles, error: rolesError } = await supabase
         .from('user_roles')
@@ -48,21 +50,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .limit(1);
 
       if (!rolesError && userRoles && userRoles.length > 0) {
-        return (userRoles[0] as any).roles.name;
+        const roleName = (userRoles[0] as any).roles.name;
+        console.log('Role from user_roles table:', roleName);
+        return roleName;
       }
 
-      // Fallback to profile role with safe access
+      // Fallback to profile role
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('role')
         .eq('id', userId)
         .single();
 
       if (!profileError && profile) {
-        // Safely access role property with fallback
-        return (profile as any).role || 'user';
+        console.log('Role from profiles table:', profile.role);
+        return profile.role || 'user';
       }
 
+      console.log('No role found, defaulting to user');
       return 'user'; // Default role
     } catch (error) {
       console.error('Role fetch failed:', error);
@@ -71,9 +76,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
+    console.log('Setting up auth state listener...');
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
+        
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -94,10 +103,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // THEN check for existing session
     const getSession = async () => {
       try {
+        console.log('Checking for existing session...');
         const { data: { session }, error } = await supabase.auth.getSession();
+        
         if (error) {
           console.error('Error getting session:', error);
         } else {
+          console.log('Existing session found:', !!session);
           setSession(session);
           setUser(session?.user ?? null);
           
@@ -115,19 +127,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     getSession();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log('Cleaning up auth subscription');
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      console.log('Attempting login for:', email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Login error:', error);
+        throw error;
+      }
 
+      console.log('Login successful for:', data.user?.email);
       setSession(data.session);
       setUser(data.user);
       
@@ -145,12 +166,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async () => {
     try {
+      console.log('Logging out...');
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
       setUser(null);
       setSession(null);
       setUserRole(null);
+      console.log('Logout successful');
     } catch (error) {
       console.error('Logout failed:', error);
       throw error;

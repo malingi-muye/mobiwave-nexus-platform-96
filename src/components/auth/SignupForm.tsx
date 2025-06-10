@@ -21,9 +21,23 @@ export function SignupForm({ isLoading, setIsLoading }: SignupFormProps) {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Basic validation
+    if (!email || !password || !firstName || !lastName) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters long');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
+      console.log('Starting signup process...', { email, firstName, lastName });
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -32,24 +46,51 @@ export function SignupForm({ isLoading, setIsLoading }: SignupFormProps) {
             first_name: firstName,
             last_name: lastName,
             role: 'user'
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/`
         }
       });
 
+      console.log('Signup response:', { data, error });
+
       if (error) {
-        toast.error(error.message);
+        console.error('Signup error:', error);
+        
+        // Handle specific error cases
+        if (error.message.includes('User already registered')) {
+          toast.error('An account with this email already exists. Please try logging in instead.');
+        } else if (error.message.includes('Database error')) {
+          toast.error('Database error occurred. Please try again or contact support.');
+        } else if (error.message.includes('Invalid email')) {
+          toast.error('Please enter a valid email address.');
+        } else {
+          toast.error(`Signup failed: ${error.message}`);
+        }
         return;
       }
 
       if (data.user) {
-        toast.success('Account created successfully! You can now log in.');
+        console.log('User created successfully:', data.user);
+        
+        // Check if email confirmation is required
+        if (data.user.email_confirmed_at) {
+          toast.success('Account created successfully! You can now log in.');
+        } else {
+          toast.success('Account created! Please check your email to confirm your account before logging in.');
+        }
+        
+        // Clear form
         setFirstName("");
         setLastName("");
         setEmail("");
         setPassword("");
+      } else {
+        console.warn('No user data returned from signup');
+        toast.error('Signup completed but user data not received. Please try logging in.');
       }
-    } catch (error) {
-      toast.error('An unexpected error occurred. Please try again.');
+    } catch (error: any) {
+      console.error('Unexpected signup error:', error);
+      toast.error(`An unexpected error occurred: ${error.message || 'Please try again.'}`);
     } finally {
       setIsLoading(false);
     }
@@ -70,6 +111,7 @@ export function SignupForm({ isLoading, setIsLoading }: SignupFormProps) {
               onChange={(e) => setFirstName(e.target.value)}
               className="pl-10"
               required
+              disabled={isLoading}
             />
           </div>
         </div>
@@ -82,6 +124,7 @@ export function SignupForm({ isLoading, setIsLoading }: SignupFormProps) {
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             required
+            disabled={isLoading}
           />
         </div>
       </div>
@@ -98,6 +141,7 @@ export function SignupForm({ isLoading, setIsLoading }: SignupFormProps) {
             onChange={(e) => setEmail(e.target.value)}
             className="pl-10"
             required
+            disabled={isLoading}
           />
         </div>
       </div>
@@ -115,6 +159,7 @@ export function SignupForm({ isLoading, setIsLoading }: SignupFormProps) {
             className="pl-10 pr-10"
             required
             minLength={6}
+            disabled={isLoading}
           />
           <Button
             type="button"
@@ -122,6 +167,7 @@ export function SignupForm({ isLoading, setIsLoading }: SignupFormProps) {
             size="sm"
             className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
             onClick={() => setShowPassword(!showPassword)}
+            disabled={isLoading}
           >
             {showPassword ? (
               <EyeOff className="h-4 w-4 text-slate-400" />
@@ -139,6 +185,10 @@ export function SignupForm({ isLoading, setIsLoading }: SignupFormProps) {
       >
         {isLoading ? "Creating account..." : "Create Account"}
       </Button>
+      
+      <div className="text-sm text-gray-600 mt-4">
+        <p>By creating an account, you agree to our terms of service and privacy policy.</p>
+      </div>
     </form>
   );
 }

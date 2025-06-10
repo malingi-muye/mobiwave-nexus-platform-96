@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -18,6 +17,8 @@ interface ServiceStatus {
   version: string;
   uptime_percentage: number;
   instances: number;
+  cpu_usage: number;
+  memory_usage: number;
 }
 
 export const useSystemMetrics = () => {
@@ -86,7 +87,9 @@ export const useServiceStatus = () => {
           status: 'healthy',
           version: '14.2',
           uptime_percentage: 99.9,
-          instances: 3
+          instances: 3,
+          cpu_usage: 45,
+          memory_usage: 68
         },
         {
           id: '2',
@@ -94,7 +97,9 @@ export const useServiceStatus = () => {
           status: 'healthy',
           version: '2.1.0',
           uptime_percentage: 99.8,
-          instances: 2
+          instances: 2,
+          cpu_usage: 32,
+          memory_usage: 55
         },
         {
           id: '3',
@@ -102,7 +107,9 @@ export const useServiceStatus = () => {
           status: 'warning',
           version: '1.5.3',
           uptime_percentage: 98.2,
-          instances: 1
+          instances: 1,
+          cpu_usage: 78,
+          memory_usage: 85
         },
         {
           id: '4',
@@ -110,7 +117,9 @@ export const useServiceStatus = () => {
           status: 'healthy',
           version: '3.0.1',
           uptime_percentage: 99.95,
-          instances: 4
+          instances: 4,
+          cpu_usage: 52,
+          memory_usage: 71
         }
       ];
     },

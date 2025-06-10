@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUserCredits } from '@/hooks/useUserCredits';
@@ -5,12 +6,13 @@ import { useSystemMetrics } from '@/hooks/useSystemMetrics';
 import { useSMSService } from '@/hooks/useSMSService';
 import { 
   Users, 
-  Campaign, 
+  Zap, 
   Mail, 
   MessageSquare, 
   TrendingUp,
   Activity,
-  Server
+  Server,
+  CreditCard
 } from 'lucide-react';
 
 export function EnhancedClientDashboard() {
@@ -35,7 +37,7 @@ export function EnhancedClientDashboard() {
       <div className="bg-gradient-to-br from-green-50 to-teal-50 rounded-xl p-6 border border-green-200">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-green-900">Active Campaigns</h3>
-          <Campaign className="w-6 h-6 text-green-600" />
+          <Zap className="w-6 h-6 text-green-600" />
         </div>
         <div className="space-y-2">
           <div className="text-3xl font-bold text-green-600">{systemMetrics?.activeCampaigns || 0}</div>
@@ -67,18 +69,18 @@ export function EnhancedClientDashboard() {
         </div>
       </div>
 
-          <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-6 border border-orange-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-orange-900">Credits Used</h3>
-              <TrendingUp className="w-6 h-6 text-orange-600" />
-            </div>
-            <div className="space-y-2">
-              <div className="text-3xl font-bold text-orange-600">
-                ${((userCredits?.total_purchased || 0) - (userCredits?.credits_remaining || 0)).toFixed(2)}
-              </div>
-              <p className="text-sm text-orange-700">Total spent on campaigns</p>
-            </div>
+      <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-6 border border-orange-200">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-orange-900">Credits Used</h3>
+          <TrendingUp className="w-6 h-6 text-orange-600" />
+        </div>
+        <div className="space-y-2">
+          <div className="text-3xl font-bold text-orange-600">
+            ${((userCredits?.total_purchased || 0) - (userCredits?.credits_remaining || 0)).toFixed(2)}
           </div>
+          <p className="text-sm text-orange-700">Total spent on campaigns</p>
+        </div>
+      </div>
 
       {/* System Health */}
       <div className="bg-gradient-to-br from-gray-50 to-zinc-50 rounded-xl p-6 border border-gray-200">

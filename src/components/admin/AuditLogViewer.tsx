@@ -15,7 +15,7 @@ interface AuditLog {
   action: string;
   resource_type: string;
   resource_id: string;
-  details: any;
+  metadata: any;
   ip_address: string;
   user_agent: string;
   created_at: string;
@@ -36,7 +36,7 @@ export function AuditLogViewer() {
         .limit(100);
 
       if (actionFilter !== 'all') {
-        query = query.eq('action', actionFilter);
+        query = query.ilike('action', `%${actionFilter}%`);
       }
 
       if (resourceFilter !== 'all') {
@@ -48,7 +48,10 @@ export function AuditLogViewer() {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
+      if (error) {
+        console.warn('Error fetching audit logs:', error);
+        return [];
+      }
       return data as AuditLog[];
     }
   });
@@ -58,12 +61,6 @@ export function AuditLogViewer() {
     if (action.includes('create') || action.includes('add')) return 'default';
     if (action.includes('update') || action.includes('edit')) return 'secondary';
     return 'outline';
-  };
-
-  const getStatusColor = (action: string) => {
-    if (action.includes('failed') || action.includes('error')) return 'destructive';
-    if (action.includes('success') || action.includes('completed')) return 'default';
-    return 'secondary';
   };
 
   const formatTimestamp = (timestamp: string) => {
@@ -156,7 +153,7 @@ export function AuditLogViewer() {
                           <Badge variant={getSeverityColor(log.action)}>
                             {log.action}
                           </Badge>
-                          <Badge variant={getStatusColor(log.action)}>
+                          <Badge variant="outline">
                             {log.resource_type || 'system'}
                           </Badge>
                           <span className="text-sm text-gray-500">

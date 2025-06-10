@@ -14,7 +14,7 @@ interface SecurityEvent {
   action: string;
   resource_type: string;
   resource_id: string;
-  details: any;
+  metadata: any;
   ip_address: string;
   user_agent: string;
   created_at: string;
@@ -33,7 +33,10 @@ export function SecurityMonitor() {
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (error) throw error;
+      if (error) {
+        console.warn('Error fetching security events:', error);
+        return [];
+      }
       return data as SecurityEvent[];
     },
     refetchInterval: refreshInterval

@@ -19,11 +19,21 @@ export function Analytics() {
         .select('status, type, created_at, recipient_count, delivered_count, failed_count')
         .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
 
-      if (error) throw error;
+      if (error) {
+        console.warn('Error fetching campaigns:', error);
+        return {
+          totalCampaigns: 0,
+          activeCampaigns: 0,
+          completedCampaigns: 0,
+          totalRecipients: 0,
+          totalDelivered: 0,
+          deliveryRate: 0
+        };
+      }
 
       const totalCampaigns = data?.length || 0;
-      const activeCampaigns = data?.filter(c => c.status === 'active').length || 0;
-      const completedCampaigns = data?.filter(c => c.status === 'completed').length || 0;
+      const activeCampaigns = data?.filter(c => c.status === 'sending').length || 0;
+      const completedCampaigns = data?.filter(c => c.status === 'sent').length || 0;
       const totalRecipients = data?.reduce((sum, c) => sum + (c.recipient_count || 0), 0) || 0;
       const totalDelivered = data?.reduce((sum, c) => sum + (c.delivered_count || 0), 0) || 0;
 
@@ -47,7 +57,10 @@ export function Analytics() {
         .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
         .order('created_at');
 
-      if (error) throw error;
+      if (error) {
+        console.warn('Error fetching user growth:', error);
+        return [];
+      }
 
       const last7Days = [];
       for (let i = 6; i >= 0; i--) {

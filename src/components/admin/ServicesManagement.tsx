@@ -8,33 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings, Users, Search, Shield, Crown } from 'lucide-react';
-
-interface Service {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  route: string;
-  is_active: boolean;
-  is_premium: boolean;
-}
-
-interface UserService {
-  id: string;
-  user_id: string;
-  service_id: string;
-  is_enabled: boolean;
-  services: Service;
-  profiles: {
-    email: string;
-    first_name?: string;
-    last_name?: string;
-  };
-}
 
 interface User {
   id: string;
@@ -42,16 +18,6 @@ interface User {
   first_name?: string;
   last_name?: string;
 }
-
-const fetchServices = async (): Promise<Service[]> => {
-  const { data, error } = await supabase
-    .from('services')
-    .select('*')
-    .order('name');
-
-  if (error) throw error;
-  return data || [];
-};
 
 const fetchUsers = async (): Promise<User[]> => {
   const { data, error } = await supabase
@@ -63,131 +29,57 @@ const fetchUsers = async (): Promise<User[]> => {
   return data || [];
 };
 
-const fetchUserServices = async (): Promise<UserService[]> => {
-  const { data, error } = await supabase
-    .from('user_services')
-    .select(`
-      *,
-      services(*),
-      profiles:user_id(email, first_name, last_name)
-    `)
-    .order('user_id');
-
-  if (error) throw error;
-  return data || [];
-};
-
 export function ServicesManagement() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedUser, setSelectedUser] = useState<string>('all');
   const queryClient = useQueryClient();
-
-  const { data: services = [], isLoading: servicesLoading } = useQuery({
-    queryKey: ['admin-services'],
-    queryFn: fetchServices
-  });
 
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ['admin-users-simple'],
     queryFn: fetchUsers
   });
 
-  const { data: userServices = [], isLoading: userServicesLoading } = useQuery({
-    queryKey: ['admin-user-services'],
-    queryFn: fetchUserServices
-  });
-
-  const updateServiceStatus = useMutation({
-    mutationFn: async ({ serviceId, isActive }: { serviceId: string; isActive: boolean }) => {
-      const { error } = await supabase
-        .from('services')
-        .update({ is_active: isActive })
-        .eq('id', serviceId);
-
-      if (error) throw error;
+  // Mock services data since we don't have a services table yet
+  const mockServices = [
+    {
+      id: '1',
+      name: 'SMS Messaging',
+      description: 'Send SMS messages to contacts',
+      route: '/bulk-sms',
+      is_active: true,
+      is_premium: false
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-services'] });
-      toast.success('Service status updated');
+    {
+      id: '2',
+      name: 'Email Campaigns',
+      description: 'Create and send email campaigns',
+      route: '/email-campaigns',
+      is_active: true,
+      is_premium: false
     },
-    onError: (error: any) => {
-      toast.error(`Failed to update service: ${error.message}`);
+    {
+      id: '3',
+      name: 'WhatsApp Messaging',
+      description: 'Send WhatsApp messages',
+      route: '/whatsapp-campaigns',
+      is_active: true,
+      is_premium: true
+    },
+    {
+      id: '4',
+      name: 'Analytics Dashboard',
+      description: 'View detailed analytics',
+      route: '/analytics',
+      is_active: true,
+      is_premium: true
     }
-  });
-
-  const toggleUserService = useMutation({
-    mutationFn: async ({ userId, serviceId, enabled }: { userId: string; serviceId: string; enabled: boolean }) => {
-      if (enabled) {
-        // Enable service for user
-        const { error } = await supabase
-          .from('user_services')
-          .upsert({
-            user_id: userId,
-            service_id: serviceId,
-            is_enabled: true,
-            enabled_by: (await supabase.auth.getUser()).data.user?.id
-          });
-
-        if (error) throw error;
-      } else {
-        // Disable service for user
-        const { error } = await supabase
-          .from('user_services')
-          .delete()
-          .eq('user_id', userId)
-          .eq('service_id', serviceId);
-
-        if (error) throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-user-services'] });
-      toast.success('User service updated');
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to update user service: ${error.message}`);
-    }
-  });
-
-  const enableAllServicesForUser = useMutation({
-    mutationFn: async (userId: string) => {
-      const currentUser = (await supabase.auth.getUser()).data.user;
-      const servicesToInsert = services.filter(s => s.is_active).map(service => ({
-        user_id: userId,
-        service_id: service.id,
-        is_enabled: true,
-        enabled_by: currentUser?.id
-      }));
-
-      const { error } = await supabase
-        .from('user_services')
-        .upsert(servicesToInsert, { onConflict: 'user_id,service_id' });
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-user-services'] });
-      toast.success('All services enabled for user');
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to enable services: ${error.message}`);
-    }
-  });
-
-  const getUserServices = (userId: string) => {
-    return userServices.filter(us => us.user_id === userId);
-  };
-
-  const isServiceEnabledForUser = (userId: string, serviceId: string) => {
-    return userServices.some(us => us.user_id === userId && us.service_id === serviceId && us.is_enabled);
-  };
+  ];
 
   const filteredUsers = users.filter(user => 
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (servicesLoading || usersLoading || userServicesLoading) {
+  if (usersLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -247,62 +139,40 @@ export function ServicesManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredUsers.map((user) => {
-                    const userServicesList = getUserServices(user.id);
-                    return (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">
-                              {user.first_name || user.last_name 
-                                ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
-                                : user.email.split('@')[0]
-                              }
-                            </div>
-                            <div className="text-sm text-gray-500">{user.email}</div>
+                  {filteredUsers.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">
+                            {user.first_name || user.last_name 
+                              ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
+                              : user.email.split('@')[0]
+                            }
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-2">
-                            {services.map((service) => {
-                              const isEnabled = isServiceEnabledForUser(user.id, service.id);
-                              return (
-                                <div key={service.id} className="flex items-center gap-2">
-                                  <Switch
-                                    checked={isEnabled}
-                                    onCheckedChange={(checked) => 
-                                      toggleUserService.mutate({
-                                        userId: user.id,
-                                        serviceId: service.id,
-                                        enabled: checked
-                                      })
-                                    }
-                                    disabled={!service.is_active}
-                                  />
-                                  <Badge
-                                    variant={isEnabled ? "default" : "secondary"}
-                                    className={`text-xs ${service.is_premium ? 'bg-yellow-100 text-yellow-800' : ''}`}
-                                  >
-                                    {service.name}
-                                    {service.is_premium && <Crown className="w-3 h-3 ml-1" />}
-                                  </Badge>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            size="sm"
-                            onClick={() => enableAllServicesForUser.mutate(user.id)}
-                            disabled={enableAllServicesForUser.isPending}
-                          >
-                            Enable All
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
+                          <div className="text-sm text-gray-500">{user.email}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-2">
+                          {mockServices.map((service) => (
+                            <Badge
+                              key={service.id}
+                              variant="default"
+                              className={`text-xs ${service.is_premium ? 'bg-yellow-100 text-yellow-800' : ''}`}
+                            >
+                              {service.name}
+                              {service.is_premium && <Crown className="w-3 h-3 ml-1" />}
+                            </Badge>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Button size="sm" variant="outline">
+                          Manage
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </CardContent>
@@ -329,7 +199,7 @@ export function ServicesManagement() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {services.map((service) => (
+                  {mockServices.map((service) => (
                     <TableRow key={service.id}>
                       <TableCell>
                         <div>
@@ -358,12 +228,9 @@ export function ServicesManagement() {
                       <TableCell>
                         <Switch
                           checked={service.is_active}
-                          onCheckedChange={(checked) => 
-                            updateServiceStatus.mutate({
-                              serviceId: service.id,
-                              isActive: checked
-                            })
-                          }
+                          onCheckedChange={(checked) => {
+                            console.log(`Toggling service ${service.name} to ${checked}`);
+                          }}
                         />
                       </TableCell>
                     </TableRow>

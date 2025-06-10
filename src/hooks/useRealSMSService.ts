@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,7 +27,7 @@ export const useRealSMSService = () => {
       // Check user credits
       const { data: credits } = await supabase
         .from('user_credits')
-        .select('credits_remaining, credits_used')
+        .select('credits_remaining, credits_purchased')
         .eq('user_id', user.id)
         .single();
 
@@ -43,43 +44,76 @@ export const useRealSMSService = () => {
           const cost = 0.05; // Fixed cost per SMS
           totalCost += cost;
 
-          // Record message in history
-          const { data: messageRecord, error } = await supabase
-            .from('message_history')
-            .insert({
-              user_id: user.id,
-              campaign_id: campaignId,
-              type: 'sms',
-              sender: senderId || 'MOBIWAVE',
-              recipient: recipient.replace(/\D/g, ''),
-              content: message,
-              status: 'sent',
-              cost: cost,
-              provider: 'mspace',
-              provider_message_id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-              sent_at: new Date().toISOString()
-            })
-            .select()
-            .single();
+          // For now, we'll store campaign metadata instead of using message_history table
+          const messageData = {
+            user_id: user.id,
+            campaign_id: campaignId,
+            type: 'sms',
+            sender: senderId || 'MOBIWAVE',
+            recipient: recipient.replace(/\D/g, ''),
+            content: message,
+            status: 'sent',
+            cost: cost,
+            provider: 'mspace',
+            provider_message_id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            sent_at: new Date().toISOString()
+          };
 
-          if (error) throw error;
+          // Store in campaigns table metadata for now
+          if (campaignId) {
+            const { data: campaign } = await supabase
+              .from('campaigns')
+              .select('metadata')
+              .eq('id', campaignId)
+              .single();
+
+            const existingMetadata = campaign?.metadata as any || {};
+            const messages = existingMetadata.messages || [];
+            messages.push(messageData);
+
+            await supabase
+              .from('campaigns')
+              .update({ 
+                metadata: { ...existingMetadata, messages }
+              })
+              .eq('id', campaignId);
+          }
 
           results.push({ 
             recipient, 
             success: true, 
-            messageId: messageRecord.id,
+            messageId: messageData.provider_message_id,
             cost 
           });
 
           // Simulate delivery after a short delay
           setTimeout(async () => {
-            await supabase
-              .from('message_history')
-              .update({ 
-                status: 'delivered', 
-                delivered_at: new Date().toISOString() 
-              })
-              .eq('id', messageRecord.id);
+            if (campaignId) {
+              const { data: campaign } = await supabase
+                .from('campaigns')
+                .select('metadata')
+                .eq('id', campaignId)
+                .single();
+
+              const existingMetadata = campaign?.metadata as any || {};
+              const messages = existingMetadata.messages || [];
+              const messageIndex = messages.findIndex((m: any) => m.provider_message_id === messageData.provider_message_id);
+              
+              if (messageIndex >= 0) {
+                messages[messageIndex] = { 
+                  ...messages[messageIndex],
+                  status: 'delivered', 
+                  delivered_at: new Date().toISOString() 
+                };
+
+                await supabase
+                  .from('campaigns')
+                  .update({ 
+                    metadata: { ...existingMetadata, messages }
+                  })
+                  .eq('id', campaignId);
+              }
+            }
           }, Math.random() * 3000 + 1000);
 
         } catch (error: any) {
@@ -97,7 +131,7 @@ export const useRealSMSService = () => {
         .from('user_credits')
         .update({ 
           credits_remaining: credits.credits_remaining - totalCost,
-          credits_used: (credits.credits_used || 0) + totalCost
+          credits_purchased: (credits.credits_purchased || 0)
         })
         .eq('user_id', user.id);
 
@@ -125,7 +159,6 @@ export const useRealSMSService = () => {
         toast.error(`${failCount} SMS failed to send`);
       }
       
-      queryClient.invalidateQueries({ queryKey: ['message-history'] });
       queryClient.invalidateQueries({ queryKey: ['user-credits'] });
       queryClient.invalidateQueries({ queryKey: ['campaigns'] });
     },
@@ -149,29 +182,22 @@ export const useRealSMSService = () => {
             name: campaignName,
             type: 'sms',
             content: message,
-            sender_id: senderId || 'MOBIWAVE',
             status: 'active',
             recipient_count: recipients.length,
-            user_id: user.id
+            user_id: user.id,
+            metadata: {
+              sender_id: senderId || 'MOBIWAVE',
+              recipients: recipients.map(recipient => ({
+                recipient_type: 'phone',
+                recipient_value: recipient.replace(/\D/g, ''),
+                status: 'pending'
+              }))
+            }
           })
           .select()
           .single();
 
         if (campaignError) throw campaignError;
-
-        // Create campaign recipients
-        const campaignRecipients = recipients.map(recipient => ({
-          campaign_id: campaign.id,
-          recipient_type: 'phone',
-          recipient_value: recipient.replace(/\D/g, ''),
-          status: 'pending' as const
-        }));
-
-        const { error: recipientsError } = await supabase
-          .from('campaign_recipients')
-          .insert(campaignRecipients);
-
-        if (recipientsError) throw recipientsError;
 
         // Send SMS to all recipients
         const results = await sendSingleSMS.mutateAsync({
@@ -183,7 +209,7 @@ export const useRealSMSService = () => {
 
         // Update campaign status
         const successCount = results.filter(r => r.success).length;
-        const failCount = results.filter(r => r.success).length;
+        const failCount = results.length - successCount;
         const totalCost = results.reduce((sum, r) => sum + (r.cost || 0), 0);
 
         await supabase
@@ -193,25 +219,13 @@ export const useRealSMSService = () => {
             sent_count: successCount,
             delivered_count: successCount, // Initially assume sent = delivered
             failed_count: failCount,
-            total_cost: totalCost,
-            completed_at: new Date().toISOString()
+            cost: totalCost,
+            metadata: {
+              ...campaign.metadata,
+              completed_at: new Date().toISOString()
+            }
           })
           .eq('id', campaign.id);
-
-        // Update campaign recipients status
-        for (const result of results) {
-          const status = result.success ? 'sent' : 'failed';
-          await supabase
-            .from('campaign_recipients')
-            .update({ 
-              status,
-              sent_at: result.success ? new Date().toISOString() : null,
-              failed_at: !result.success ? new Date().toISOString() : null,
-              error_message: result.success ? null : result.error
-            })
-            .eq('campaign_id', campaign.id)
-            .eq('recipient_value', result.recipient.replace(/\D/g, ''));
-        }
 
         return { campaign, results };
         

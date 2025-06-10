@@ -41,7 +41,7 @@ export const useMspaceService = () => {
     const { data: credentials, error } = await supabase
       .from('api_credentials')
       .select('*')
-      .eq('provider', 'mspace')
+      .eq('service_name', 'mspace')
       .eq('is_active', true)
       .single();
 
@@ -49,7 +49,13 @@ export const useMspaceService = () => {
       throw new Error('No active Mspace API credentials found. Please configure your API settings.');
     }
 
-    return credentials;
+    // Extract credentials from additional_config
+    const config = credentials.additional_config as any;
+    return {
+      api_key: config?.api_key || credentials.api_key_encrypted || '',
+      username: config?.username || '',
+      sender_id: config?.sender_id || ''
+    };
   };
 
   const sendSMS = async (payload: SMSPayload) => {

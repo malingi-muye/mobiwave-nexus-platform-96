@@ -50,7 +50,7 @@ export function BalanceDisplay({ estimatedCost, recipientCount, smsCount }: Bala
           </div>
         ) : (
           <div className="text-sm text-purple-600">
-            {checkBalance.isLoading ? 'Loading...' : 'Connect to check'}
+            {checkBalance.isPending ? 'Loading...' : 'Connect to check'}
           </div>
         )}
       </div>

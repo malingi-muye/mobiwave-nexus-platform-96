@@ -64,8 +64,8 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
         await sendSMS.mutateAsync({
           recipients: campaignData.recipients,
           message: campaignData.content,
-          sender_id: 'MOBIWAVE',
-          campaign_id: campaign.id
+          senderId: 'MOBIWAVE',
+          campaignId: campaign.id
         });
         
         toast.success('Campaign sent successfully! Check the Live Tracking tab for real-time updates.');

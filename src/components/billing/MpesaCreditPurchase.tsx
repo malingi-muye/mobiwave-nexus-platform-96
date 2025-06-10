@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,7 +45,7 @@ export function MpesaCreditPurchase() {
     try {
       const result = await initiatePayment({
         amount: amount,
-        phoneNumber: cleanPhone,
+        phone: cleanPhone,
         accountReference: `CREDITS_${Date.now()}`,
         transactionDesc: `Credit purchase - KES ${amount}`
       });

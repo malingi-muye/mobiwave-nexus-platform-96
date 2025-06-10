@@ -221,7 +221,13 @@ export const useRealSMSService = () => {
             failed_count: failCount,
             cost: totalCost,
             metadata: {
-              ...campaign.metadata,
+              // Fix: Create new object instead of spreading undefined
+              sender_id: senderId || 'MOBIWAVE',
+              recipients: recipients.map(recipient => ({
+                recipient_type: 'phone',
+                recipient_value: recipient.replace(/\D/g, ''),
+                status: 'completed'
+              })),
               completed_at: new Date().toISOString()
             }
           })

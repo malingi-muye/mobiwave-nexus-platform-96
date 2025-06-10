@@ -11,6 +11,15 @@ interface SystemMetrics {
   responseTime: number;
 }
 
+interface ServiceStatus {
+  id: string;
+  service_name: string;
+  status: 'healthy' | 'warning' | 'error';
+  version: string;
+  uptime_percentage: number;
+  instances: number;
+}
+
 export const useSystemMetrics = () => {
   return useQuery({
     queryKey: ['system-metrics'],
@@ -61,6 +70,52 @@ export const useSystemMetrics = () => {
     },
     refetchInterval: 30000, // Refetch every 30 seconds
     staleTime: 15000, // Consider data stale after 15 seconds
+  });
+};
+
+// Add the missing useServiceStatus hook
+export const useServiceStatus = () => {
+  return useQuery({
+    queryKey: ['service-status'],
+    queryFn: async (): Promise<ServiceStatus[]> => {
+      // Mock service status data since we don't have a services table
+      return [
+        {
+          id: '1',
+          service_name: 'Database',
+          status: 'healthy',
+          version: '14.2',
+          uptime_percentage: 99.9,
+          instances: 3
+        },
+        {
+          id: '2',
+          service_name: 'SMS Gateway',
+          status: 'healthy',
+          version: '2.1.0',
+          uptime_percentage: 99.8,
+          instances: 2
+        },
+        {
+          id: '3',
+          service_name: 'Email Service',
+          status: 'warning',
+          version: '1.5.3',
+          uptime_percentage: 98.2,
+          instances: 1
+        },
+        {
+          id: '4',
+          service_name: 'API Gateway',
+          status: 'healthy',
+          version: '3.0.1',
+          uptime_percentage: 99.95,
+          instances: 4
+        }
+      ];
+    },
+    refetchInterval: 60000, // Refetch every minute
+    staleTime: 30000, // Consider data stale after 30 seconds
   });
 };
 

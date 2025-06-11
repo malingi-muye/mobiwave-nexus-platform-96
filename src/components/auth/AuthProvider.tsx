@@ -37,7 +37,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log('Fetching user role for:', userId);
       
-      // First try to get role from the new roles system
+      // First try to get role from the profiles table (after the recent migration)
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+
+      if (!profileError && profile) {
+        console.log('Role from profiles table:', profile.role);
+        return profile.role || 'user';
+      }
+
+      // Fallback to user_roles system if profiles doesn't have the role
       const { data: userRoles, error: rolesError } = await supabase
         .from('user_roles')
         .select(`
@@ -53,18 +65,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const roleName = (userRoles[0] as any).roles.name;
         console.log('Role from user_roles table:', roleName);
         return roleName;
-      }
-
-      // Fallback to profile role
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
-
-      if (!profileError && profile) {
-        console.log('Role from profiles table:', profile.role);
-        return profile.role || 'user';
       }
 
       console.log('No role found, defaulting to user');

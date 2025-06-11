@@ -54,13 +54,19 @@ export function SignupForm({ isLoading, setIsLoading }: SignupFormProps) {
       console.log('Signup response:', { data, error });
 
       if (error) {
-        console.error('Signup error:', error);
+        console.error('Signup error details:', {
+          message: error.message,
+          status: error.status,
+          code: error.code,
+          details: error
+        });
         
         // Handle specific error cases
         if (error.message.includes('User already registered')) {
           toast.error('An account with this email already exists. Please try logging in instead.');
         } else if (error.message.includes('Database error')) {
-          toast.error('Database error occurred. Please try again or contact support.');
+          toast.error('There was a database error. Please try again or contact support if the issue persists.');
+          console.error('Database error during signup - this may indicate a trigger or RLS issue');
         } else if (error.message.includes('Invalid email')) {
           toast.error('Please enter a valid email address.');
         } else {
@@ -70,7 +76,11 @@ export function SignupForm({ isLoading, setIsLoading }: SignupFormProps) {
       }
 
       if (data.user) {
-        console.log('User created successfully:', data.user);
+        console.log('User created successfully:', {
+          id: data.user.id,
+          email: data.user.email,
+          confirmed: data.user.email_confirmed_at
+        });
         
         // Check if email confirmation is required
         if (data.user.email_confirmed_at) {

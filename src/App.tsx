@@ -31,6 +31,7 @@ import SurveyBuilder from '@/pages/SurveyBuilder';
 // Admin pages
 import AdminDashboard from '@/pages/AdminDashboard';
 import UserManagement from '@/pages/admin/UserManagement';
+import UserCreation from '@/pages/admin/UserCreation';
 import ServicesManagement from '@/pages/admin/ServicesManagement';
 import SystemSettings from '@/pages/admin/SystemSettings';
 import Analytics from '@/pages/admin/Analytics';
@@ -126,6 +127,11 @@ function App() {
               <Route path="/admin/users" element={
                 <RoleBasedRoute allowedRoles={['super_admin', 'admin', 'manager']}>
                   <UserManagement />
+                </RoleBasedRoute>
+              } />
+              <Route path="/admin/user-creation" element={
+                <RoleBasedRoute allowedRoles={['super_admin', 'admin']}>
+                  <UserCreation />
                 </RoleBasedRoute>
               } />
               <Route path="/admin/services" element={

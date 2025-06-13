@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,15 +16,19 @@ export const AuthPage = () => {
 
   useEffect(() => {
     if (!authLoading && user && userRole) {
-      // Handle routing for all roles
+      console.log('AuthPage - Routing user with role:', userRole);
+      
+      // Route based on user role
       switch (userRole) {
         case 'super_admin':
         case 'admin':
-        case 'manager':
+          console.log('Redirecting admin to /admin');
           navigate("/admin");
           break;
+        case 'manager':
         case 'user':
         default:
+          console.log('Redirecting user/manager to /dashboard');
           navigate("/dashboard");
           break;
       }

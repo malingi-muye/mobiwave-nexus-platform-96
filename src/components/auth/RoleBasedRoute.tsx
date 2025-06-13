@@ -12,7 +12,7 @@ interface RoleBasedRouteProps {
 export const RoleBasedRoute: React.FC<RoleBasedRouteProps> = ({ 
   children, 
   allowedRoles = [],
-  redirectTo = '/dashboard'
+  redirectTo
 }) => {
   const { user, userRole, isLoading } = useAuth();
 
@@ -33,6 +33,16 @@ export const RoleBasedRoute: React.FC<RoleBasedRouteProps> = ({
   // Check if user has one of the allowed roles
   if (allowedRoles.length > 0 && userRole && !allowedRoles.includes(userRole)) {
     console.log('Access denied. User role:', userRole, 'Required roles:', allowedRoles);
+    
+    // If no custom redirect specified, redirect based on user role
+    if (!redirectTo) {
+      if (userRole === 'super_admin' || userRole === 'admin') {
+        return <Navigate to="/admin" replace />;
+      } else {
+        return <Navigate to="/dashboard" replace />;
+      }
+    }
+    
     return <Navigate to={redirectTo} replace />;
   }
 

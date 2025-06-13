@@ -21,6 +21,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
   }, [user, isLoading]);
 
+  console.log('ProtectedRoute - User:', !!user, 'Role:', userRole, 'Loading:', isLoading);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -35,8 +37,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Check role requirement
   if (requiredRole && userRole !== requiredRole) {
+    console.log('Role mismatch - Required:', requiredRole, 'User has:', userRole);
     // Redirect to appropriate dashboard based on user's actual role
-    if (userRole === 'admin') {
+    if (userRole === 'super_admin' || userRole === 'admin') {
       return <Navigate to="/admin" replace />;
     } else {
       return <Navigate to="/dashboard" replace />;

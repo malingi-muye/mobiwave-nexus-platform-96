@@ -1,10 +1,10 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "./AuthProvider";
 import { toast } from 'sonner';
 
 interface LoginFormProps {
@@ -16,53 +16,19 @@ export function LoginForm({ isLoading, setIsLoading }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-
-      if (data.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-
-        // Safely access role with fallback
-        const userRole = (profile as any)?.role || 'user';
-        toast.success('Welcome back!');
-
-        // Handle routing for all roles
-        switch (userRole) {
-          case 'super_admin':
-          case 'admin':
-            navigate("/admin");
-            break;
-          case 'manager':
-            // Managers could go to admin dashboard or a specific manager dashboard
-            // For now, routing to admin dashboard - can be customized later
-            navigate("/admin");
-            break;
-          case 'user':
-          default:
-            navigate("/dashboard");
-            break;
-        }
-      }
-    } catch (error) {
-      toast.error('An unexpected error occurred. Please try again.');
+      await login(email, password);
+      toast.success('Welcome back!');
+      // Navigation will be handled by AuthPage based on role
+    } catch (error: any) {
+      console.error('Login error:', error);
+      toast.error(error.message || 'Login failed');
     } finally {
       setIsLoading(false);
     }

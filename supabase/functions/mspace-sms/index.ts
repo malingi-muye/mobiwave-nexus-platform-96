@@ -8,10 +8,9 @@ const corsHeaders = {
 }
 
 interface SMSRequest {
-  username: string;
-  senderId: string;
-  recipient: string;
+  recipients: string[];
   message: string;
+  senderId?: string;
   campaignId?: string;
 }
 
@@ -33,14 +32,44 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { username, senderId, recipient, message, campaignId } = await req.json() as SMSRequest
+    const { recipients, message, senderId, campaignId } = await req.json() as SMSRequest
     
-    // Get API key from request headers
-    const apiKey = req.headers.get('x-api-key')
-    
-    if (!apiKey) {
+    // Get API credentials from the user's stored credentials
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
       return new Response(
-        JSON.stringify({ error: 'API key is required' }),
+        JSON.stringify({ error: 'Authorization required' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
+    
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid authorization' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    // Get user's API credentials
+    const { data: credentials, error: credError } = await supabase
+      .from('api_credentials')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('service_name', 'mspace')
+      .eq('is_active', true)
+      .single()
+
+    if (credError || !credentials) {
+      return new Response(
+        JSON.stringify({ error: 'Mspace API credentials not configured. Please configure them in Settings.' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -48,109 +77,156 @@ serve(async (req) => {
       )
     }
 
-    console.log('Sending SMS via Mspace API:', { username, senderId, recipient: recipient.substring(0, 5) + '...' })
+    // Extract credentials from additional_config
+    const config = credentials.additional_config as any
+    const apiKey = config?.api_key || Deno.env.get('MSPACE_API_KEY')
+    const username = config?.username
+    const defaultSenderId = config?.sender_id || senderId || 'MOBIWAVE'
 
-    // Send SMS via Mspace API
-    const mspaceResponse = await fetch('https://api.mspace.co.ke/smsapi/v2/sendtext', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'apikey': apiKey
-      },
-      body: JSON.stringify({
-        username,
-        senderId,
-        recipient,
-        message
-      })
-    })
-
-    const responseData = await mspaceResponse.json() as MspaceResponse
-    console.log('Mspace API response:', responseData)
-
-    // Get user ID from JWT token
-    const authHeader = req.headers.get('Authorization')
-    let userId = null
-    
-    if (authHeader) {
-      const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
-      userId = user?.id
+    if (!apiKey || !username) {
+      return new Response(
+        JSON.stringify({ error: 'Incomplete Mspace API credentials. Please check your settings.' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
     }
 
-    const isSuccess = mspaceResponse.ok && (responseData.messageId || responseData.status === 'success')
-    const messageStatus = isSuccess ? 'sent' : 'failed'
+    console.log('Sending SMS to', recipients.length, 'recipients via Mspace API')
 
-    // Store message in database if we have user ID
-    if (userId) {
-      const messageRecord = {
-        user_id: userId,
-        campaign_id: campaignId || null,
-        type: 'sms',
-        sender: senderId,
-        recipient: recipient,
-        content: message,
-        status: messageStatus,
-        provider: 'mspace',
-        provider_message_id: responseData.messageId || null,
-        cost: 0.05, // Default cost per SMS
-        sent_at: isSuccess ? new Date().toISOString() : null,
-        failed_at: isSuccess ? null : new Date().toISOString(),
-        error_message: isSuccess ? null : responseData.error || responseData.message || 'Failed to send SMS',
-        metadata: { mspace_response: responseData }
-      }
+    const results = []
+    let totalCost = 0
 
-      const { error: dbError } = await supabase
-        .from('message_history')
-        .insert(messageRecord)
+    // Send SMS to each recipient
+    for (const recipient of recipients) {
+      try {
+        console.log('Sending SMS to:', recipient.substring(0, 5) + '...')
 
-      if (dbError) {
-        console.error('Error storing message in database:', dbError)
-      }
-
-      // Update campaign recipient status if campaignId is provided
-      if (campaignId) {
-        const { error: recipientError } = await supabase
-          .from('campaign_recipients')
-          .update({
-            status: messageStatus,
-            provider_message_id: responseData.messageId || null,
-            cost: 0.05,
-            sent_at: isSuccess ? new Date().toISOString() : null,
-            failed_at: isSuccess ? null : new Date().toISOString(),
-            error_message: isSuccess ? null : responseData.error || responseData.message || 'Failed to send SMS'
+        const mspaceResponse = await fetch('https://api.mspace.co.ke/smsapi/v2/sendtext', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'apikey': apiKey
+          },
+          body: JSON.stringify({
+            username,
+            senderId: defaultSenderId,
+            recipient: recipient.replace(/\D/g, ''), // Clean phone number
+            message
           })
-          .eq('campaign_id', campaignId)
-          .eq('recipient_value', recipient)
+        })
 
-        if (recipientError) {
-          console.error('Error updating campaign recipient:', recipientError)
+        const responseData = await mspaceResponse.json() as MspaceResponse
+        console.log('Mspace API response for', recipient + ':', responseData)
+
+        const isSuccess = mspaceResponse.ok && (responseData.messageId || responseData.status === 'success')
+        const cost = 0.05 // Cost per SMS
+
+        if (isSuccess) {
+          totalCost += cost
         }
-      }
 
-      // Update user credits
-      if (isSuccess) {
+        // Store message in database
+        const messageRecord = {
+          user_id: user.id,
+          campaign_id: campaignId || null,
+          type: 'sms',
+          sender: defaultSenderId,
+          recipient: recipient.replace(/\D/g, ''),
+          content: message,
+          status: isSuccess ? 'sent' : 'failed',
+          provider: 'mspace',
+          provider_message_id: responseData.messageId || null,
+          cost: isSuccess ? cost : 0,
+          sent_at: isSuccess ? new Date().toISOString() : null,
+          failed_at: isSuccess ? null : new Date().toISOString(),
+          error_message: isSuccess ? null : responseData.error || responseData.message || 'Failed to send SMS',
+          metadata: { mspace_response: responseData }
+        }
+
+        // Try to store in message_history table if it exists
+        try {
+          const { error: dbError } = await supabase
+            .from('message_history')
+            .insert(messageRecord)
+
+          if (dbError) {
+            console.error('Error storing message in database:', dbError)
+          }
+        } catch (err) {
+          // If message_history table doesn't exist, store in campaigns metadata
+          if (campaignId) {
+            const { data: campaign } = await supabase
+              .from('campaigns')
+              .select('metadata')
+              .eq('id', campaignId)
+              .single()
+
+            const existingMetadata = campaign?.metadata as any || {}
+            const messages = existingMetadata.messages || []
+            messages.push(messageRecord)
+
+            await supabase
+              .from('campaigns')
+              .update({ 
+                metadata: { ...existingMetadata, messages }
+              })
+              .eq('id', campaignId)
+          }
+        }
+
+        results.push({
+          recipient,
+          success: isSuccess,
+          messageId: responseData.messageId,
+          message: responseData.message,
+          error: responseData.error
+        })
+
+      } catch (error) {
+        console.error('Error sending SMS to', recipient + ':', error)
+        results.push({
+          recipient,
+          success: false,
+          error: error.message
+        })
+      }
+    }
+
+    // Deduct credits if any messages were successful
+    if (totalCost > 0) {
+      try {
         const { error: creditError } = await supabase.rpc('deduct_credits', {
-          user_id: userId,
-          amount: 0.05
+          user_id: user.id,
+          amount: totalCost
         })
 
         if (creditError) {
           console.error('Error deducting credits:', creditError)
         }
+      } catch (err) {
+        console.error('Credits deduction failed:', err)
       }
     }
 
+    const successCount = results.filter(r => r.success).length
+    const failCount = results.length - successCount
+
     return new Response(
       JSON.stringify({
-        success: isSuccess,
-        messageId: responseData.messageId,
-        status: messageStatus,
-        message: responseData.message || (isSuccess ? 'SMS sent successfully' : 'Failed to send SMS'),
-        error: responseData.error
+        success: successCount > 0,
+        results,
+        summary: {
+          total: results.length,
+          successful: successCount,
+          failed: failCount,
+          totalCost
+        }
       }),
       { 
-        status: isSuccess ? 200 : 400,
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     )

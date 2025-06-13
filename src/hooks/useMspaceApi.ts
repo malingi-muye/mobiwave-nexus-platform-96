@@ -30,6 +30,7 @@ export const useMspaceApi = () => {
           .select('*')
           .eq('user_id', user.id)
           .eq('service_name', 'mspace')
+          .eq('is_active', true)
           .single();
 
         if (error || !data) return null;
@@ -50,8 +51,8 @@ export const useMspaceApi = () => {
 
   const sendSMS = useMutation({
     mutationFn: async ({ recipients, message, senderId, campaignId }: SendSMSParams) => {
-      if (!credentials) {
-        throw new Error('Mspace API credentials not configured');
+      if (!credentials?.api_key || !credentials?.username) {
+        throw new Error('Mspace API credentials not configured. Please configure them in Settings.');
       }
 
       const { data, error } = await supabase.functions.invoke('mspace-sms', {
@@ -66,8 +67,18 @@ export const useMspaceApi = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      toast.success('SMS sent successfully');
+    onSuccess: (data) => {
+      if (data?.summary) {
+        const { successful, failed, total } = data.summary;
+        if (successful > 0) {
+          toast.success(`${successful}/${total} SMS sent successfully`);
+        }
+        if (failed > 0) {
+          toast.error(`${failed}/${total} SMS failed to send`);
+        }
+      } else {
+        toast.success('SMS sent successfully');
+      }
     },
     onError: (error: any) => {
       toast.error(`Failed to send SMS: ${error.message}`);
@@ -76,7 +87,7 @@ export const useMspaceApi = () => {
 
   const checkBalance = useMutation({
     mutationFn: async () => {
-      if (!credentials) {
+      if (!credentials?.api_key || !credentials?.username) {
         throw new Error('Mspace API credentials not configured');
       }
 
@@ -96,7 +107,7 @@ export const useMspaceApi = () => {
       }
     },
     onSuccess: (data) => {
-      toast.success(`Balance: ${data.balance || 'N/A'}`);
+      toast.success(`Balance: ${data.balance || 'N/A'} SMS credits`);
     },
     onError: (error: any) => {
       toast.error(error.message);
@@ -107,6 +118,6 @@ export const useMspaceApi = () => {
     sendSMS,
     checkBalance,
     isLoading: sendSMS.isPending || checkBalance.isPending,
-    hasCredentials: !!credentials?.api_key
+    hasCredentials: !!(credentials?.api_key && credentials?.username)
   };
 };

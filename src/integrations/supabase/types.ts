@@ -859,6 +859,71 @@ export type Database = {
           },
         ]
       }
+      whatsapp_messages: {
+        Row: {
+          content: string
+          created_at: string
+          delivered_at: string | null
+          failed_reason: string | null
+          id: string
+          message_type: string
+          read_at: string | null
+          recipient_phone: string
+          sent_at: string | null
+          status: string
+          subscription_id: string | null
+          template_components: Json | null
+          template_language: string | null
+          template_name: string | null
+          updated_at: string
+          whatsapp_message_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          delivered_at?: string | null
+          failed_reason?: string | null
+          id?: string
+          message_type?: string
+          read_at?: string | null
+          recipient_phone: string
+          sent_at?: string | null
+          status?: string
+          subscription_id?: string | null
+          template_components?: Json | null
+          template_language?: string | null
+          template_name?: string | null
+          updated_at?: string
+          whatsapp_message_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          delivered_at?: string | null
+          failed_reason?: string | null
+          id?: string
+          message_type?: string
+          read_at?: string | null
+          recipient_phone?: string
+          sent_at?: string | null
+          status?: string
+          subscription_id?: string | null
+          template_components?: Json | null
+          template_language?: string | null
+          template_name?: string | null
+          updated_at?: string
+          whatsapp_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       whatsapp_subscriptions: {
         Row: {
           access_token_encrypted: string
@@ -905,6 +970,68 @@ export type Database = {
             columns: ["subscription_id"]
             isOneToOne: false
             referencedRelation: "user_service_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_templates: {
+        Row: {
+          body_text: string
+          buttons: Json | null
+          category: string
+          created_at: string
+          footer_text: string | null
+          header_text: string | null
+          header_type: string | null
+          id: string
+          language: string
+          name: string
+          status: string
+          subscription_id: string | null
+          updated_at: string
+          variables: Json | null
+          whatsapp_template_id: string | null
+        }
+        Insert: {
+          body_text: string
+          buttons?: Json | null
+          category?: string
+          created_at?: string
+          footer_text?: string | null
+          header_text?: string | null
+          header_type?: string | null
+          id?: string
+          language?: string
+          name: string
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+          variables?: Json | null
+          whatsapp_template_id?: string | null
+        }
+        Update: {
+          body_text?: string
+          buttons?: Json | null
+          category?: string
+          created_at?: string
+          footer_text?: string | null
+          header_text?: string | null
+          header_type?: string | null
+          id?: string
+          language?: string
+          name?: string
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+          variables?: Json | null
+          whatsapp_template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_templates_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_subscriptions"
             referencedColumns: ["id"]
           },
         ]

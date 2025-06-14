@@ -1,222 +1,361 @@
 
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { useQuery } from '@tanstack/react-query';
-import { useServiceStatus } from '@/hooks/useSystemMetrics';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import { 
   Activity, 
   Server, 
-  AlertTriangle, 
-  CheckCircle, 
-  Cpu, 
-  HardDrive,
-  Wifi,
-  RefreshCw
+  Database, 
+  Wifi, 
+  Shield,
+  AlertTriangle,
+  CheckCircle,
+  RefreshCw,
+  TrendingUp,
+  TrendingDown,
+  Minus
 } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+interface HealthMetric {
+  id: string;
+  name: string;
+  value: number;
+  status: 'healthy' | 'warning' | 'critical';
+  trend: 'up' | 'down' | 'stable';
+  lastUpdated: string;
+}
+
+interface ServiceHealth {
+  id: string;
+  name: string;
+  status: 'operational' | 'degraded' | 'down';
+  uptime: number;
+  incidents: number;
+  lastIncident?: string;
+}
 
 export function SystemHealthDashboard() {
-  const { data: services, isLoading } = useServiceStatus();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState(new Date());
 
-  const systemMetrics = [
-    { time: '00:00', cpu: 45, memory: 68, network: 23 },
-    { time: '04:00', cpu: 52, memory: 71, network: 34 },
-    { time: '08:00', cpu: 78, memory: 85, network: 67 },
-    { time: '12:00', cpu: 65, memory: 79, network: 45 },
-    { time: '16:00', cpu: 71, memory: 82, network: 56 },
-    { time: '20:00', cpu: 58, memory: 74, network: 38 }
-  ];
+  const [healthMetrics, setHealthMetrics] = useState<HealthMetric[]>([
+    {
+      id: 'cpu',
+      name: 'CPU Usage',
+      value: 45,
+      status: 'healthy',
+      trend: 'stable',
+      lastUpdated: '2 min ago'
+    },
+    {
+      id: 'memory',
+      name: 'Memory Usage',
+      value: 68,
+      status: 'healthy',
+      trend: 'up',
+      lastUpdated: '2 min ago'
+    },
+    {
+      id: 'disk',
+      name: 'Disk Usage',
+      value: 72,
+      status: 'warning',
+      trend: 'up',
+      lastUpdated: '2 min ago'
+    },
+    {
+      id: 'network',
+      name: 'Network Latency',
+      value: 23,
+      status: 'healthy',
+      trend: 'down',
+      lastUpdated: '2 min ago'
+    }
+  ]);
 
-  const alerts = [
-    { id: '1', type: 'warning', message: 'High memory usage on database server', time: '5 minutes ago' },
-    { id: '2', type: 'info', message: 'Scheduled maintenance completed successfully', time: '1 hour ago' },
-    { id: '3', type: 'error', message: 'Failed to connect to external API', time: '2 hours ago' }
-  ];
+  const [services, setServices] = useState<ServiceHealth[]>([
+    {
+      id: 'api',
+      name: 'API Gateway',
+      status: 'operational',
+      uptime: 99.9,
+      incidents: 0,
+    },
+    {
+      id: 'database',
+      name: 'Database',
+      status: 'operational',
+      uptime: 99.99,
+      incidents: 0,
+    },
+    {
+      id: 'sms',
+      name: 'SMS Service',
+      status: 'operational',
+      uptime: 99.8,
+      incidents: 1,
+      lastIncident: '2 days ago'
+    },
+    {
+      id: 'whatsapp',
+      name: 'WhatsApp API',
+      status: 'degraded',
+      uptime: 98.5,
+      incidents: 3,
+      lastIncident: '4 hours ago'
+    }
+  ]);
 
-  const getHealthScore = () => {
-    if (!services?.length) return 0;
-    const healthyServices = services.filter(s => s.status === 'healthy').length;
-    return Math.round((healthyServices / services.length) * 100);
+  const [performanceData] = useState([
+    { time: '00:00', cpu: 45, memory: 62, disk: 70 },
+    { time: '04:00', cpu: 38, memory: 65, disk: 71 },
+    { time: '08:00', cpu: 52, memory: 70, disk: 72 },
+    { time: '12:00', cpu: 48, memory: 68, disk: 72 },
+    { time: '16:00', cpu: 55, memory: 72, disk: 73 },
+    { time: '20:00', cpu: 42, memory: 66, disk: 72 },
+    { time: '24:00', cpu: 45, memory: 68, disk: 72 }
+  ]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setLastRefresh(new Date());
+    setIsRefreshing(false);
   };
 
-  const getAlertColor = (type: string) => {
-    switch (type) {
-      case 'error': return 'bg-red-100 text-red-800';
-      case 'warning': return 'bg-yellow-100 text-yellow-800';
-      case 'info': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'healthy':
+      case 'operational':
+        return 'bg-green-100 text-green-800';
+      case 'warning':
+      case 'degraded':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'critical':
+      case 'down':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'healthy': return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case 'warning': return <AlertTriangle className="w-4 h-4 text-yellow-600" />;
-      case 'error': return <AlertTriangle className="w-4 h-4 text-red-600" />;
-      default: return <Server className="w-4 h-4 text-gray-600" />;
+      case 'healthy':
+      case 'operational':
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'warning':
+      case 'degraded':
+        return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
+      case 'critical':
+      case 'down':
+        return <AlertTriangle className="w-4 h-4 text-red-500" />;
+      default:
+        return <Activity className="w-4 h-4 text-gray-500" />;
     }
   };
 
-  if (isLoading) {
-    return <div>Loading system health data...</div>;
-  }
+  const getTrendIcon = (trend: string) => {
+    switch (trend) {
+      case 'up':
+        return <TrendingUp className="w-3 h-3 text-red-500" />;
+      case 'down':
+        return <TrendingDown className="w-3 h-3 text-green-500" />;
+      default:
+        return <Minus className="w-3 h-3 text-gray-500" />;
+    }
+  };
+
+  const overallHealth = () => {
+    const criticalCount = healthMetrics.filter(m => m.status === 'critical').length;
+    const warningCount = healthMetrics.filter(m => m.status === 'warning').length;
+    
+    if (criticalCount > 0) return 'critical';
+    if (warningCount > 0) return 'warning';
+    return 'healthy';
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold">System Health Dashboard</h2>
-          <p className="text-gray-600">Real-time monitoring of system performance and health</p>
+          <h1 className="text-3xl font-bold tracking-tight">System Health</h1>
+          <p className="text-muted-foreground">Monitor infrastructure health and performance</p>
         </div>
-        <Button variant="outline">
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            {getStatusIcon(overallHealth())}
+            <Badge className={getStatusColor(overallHealth())}>
+              {overallHealth()}
+            </Badge>
+          </div>
+          <Button
+            variant="outline"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
-      {/* Overall Health Score */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center">
-            <div className="text-6xl font-bold text-green-600 mb-2">{getHealthScore()}%</div>
-            <p className="text-lg text-gray-600">Overall System Health</p>
-            <p className="text-sm text-gray-500 mt-2">
-              {services?.filter(s => s.status === 'healthy').length || 0} of {services?.length || 0} services healthy
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* System Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">CPU Usage</p>
-                <p className="text-3xl font-bold">67%</p>
-                <p className="text-sm text-green-600">Normal</p>
+      {/* System Overview */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {healthMetrics.map((metric) => (
+          <Card key={metric.id}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{metric.name}</CardTitle>
+              <div className="flex items-center gap-1">
+                {getTrendIcon(metric.trend)}
+                {getStatusIcon(metric.status)}
               </div>
-              <Cpu className="w-8 h-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Memory Usage</p>
-                <p className="text-3xl font-bold">82%</p>
-                <p className="text-sm text-yellow-600">High</p>
-              </div>
-              <HardDrive className="w-8 h-8 text-purple-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Network I/O</p>
-                <p className="text-3xl font-bold">45%</p>
-                <p className="text-sm text-green-600">Normal</p>
-              </div>
-              <Wifi className="w-8 h-8 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{metric.value}%</div>
+              <Progress 
+                value={metric.value} 
+                className="mt-2"
+                // @ts-ignore
+                indicatorClassName={
+                  metric.status === 'critical' ? 'bg-red-500' :
+                  metric.status === 'warning' ? 'bg-yellow-500' : 'bg-green-500'
+                }
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Updated {metric.lastUpdated}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Performance Chart */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="w-5 h-5" />
-            System Performance
-          </CardTitle>
-          <CardDescription>
-            Real-time system metrics over the last 24 hours
-          </CardDescription>
+          <CardTitle>System Performance Trends</CardTitle>
+          <CardDescription>24-hour performance overview</CardDescription>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={systemMetrics}>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={performanceData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="time" />
               <YAxis />
               <Tooltip />
-              <Line type="monotone" dataKey="cpu" stroke="#3B82F6" strokeWidth={2} name="CPU %" />
-              <Line type="monotone" dataKey="memory" stroke="#8B5CF6" strokeWidth={2} name="Memory %" />
-              <Line type="monotone" dataKey="network" stroke="#10B981" strokeWidth={2} name="Network %" />
+              <Line
+                type="monotone"
+                dataKey="cpu"
+                stroke="#8884d8"
+                strokeWidth={2}
+                name="CPU %"
+              />
+              <Line
+                type="monotone"
+                dataKey="memory"
+                stroke="#82ca9d"
+                strokeWidth={2}
+                name="Memory %"
+              />
+              <Line
+                type="monotone"
+                dataKey="disk"
+                stroke="#ffc658"
+                strokeWidth={2}
+                name="Disk %"
+              />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Service Status */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Server className="w-5 h-5" />
-              Service Status
-            </CardTitle>
-            <CardDescription>
-              Current status of all system services
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {services?.map((service) => (
-                <div key={service.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    {getStatusIcon(service.status)}
-                    <div>
-                      <h3 className="font-medium">{service.service_name}</h3>
-                      <p className="text-sm text-gray-500">Version {service.version}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium">{service.uptime_percentage}% uptime</p>
-                    <p className="text-xs text-gray-500">{service.instances} instances</p>
+      {/* Service Status */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Service Status</CardTitle>
+          <CardDescription>Current status of all system services</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {services.map((service) => (
+              <div key={service.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  {getStatusIcon(service.status)}
+                  <div>
+                    <h4 className="font-medium">{service.name}</h4>
+                    {service.lastIncident && (
+                      <p className="text-sm text-muted-foreground">
+                        Last incident: {service.lastIncident}
+                      </p>
+                    )}
                   </div>
                 </div>
-              ))}
-            </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p className="text-sm font-medium">{service.uptime}% uptime</p>
+                    <p className="text-xs text-muted-foreground">
+                      {service.incidents} incidents this month
+                    </p>
+                  </div>
+                  <Badge className={getStatusColor(service.status)}>
+                    {service.status}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* System Information */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Server Load</CardTitle>
+            <Server className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">0.85</div>
+            <p className="text-xs text-muted-foreground">
+              Load average (1m)
+            </p>
           </CardContent>
         </Card>
 
-        {/* Recent Alerts */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5" />
-              Recent Alerts
-            </CardTitle>
-            <CardDescription>
-              Latest system alerts and notifications
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Database Connections</CardTitle>
+            <Database className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {alerts.map((alert) => (
-                <div key={alert.id} className="flex items-start gap-3 p-3 border rounded-lg">
-                  <Badge className={getAlertColor(alert.type)}>
-                    {alert.type}
-                  </Badge>
-                  <div className="flex-1">
-                    <p className="text-sm">{alert.message}</p>
-                    <p className="text-xs text-gray-500 mt-1">{alert.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <div className="text-2xl font-bold">45/100</div>
+            <p className="text-xs text-muted-foreground">
+              Active connections
+            </p>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Security Score</CardTitle>
+            <Shield className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">94/100</div>
+            <p className="text-xs text-muted-foreground">
+              Security rating
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="text-xs text-muted-foreground text-center">
+        Last updated: {lastRefresh.toLocaleTimeString()}
       </div>
     </div>
   );

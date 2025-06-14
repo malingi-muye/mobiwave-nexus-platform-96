@@ -15,6 +15,10 @@ import RevenueReports from '../pages/admin/RevenueReports';
 import SystemIntegrity from '../pages/admin/SystemIntegrity';
 import AdvancedAnalytics from '../pages/AdvancedAnalytics';
 import ApiManagement from '../pages/ApiManagement';
+// Phase 6 imports
+import RealTimeMonitoring from '../pages/admin/RealTimeMonitoring';
+import NotificationCenter from '../pages/admin/NotificationCenter';
+import SystemHealth from '../pages/admin/SystemHealth';
 
 export const adminRoutes = [
   <Route
@@ -140,6 +144,34 @@ export const adminRoutes = [
     element={
       <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
         <ApiManagement />
+      </RoleBasedRoute>
+    }
+  />,
+  // Phase 6 routes
+  <Route
+    key="admin-real-time-monitoring"
+    path="/admin/real-time-monitoring"
+    element={
+      <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
+        <RealTimeMonitoring />
+      </RoleBasedRoute>
+    }
+  />,
+  <Route
+    key="admin-notifications"
+    path="/admin/notifications"
+    element={
+      <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
+        <NotificationCenter />
+      </RoleBasedRoute>
+    }
+  />,
+  <Route
+    key="admin-system-health"
+    path="/admin/system-health"
+    element={
+      <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
+        <SystemHealth />
       </RoleBasedRoute>
     }
   />

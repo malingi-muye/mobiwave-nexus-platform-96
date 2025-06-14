@@ -1,11 +1,15 @@
 
 import { useState, useMemo } from 'react';
 
-interface ServiceSubscription {
+interface UserServiceSubscription {
   id: string;
   user_id: string;
   service_id: string;
   status: string;
+  configuration: any;
+  setup_fee_paid: boolean;
+  monthly_billing_active: boolean;
+  activated_at: string;
   service: {
     id: string;
     service_name: string;
@@ -20,7 +24,7 @@ interface User {
   last_name?: string;
 }
 
-export function useServiceFilters(subscriptions: ServiceSubscription[], users: User[]) {
+export function useServiceFilters(subscriptions: UserServiceSubscription[], users: User[]) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [serviceTypeFilter, setServiceTypeFilter] = useState<string>('all');

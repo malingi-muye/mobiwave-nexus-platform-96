@@ -7,10 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { RefreshCw, Plus, DollarSign, Users } from 'lucide-react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { RefreshCw, Plus, DollarSign, Users, Settings, AlertCircle } from 'lucide-react';
 import { useMspaceAccounts } from '@/hooks/mspace/useMspaceAccounts';
 import { LoadingWrapper } from '@/components/ui/loading-wrapper';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 
 interface SubUser {
   smsBalance: string;
@@ -28,6 +30,7 @@ export function SubUsersManager() {
   const [resellerClients, setResellerClients] = useState<ResellerClient[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [topUpData, setTopUpData] = useState({ clientname: '', noOfSms: 0, type: 'subAccount' });
+  const [credentialsError, setCredentialsError] = useState(false);
   
   const { 
     querySubAccounts, 
@@ -39,19 +42,27 @@ export function SubUsersManager() {
 
   const loadSubUsers = async () => {
     try {
+      setCredentialsError(false);
       const data = await querySubAccounts();
       setSubUsers(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load sub users:', error);
+      if (error.message?.includes('credentials not configured')) {
+        setCredentialsError(true);
+      }
     }
   };
 
   const loadResellerClients = async () => {
     try {
+      setCredentialsError(false);
       const data = await queryResellerClients();
       setResellerClients(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load reseller clients:', error);
+      if (error.message?.includes('credentials not configured')) {
+        setCredentialsError(true);
+      }
     }
   };
 
@@ -83,6 +94,11 @@ export function SubUsersManager() {
     }
   };
 
+  const handleRefresh = () => {
+    loadSubUsers();
+    loadResellerClients();
+  };
+
   useEffect(() => {
     loadSubUsers();
     loadResellerClients();
@@ -90,6 +106,44 @@ export function SubUsersManager() {
 
   const totalSubUserBalance = subUsers.reduce((sum, user) => sum + parseInt(user.smsBalance || '0'), 0);
   const totalResellerBalance = resellerClients.reduce((sum, client) => sum + parseInt(client.balance || '0'), 0);
+
+  if (credentialsError) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-2xl font-bold">Sub Users & Reseller Clients</h3>
+          <p className="text-gray-600">Manage sub accounts and reseller client balances</p>
+        </div>
+        
+        <Alert className="border-orange-200 bg-orange-50">
+          <AlertCircle className="h-4 w-4 text-orange-600" />
+          <AlertDescription className="text-orange-800">
+            <div className="space-y-2">
+              <p className="font-medium">Mspace API credentials not configured</p>
+              <p>To use this feature, you need to configure your Mspace API credentials first.</p>
+              <div className="flex gap-2 mt-3">
+                <Button asChild size="sm" className="bg-orange-600 hover:bg-orange-700">
+                  <Link to="/settings">
+                    <Settings className="w-4 h-4 mr-2" />
+                    Configure Credentials
+                  </Link>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleRefresh}
+                  disabled={isLoading}
+                >
+                  <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                  Retry
+                </Button>
+              </div>
+            </div>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -101,7 +155,7 @@ export function SubUsersManager() {
         
         <div className="flex gap-2">
           <Button
-            onClick={() => { loadSubUsers(); loadResellerClients(); }}
+            onClick={handleRefresh}
             disabled={isLoading}
             variant="outline"
           >
@@ -267,7 +321,7 @@ export function SubUsersManager() {
               </TableBody>
             </Table>
             
-            {subUsers.length === 0 && (
+            {subUsers.length === 0 && !isLoading && (
               <div className="text-center py-8 text-gray-500">
                 <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
                 <p>No sub users found. Click "Refresh" to load data.</p>
@@ -327,7 +381,7 @@ export function SubUsersManager() {
               </TableBody>
             </Table>
             
-            {resellerClients.length === 0 && (
+            {resellerClients.length === 0 && !isLoading && (
               <div className="text-center py-8 text-gray-500">
                 <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
                 <p>No reseller clients found. Click "Refresh" to load data.</p>

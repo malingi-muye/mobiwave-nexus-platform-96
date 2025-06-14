@@ -142,7 +142,7 @@ export function WhatsAppTemplateManager({ subscriptionId }: WhatsAppTemplateMana
                   required
                 />
                 <p className="text-xs text-gray-500">
-                  Use {{1}}, {{2}}, etc. for dynamic variables
+                  Use {`{{1}}`}, {`{{2}}`}, etc. for dynamic variables
                 </p>
               </div>
 

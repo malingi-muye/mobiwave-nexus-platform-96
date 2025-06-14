@@ -11,6 +11,7 @@ import { Plus, Phone } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
 import { USSDMenuBuilder } from './USSDMenuBuilder';
 import { USSDApplicationCard } from './USSDApplicationCard';
+import { USSDTestSimulator } from './USSDTestSimulator';
 
 interface MenuNode {
   id: string;
@@ -48,6 +49,8 @@ const fetchUSSDApplications = async (): Promise<USSDApplication[]> => {
 
 export function USSDApplicationBuilder() {
   const [isCreating, setIsCreating] = useState(false);
+  const [editingApp, setEditingApp] = useState<USSDApplication | null>(null);
+  const [testingApp, setTestingApp] = useState<USSDApplication | null>(null);
   const [serviceCode, setServiceCode] = useState('');
   const [callbackUrl, setCallbackUrl] = useState('');
   const [menuStructure, setMenuStructure] = useState<MenuNode[]>([
@@ -113,6 +116,33 @@ export function USSDApplicationBuilder() {
     }
   });
 
+  const updateApplication = useMutation({
+    mutationFn: async (appData: { id: string; service_code: string; menu_structure: MenuNode[]; callback_url: string }) => {
+      const { data, error } = await supabase
+        .from('mspace_ussd_applications')
+        .update({
+          service_code: appData.service_code,
+          menu_structure: appData.menu_structure as unknown as any,
+          callback_url: appData.callback_url
+        })
+        .eq('id', appData.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ussd-applications'] });
+      toast.success('USSD application updated successfully');
+      setEditingApp(null);
+      resetForm();
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to update application: ${error.message}`);
+    }
+  });
+
   const resetForm = () => {
     setServiceCode('');
     setCallbackUrl('');
@@ -130,15 +160,42 @@ export function USSDApplicationBuilder() {
       return;
     }
 
-    createApplication.mutate({
-      service_code: serviceCode,
-      menu_structure: menuStructure,
-      callback_url: callbackUrl
-    });
+    if (editingApp) {
+      updateApplication.mutate({
+        id: editingApp.id,
+        service_code: serviceCode,
+        menu_structure: menuStructure,
+        callback_url: callbackUrl
+      });
+    } else {
+      createApplication.mutate({
+        service_code: serviceCode,
+        menu_structure: menuStructure,
+        callback_url: callbackUrl
+      });
+    }
   };
 
   const handleMenuUpdate = (updatedMenu: MenuNode[]) => {
     setMenuStructure(updatedMenu);
+  };
+
+  const handleEdit = (app: USSDApplication) => {
+    setEditingApp(app);
+    setServiceCode(app.service_code);
+    setCallbackUrl(app.callback_url);
+    setMenuStructure(app.menu_structure);
+    setIsCreating(true);
+  };
+
+  const handleTest = (app: USSDApplication) => {
+    setTestingApp(app);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingApp(null);
+    setIsCreating(false);
+    resetForm();
   };
 
   if (isLoading) {
@@ -169,7 +226,7 @@ export function USSDApplicationBuilder() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Phone className="w-5 h-5" />
-              Create USSD Application
+              {editingApp ? 'Edit USSD Application' : 'Create USSD Application'}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -200,10 +257,16 @@ export function USSDApplicationBuilder() {
             />
 
             <div className="flex gap-3">
-              <Button onClick={handleSubmit} disabled={createApplication.isPending}>
-                {createApplication.isPending ? 'Creating...' : 'Create Application'}
+              <Button 
+                onClick={handleSubmit} 
+                disabled={createApplication.isPending || updateApplication.isPending}
+              >
+                {createApplication.isPending || updateApplication.isPending 
+                  ? (editingApp ? 'Updating...' : 'Creating...') 
+                  : (editingApp ? 'Update Application' : 'Create Application')
+                }
               </Button>
-              <Button variant="outline" onClick={() => setIsCreating(false)}>
+              <Button variant="outline" onClick={handleCancelEdit}>
                 Cancel
               </Button>
             </div>
@@ -211,9 +274,21 @@ export function USSDApplicationBuilder() {
         </Card>
       )}
 
+      {testingApp && (
+        <USSDTestSimulator 
+          application={testingApp}
+          onClose={() => setTestingApp(null)}
+        />
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {applications.map((app) => (
-          <USSDApplicationCard key={app.id} application={app} />
+          <USSDApplicationCard 
+            key={app.id} 
+            application={app}
+            onEdit={handleEdit}
+            onTest={handleTest}
+          />
         ))}
       </div>
 

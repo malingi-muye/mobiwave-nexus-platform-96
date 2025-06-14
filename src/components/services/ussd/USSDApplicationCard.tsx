@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Phone, Edit } from 'lucide-react';
+import { Phone, Edit, TestTube } from 'lucide-react';
 
 interface USSDApplication {
   id: string;
@@ -15,9 +15,23 @@ interface USSDApplication {
 
 interface USSDApplicationCardProps {
   application: USSDApplication;
+  onEdit?: (application: USSDApplication) => void;
+  onTest?: (application: USSDApplication) => void;
 }
 
-export function USSDApplicationCard({ application }: USSDApplicationCardProps) {
+export function USSDApplicationCard({ application, onEdit, onTest }: USSDApplicationCardProps) {
+  const handleEdit = () => {
+    if (onEdit) {
+      onEdit(application);
+    }
+  };
+
+  const handleTest = () => {
+    if (onTest) {
+      onTest(application);
+    }
+  };
+
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader>
@@ -47,11 +61,12 @@ export function USSDApplicationCard({ application }: USSDApplicationCardProps) {
             <p className="text-sm">{application.menu_structure.length} menus configured</p>
           </div>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" className="flex-1">
+            <Button size="sm" variant="outline" className="flex-1" onClick={handleEdit}>
               <Edit className="w-4 h-4 mr-2" />
               Edit
             </Button>
-            <Button size="sm" variant="outline">
+            <Button size="sm" variant="outline" onClick={handleTest}>
+              <TestTube className="w-4 h-4 mr-2" />
               Test
             </Button>
           </div>

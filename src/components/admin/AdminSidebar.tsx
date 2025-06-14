@@ -1,149 +1,152 @@
 
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import { 
   LayoutDashboard, 
   Users, 
-  BarChart3, 
   Settings, 
+  BarChart3, 
+  Shield, 
   Database,
-  FileText,
-  Shield,
-  Monitor,
+  Wrench,
   DollarSign,
+  Zap,
+  Smartphone,
   Activity,
-  Grid3X3,
-  TrendingUp,
-  Key,
-  Send
+  Brain
 } from 'lucide-react';
 
-const adminSidebarItems = [
-  {
-    title: 'Dashboard',
-    path: '/admin/dashboard',
+const adminMenuItems = [
+  { 
+    title: 'Overview', 
+    href: '/admin', 
     icon: LayoutDashboard,
-    color: 'bg-blue-500'
+    description: 'Main dashboard overview'
   },
-  {
-    title: 'User Management',
-    path: '/admin/users',
+  { 
+    title: 'User Management', 
+    href: '/admin/users', 
     icon: Users,
-    color: 'bg-green-500'
+    description: 'Manage users and permissions'
   },
-  {
-    title: 'Services Management',
-    path: '/admin/services',
-    icon: Grid3X3,
-    color: 'bg-purple-500'
+  { 
+    title: 'Services Management', 
+    href: '/admin/services', 
+    icon: Wrench,
+    description: 'Configure platform services'
   },
-  {
-    title: 'Analytics',
-    path: '/admin/analytics',
-    icon: BarChart3,
-    color: 'bg-orange-500'
-  },
-  {
-    title: 'Advanced Analytics',
-    path: '/admin/advanced-analytics',
-    icon: TrendingUp,
-    color: 'bg-indigo-500'
-  },
-  {
-    title: 'Revenue Reports',
-    path: '/admin/revenue',
+  { 
+    title: 'Revenue Reports', 
+    href: '/admin/revenue', 
     icon: DollarSign,
-    color: 'bg-emerald-500'
+    description: 'Financial analytics and reports'
   },
-  {
-    title: 'API Management',
-    path: '/admin/api',
-    icon: Key,
-    color: 'bg-yellow-500'
+  { 
+    title: 'Advanced Analytics', 
+    href: '/admin/analytics', 
+    icon: Brain,
+    description: 'AI-powered insights and predictions'
   },
-  {
-    title: 'System Settings',
-    path: '/admin/settings',
-    icon: Settings,
-    color: 'bg-gray-500'
+  { 
+    title: 'System Analytics', 
+    href: '/admin/system-analytics', 
+    icon: BarChart3,
+    description: 'Platform usage analytics'
   },
-  {
-    title: 'Database Admin',
-    path: '/admin/database',
-    icon: Database,
-    color: 'bg-red-500'
-  },
-  {
-    title: 'System Logs',
-    path: '/admin/logs',
-    icon: FileText,
-    color: 'bg-blue-600'
-  },
-  {
-    title: 'Security Config',
-    path: '/admin/security',
+  { 
+    title: 'Security Center', 
+    href: '/admin/security', 
     icon: Shield,
-    color: 'bg-red-600'
+    description: 'Security monitoring and config'
   },
-  {
-    title: 'Monitoring',
-    path: '/admin/monitoring',
-    icon: Monitor,
-    color: 'bg-cyan-500'
+  { 
+    title: 'Database Admin', 
+    href: '/admin/database', 
+    icon: Database,
+    description: 'Database management tools'
   },
-  {
-    title: 'System Integrity',
-    path: '/admin/integrity',
+  { 
+    title: 'System Monitoring', 
+    href: '/admin/monitoring', 
     icon: Activity,
-    color: 'bg-pink-500'
+    description: 'Real-time system monitoring'
+  },
+  { 
+    title: 'Settings', 
+    href: '/admin/settings', 
+    icon: Settings,
+    description: 'Platform configuration'
   }
 ];
 
 export function AdminSidebar() {
+  const location = useLocation();
+
   return (
-    <div className="w-64 bg-white border-r border-gray-200 h-full">
-      {/* MobiWave Header */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-r from-red-600 to-orange-600 rounded-lg flex items-center justify-center">
-            <Send className="w-4 h-4 text-white" />
-          </div>
+    <div className="flex h-full w-64 flex-col bg-white border-r border-gray-200">
+      {/* Header */}
+      <div className="flex h-16 items-center justify-center px-6 border-b border-gray-200">
+        <div className="flex items-center gap-2">
+          <Smartphone className="w-8 h-8 text-blue-600" />
           <div>
-            <h2 className="font-semibold text-gray-900">MobiWave</h2>
-            <p className="text-xs text-gray-500">Admin Portal</p>
+            <h1 className="text-lg font-bold text-gray-900">MobiWave</h1>
+            <p className="text-xs text-gray-500">Communication Hub</p>
           </div>
         </div>
       </div>
 
-      <nav className="mt-2">
-        <div className="px-2">
-          {adminSidebarItems.map((item) => {
+      {/* Admin Badge */}
+      <div className="px-6 py-3 bg-red-50 border-b border-red-100">
+        <div className="flex items-center gap-2">
+          <Shield className="w-4 h-4 text-red-600" />
+          <span className="text-sm font-medium text-red-900">Administrator Panel</span>
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto py-4">
+        <div className="space-y-1 px-3">
+          {adminMenuItems.map((item) => {
+            const isActive = location.pathname === item.href;
             const Icon = item.icon;
+            
             return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) =>
-                  `group flex items-center px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 mb-1 ${
-                    isActive
-                      ? 'bg-red-50 text-red-700 shadow-sm'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <div className={`w-8 h-8 ${item.color} rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow mr-3`}>
-                      <Icon className="w-4 h-4 text-white" />
-                    </div>
-                    <span className="truncate">{item.title}</span>
-                  </>
+              <Link
+                key={item.href}
+                to={item.href}
+                className={cn(
+                  'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                  isActive
+                    ? 'bg-blue-100 text-blue-900 shadow-sm'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 )}
-              </NavLink>
+              >
+                <Icon className={cn(
+                  'h-4 w-4 transition-colors',
+                  isActive ? 'text-blue-600' : 'text-gray-500 group-hover:text-gray-700'
+                )} />
+                <div className="flex flex-col">
+                  <span>{item.title}</span>
+                  {!isActive && (
+                    <span className="text-xs text-gray-500 group-hover:text-gray-600">
+                      {item.description}
+                    </span>
+                  )}
+                </div>
+              </Link>
             );
           })}
         </div>
       </nav>
+
+      {/* Footer */}
+      <div className="border-t border-gray-200 p-4">
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <Zap className="w-3 h-3" />
+          <span>Admin v2.0</span>
+        </div>
+      </div>
     </div>
   );
 }

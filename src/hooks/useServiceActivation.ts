@@ -47,13 +47,18 @@ export function useServiceActivation() {
         .from('service_activation_requests')
         .select(`
           *,
-          service:services_catalog(service_name, service_type, description),
-          user:profiles(email, first_name, last_name)
+          services_catalog!service_activation_requests_service_id_fkey(service_name, service_type, description),
+          profiles!service_activation_requests_user_id_fkey(email, first_name, last_name)
         `)
         .order('requested_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      
+      return (data || []).map(item => ({
+        ...item,
+        service: item.services_catalog,
+        user: item.profiles
+      })) as ServiceActivationRequest[];
     }
   });
 
@@ -65,13 +70,17 @@ export function useServiceActivation() {
         .from('user_service_activations')
         .select(`
           *,
-          service:services_catalog(service_name, service_type)
+          services_catalog!user_service_activations_service_id_fkey(service_name, service_type)
         `)
         .eq('is_active', true)
         .order('activated_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      
+      return (data || []).map(item => ({
+        ...item,
+        service: item.services_catalog
+      })) as UserServiceActivation[];
     }
   });
 
@@ -83,21 +92,29 @@ export function useServiceActivation() {
         .from('user_service_activations')
         .select(`
           *,
-          service:services_catalog(service_name, service_type)
+          services_catalog!user_service_activations_service_id_fkey(service_name, service_type)
         `)
         .eq('is_active', true);
 
       if (error) throw error;
-      return data || [];
+      
+      return (data || []).map(item => ({
+        ...item,
+        service: item.services_catalog
+      })) as UserServiceActivation[];
     }
   });
 
   // Request service activation
   const requestServiceActivation = useMutation({
     mutationFn: async (serviceId: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       const { data, error } = await supabase
         .from('service_activation_requests')
         .insert({
+          user_id: user.id,
           service_id: serviceId
         })
         .select()

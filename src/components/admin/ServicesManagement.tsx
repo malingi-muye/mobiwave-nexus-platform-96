@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Users, DollarSign } from 'lucide-react';
+import { Settings, Users, DollarSign, Wrench } from 'lucide-react';
 import { useRealServicesManagement } from '@/hooks/useRealServicesManagement';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +9,7 @@ import { ServicesManagementHeader } from './services/ServicesManagementHeader';
 import { ServiceCatalogView } from './services/ServiceCatalogView';
 import { UserSubscriptionsView } from './services/UserSubscriptionsView';
 import { BillingOverview } from './services/BillingOverview';
+import { ServiceConfigurationManager } from './services/ServiceConfigurationManager';
 
 interface User {
   id: string;
@@ -48,6 +49,16 @@ export function ServicesManagement() {
 
   const isDataLoading = isLoading || usersLoading;
 
+  // Wrapper function to match expected signature
+  const handleToggleServiceStatus = async (subscriptionId: string, newStatus: string): Promise<void> => {
+    await toggleServiceStatus({ subscriptionId, newStatus });
+  };
+
+  const handleServiceConfigured = async (serviceId: string, configuration: any): Promise<void> => {
+    // TODO: Implement service configuration update
+    console.log('Configuring service:', serviceId, configuration);
+  };
+
   if (isDataLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -61,10 +72,14 @@ export function ServicesManagement() {
       <ServicesManagementHeader />
 
       <Tabs defaultValue="services-catalog" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="services-catalog" className="flex items-center gap-2">
             <Settings className="w-4 h-4" />
             Services Catalog
+          </TabsTrigger>
+          <TabsTrigger value="configuration" className="flex items-center gap-2">
+            <Wrench className="w-4 h-4" />
+            Configuration
           </TabsTrigger>
           <TabsTrigger value="user-subscriptions" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
@@ -83,13 +98,21 @@ export function ServicesManagement() {
           />
         </TabsContent>
 
+        <TabsContent value="configuration" className="space-y-4">
+          <ServiceConfigurationManager
+            services={services}
+            onServiceConfigured={handleServiceConfigured}
+            isLoading={isDataLoading}
+          />
+        </TabsContent>
+
         <TabsContent value="user-subscriptions" className="space-y-4">
           <UserSubscriptionsView
             userSubscriptions={userSubscriptions}
             users={users}
             isLoading={isDataLoading}
             isUpdating={isUpdating}
-            onToggleServiceStatus={toggleServiceStatus}
+            onToggleServiceStatus={handleToggleServiceStatus}
           />
         </TabsContent>
 

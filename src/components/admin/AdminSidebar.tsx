@@ -14,7 +14,8 @@ import {
   Activity,
   Grid3X3,
   TrendingUp,
-  Key
+  Key,
+  Send
 } from 'lucide-react';
 
 const adminSidebarItems = [
@@ -101,11 +102,21 @@ const adminSidebarItems = [
 export function AdminSidebar() {
   return (
     <div className="w-64 bg-white border-r border-gray-200 h-full">
-      <div className="p-6">
-        <h2 className="text-xl font-bold text-gray-800">Admin Panel</h2>
+      {/* MobiWave Header */}
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-gradient-to-r from-red-600 to-orange-600 rounded-lg flex items-center justify-center">
+            <Send className="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <h2 className="font-semibold text-gray-900">MobiWave</h2>
+            <p className="text-xs text-gray-500">Admin Portal</p>
+          </div>
+        </div>
       </div>
-      <nav className="mt-6">
-        <div className="px-3">
+
+      <nav className="mt-2">
+        <div className="px-2">
           {adminSidebarItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -113,9 +124,9 @@ export function AdminSidebar() {
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) =>
-                  `group flex items-center px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 mb-2 ${
+                  `group flex items-center px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 mb-1 ${
                     isActive
-                      ? 'bg-blue-50 text-blue-700 shadow-sm'
+                      ? 'bg-red-50 text-red-700 shadow-sm'
                       : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
                   }`
                 }

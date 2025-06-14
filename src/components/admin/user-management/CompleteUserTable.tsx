@@ -3,9 +3,11 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Users, AlertTriangle, UserPlus } from 'lucide-react';
 import { CompleteUserTableRow } from './CompleteUserTableRow';
 import { UserCreateDialog } from './UserCreateDialog';
+import { BulkOperationsPanel } from './BulkOperationsPanel';
 import { CompleteUser } from '@/hooks/useCompleteUserManagement';
 
 interface CompleteUserTableProps {
@@ -16,6 +18,42 @@ interface CompleteUserTableProps {
 
 export function CompleteUserTable({ users, isLoading, onUserUpdated }: CompleteUserTableProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<CompleteUser[]>([]);
+  const [bulkLoading, setBulkLoading] = useState(false);
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedUsers(users);
+    } else {
+      setSelectedUsers([]);
+    }
+  };
+
+  const handleSelectUser = (user: CompleteUser, checked: boolean) => {
+    if (checked) {
+      setSelectedUsers(prev => [...prev, user]);
+    } else {
+      setSelectedUsers(prev => prev.filter(u => u.id !== user.id));
+    }
+  };
+
+  const handleBulkOperation = async (operation: string, params?: any) => {
+    setBulkLoading(true);
+    try {
+      console.log('Bulk operation:', operation, 'on', selectedUsers.length, 'users', params);
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Clear selection after successful operation
+      setSelectedUsers([]);
+      onUserUpdated();
+    } catch (error) {
+      console.error('Bulk operation failed:', error);
+    } finally {
+      setBulkLoading(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -39,8 +77,18 @@ export function CompleteUserTable({ users, isLoading, onUserUpdated }: CompleteU
     );
   }
 
+  const isAllSelected = users.length > 0 && selectedUsers.length === users.length;
+  const isPartiallySelected = selectedUsers.length > 0 && selectedUsers.length < users.length;
+
   return (
     <>
+      <BulkOperationsPanel
+        selectedUsers={selectedUsers}
+        onClearSelection={() => setSelectedUsers([])}
+        onBulkOperation={handleBulkOperation}
+        isLoading={bulkLoading}
+      />
+
       <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -69,6 +117,13 @@ export function CompleteUserTable({ users, isLoading, onUserUpdated }: CompleteU
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={isAllSelected}
+                    onCheckedChange={handleSelectAll}
+                    className={isPartiallySelected ? "data-[state=checked]:bg-blue-600" : ""}
+                  />
+                </TableHead>
                 <TableHead>User Details</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Role & Type</TableHead>
@@ -83,6 +138,8 @@ export function CompleteUserTable({ users, isLoading, onUserUpdated }: CompleteU
                   key={user.id}
                   user={user}
                   onUserUpdated={onUserUpdated}
+                  isSelected={selectedUsers.some(u => u.id === user.id)}
+                  onSelect={(checked) => handleSelectUser(user, checked)}
                 />
               ))}
             </TableBody>

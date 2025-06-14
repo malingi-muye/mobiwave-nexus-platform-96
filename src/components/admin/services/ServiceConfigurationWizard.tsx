@@ -2,10 +2,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from 'sonner';
@@ -94,24 +90,11 @@ export function ServiceConfigurationWizard({
         return (
           <Card>
             <CardContent className="pt-6">
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="general-config">General Configuration</Label>
-                  <Textarea
-                    id="general-config"
-                    placeholder="Enter JSON configuration..."
-                    value={JSON.stringify(configuration, null, 2)}
-                    onChange={(e) => {
-                      try {
-                        const parsed = JSON.parse(e.target.value);
-                        setConfiguration(parsed);
-                      } catch {
-                        // Invalid JSON, ignore
-                      }
-                    }}
-                    rows={10}
-                  />
-                </div>
+              <div className="text-center py-8">
+                <h3 className="text-lg font-medium mb-2">Configuration Form Coming Soon</h3>
+                <p className="text-gray-600">
+                  A specialized configuration form for {selectedService.service_type} services will be available soon.
+                </p>
               </div>
             </CardContent>
           </Card>

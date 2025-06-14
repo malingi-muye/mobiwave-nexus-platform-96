@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Zap, Wrench } from 'lucide-react';
+import { Settings, Zap, Wrench, Bot } from 'lucide-react';
 import { ServiceConfigurationWizard } from './ServiceConfigurationWizard';
 import { ServiceTemplateManager } from './ServiceTemplateManager';
 import { ServiceSetupWorkflow } from './ServiceSetupWorkflow';
+import { ServiceAutomationHub } from './ServiceAutomationHub';
 
 interface ServiceCatalog {
   id: string;
@@ -50,7 +51,7 @@ export function ServiceConfigurationManager({
         <div>
           <h3 className="text-2xl font-bold tracking-tight">Service Configuration</h3>
           <p className="text-gray-600">
-            Configure service settings and manage templates
+            Configure service settings, manage templates, and automate workflows
           </p>
         </div>
         <Button 
@@ -76,6 +77,10 @@ export function ServiceConfigurationManager({
             <Zap className="w-4 h-4" />
             Setup Workflows
           </TabsTrigger>
+          <TabsTrigger value="automation" className="flex items-center gap-2">
+            <Bot className="w-4 h-4" />
+            Automation
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="configuration" className="space-y-4">
@@ -97,6 +102,10 @@ export function ServiceConfigurationManager({
             activeWorkflow={activeWorkflow}
             onWorkflowComplete={() => setActiveWorkflow(null)}
           />
+        </TabsContent>
+
+        <TabsContent value="automation" className="space-y-4">
+          <ServiceAutomationHub />
         </TabsContent>
       </Tabs>
     </div>

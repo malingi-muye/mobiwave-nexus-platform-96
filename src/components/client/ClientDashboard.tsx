@@ -19,7 +19,8 @@ import {
   Phone,
   TrendingUp,
   Clock,
-  CheckCircle
+  CheckCircle,
+  Zap
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -55,6 +56,41 @@ export function ClientDashboard() {
         {/* Key Metrics */}
         <ClientMetrics />
 
+        {/* Quick SMS Card */}
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
+                  <Zap className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl text-blue-900">Quick SMS Campaign</CardTitle>
+                  <CardDescription className="text-blue-700">
+                    Send instant SMS messages to your contacts
+                  </CardDescription>
+                </div>
+              </div>
+              <Badge className="bg-blue-600 text-white">New</Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-blue-800">
+                <p className="mb-1">• Instant delivery to multiple recipients</p>
+                <p className="mb-1">• Real-time delivery tracking</p>
+                <p>• Cost-effective bulk messaging</p>
+              </div>
+              <Link to="/bulk-sms">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6">
+                  <Send className="w-4 h-4 mr-2" />
+                  Send SMS Now
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
@@ -67,7 +103,7 @@ export function ClientDashboard() {
               <CardDescription>Create and manage SMS marketing campaigns</CardDescription>
             </CardHeader>
             <CardContent>
-              <Link to="/dashboard">
+              <Link to="/bulk-sms">
                 <Button className="w-full bg-blue-600 hover:bg-blue-700">
                   <Plus className="w-4 h-4 mr-2" />
                   New SMS Campaign
@@ -167,7 +203,7 @@ export function ClientDashboard() {
                 <div className="text-center py-8">
                   <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                   <p className="text-gray-500 mb-4">No campaigns yet</p>
-                  <Link to="/dashboard">
+                  <Link to="/bulk-sms">
                     <Button size="sm">
                       <Plus className="w-4 h-4 mr-2" />
                       Create Your First Campaign

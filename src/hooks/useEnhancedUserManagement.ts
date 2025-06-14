@@ -75,7 +75,8 @@ export const useEnhancedUserManagement = (searchTerm: string, roleFilter: string
       const dbUsers = databaseUsers || [];
       const mspaceUsers: MspaceUser[] = (storedMspaceUsers || []).map(user => ({
         ...user,
-        source: 'mspace_api' as const
+        source: 'mspace_api' as const,
+        user_type: 'mspace_client' as const
       }));
 
       let combined: CombinedUser[] = [...dbUsers, ...mspaceUsers];

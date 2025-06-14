@@ -23,6 +23,7 @@ export interface SidebarItem {
   href: string;
   icon: React.ReactNode;
   badge?: string;
+  color?: string;
 }
 
 export interface SidebarSection {
@@ -40,7 +41,8 @@ export const sidebarSections: SidebarSection[] = [
         id: 'dashboard',
         label: 'Dashboard',
         href: '/dashboard',
-        icon: <LayoutDashboard className="w-5 h-5" />
+        icon: <LayoutDashboard className="w-5 h-5" />,
+        color: 'bg-blue-500'
       }
     ]
   },
@@ -52,19 +54,22 @@ export const sidebarSections: SidebarSection[] = [
         id: 'bulk-sms',
         label: 'SMS Campaigns',
         href: '/bulk-sms',
-        icon: <Smartphone className="w-5 h-5" />
+        icon: <Smartphone className="w-5 h-5" />,
+        color: 'bg-green-500'
       },
       {
         id: 'whatsapp',
         label: 'WhatsApp',
         href: '/whatsapp',
-        icon: <MessageCircle className="w-5 h-5" />
+        icon: <MessageCircle className="w-5 h-5" />,
+        color: 'bg-green-600'
       },
       {
         id: 'email',
         label: 'Email Campaigns',
         href: '/email',
-        icon: <Mail className="w-5 h-5" />
+        icon: <Mail className="w-5 h-5" />,
+        color: 'bg-red-500'
       }
     ]
   },
@@ -76,37 +81,43 @@ export const sidebarSections: SidebarSection[] = [
         id: 'surveys',
         label: 'Surveys & Forms',
         href: '/surveys',
-        icon: <FileText className="w-5 h-5" />
+        icon: <FileText className="w-5 h-5" />,
+        color: 'bg-purple-500'
       },
       {
         id: 'survey-builder',
         label: 'Survey Builder',
         href: '/survey-builder',
-        icon: <FileText className="w-5 h-5" />
+        icon: <FileText className="w-5 h-5" />,
+        color: 'bg-purple-600'
       },
       {
         id: 'service-desk',
         label: 'Service Desk',
         href: '/service-desk',
-        icon: <Headphones className="w-5 h-5" />
+        icon: <Headphones className="w-5 h-5" />,
+        color: 'bg-orange-500'
       },
       {
         id: 'ussd',
         label: 'USSD Services',
         href: '/ussd',
-        icon: <Smartphone className="w-5 h-5" />
+        icon: <Smartphone className="w-5 h-5" />,
+        color: 'bg-indigo-500'
       },
       {
         id: 'mpesa',
         label: 'M-Pesa Integration',
         href: '/mpesa',
-        icon: <DollarSign className="w-5 h-5" />
+        icon: <DollarSign className="w-5 h-5" />,
+        color: 'bg-emerald-500'
       },
       {
         id: 'subscriptions',
         label: 'My Subscriptions',
         href: '/subscriptions',
-        icon: <Zap className="w-5 h-5" />
+        icon: <Zap className="w-5 h-5" />,
+        color: 'bg-yellow-500'
       }
     ]
   },
@@ -118,7 +129,8 @@ export const sidebarSections: SidebarSection[] = [
         id: 'contacts',
         label: 'Contacts',
         href: '/contacts',
-        icon: <Users className="w-5 h-5" />
+        icon: <Users className="w-5 h-5" />,
+        color: 'bg-cyan-500'
       }
     ]
   },
@@ -130,7 +142,8 @@ export const sidebarSections: SidebarSection[] = [
         id: 'analytics',
         label: 'Analytics',
         href: '/analytics',
-        icon: <BarChart3 className="w-5 h-5" />
+        icon: <BarChart3 className="w-5 h-5" />,
+        color: 'bg-blue-600'
       }
     ]
   },
@@ -142,13 +155,15 @@ export const sidebarSections: SidebarSection[] = [
         id: 'billing',
         label: 'Billing',
         href: '/billing',
-        icon: <CreditCard className="w-5 h-5" />
+        icon: <CreditCard className="w-5 h-5" />,
+        color: 'bg-pink-500'
       },
       {
         id: 'settings',
         label: 'Settings',
         href: '/profile',
-        icon: <Settings className="w-5 h-5" />
+        icon: <Settings className="w-5 h-5" />,
+        color: 'bg-gray-500'
       }
     ]
   }

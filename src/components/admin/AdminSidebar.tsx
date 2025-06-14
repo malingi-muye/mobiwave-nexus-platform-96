@@ -21,67 +21,80 @@ const adminSidebarItems = [
   {
     title: 'Dashboard',
     path: '/admin/dashboard',
-    icon: LayoutDashboard
+    icon: LayoutDashboard,
+    color: 'bg-blue-500'
   },
   {
     title: 'User Management',
     path: '/admin/users',
-    icon: Users
+    icon: Users,
+    color: 'bg-green-500'
   },
   {
     title: 'Services Management',
     path: '/admin/services',
-    icon: Grid3X3
+    icon: Grid3X3,
+    color: 'bg-purple-500'
   },
   {
     title: 'Analytics',
     path: '/admin/analytics',
-    icon: BarChart3
+    icon: BarChart3,
+    color: 'bg-orange-500'
   },
   {
     title: 'Advanced Analytics',
     path: '/admin/advanced-analytics',
-    icon: TrendingUp
+    icon: TrendingUp,
+    color: 'bg-indigo-500'
   },
   {
     title: 'Revenue Reports',
     path: '/admin/revenue',
-    icon: DollarSign
+    icon: DollarSign,
+    color: 'bg-emerald-500'
   },
   {
     title: 'API Management',
     path: '/admin/api',
-    icon: Key
+    icon: Key,
+    color: 'bg-yellow-500'
   },
   {
     title: 'System Settings',
     path: '/admin/settings',
-    icon: Settings
+    icon: Settings,
+    color: 'bg-gray-500'
   },
   {
     title: 'Database Admin',
     path: '/admin/database',
-    icon: Database
+    icon: Database,
+    color: 'bg-red-500'
   },
   {
     title: 'System Logs',
     path: '/admin/logs',
-    icon: FileText
+    icon: FileText,
+    color: 'bg-blue-600'
   },
   {
     title: 'Security Config',
     path: '/admin/security',
-    icon: Shield
+    icon: Shield,
+    color: 'bg-red-600'
   },
   {
     title: 'Monitoring',
     path: '/admin/monitoring',
-    icon: Monitor
+    icon: Monitor,
+    color: 'bg-cyan-500'
   },
   {
     title: 'System Integrity',
     path: '/admin/integrity',
-    icon: Activity
+    icon: Activity,
+    color: 'bg-pink-500'
   }
 ];
 
@@ -100,15 +113,21 @@ export function AdminSidebar() {
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 mb-1 ${
+                  `group flex items-center px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 mb-2 ${
                     isActive
-                      ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      ? 'bg-blue-50 text-blue-700 shadow-sm'
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-sm'
                   }`
                 }
               >
-                <Icon className="mr-3 h-5 w-5" />
-                {item.title}
+                {({ isActive }) => (
+                  <>
+                    <div className={`w-8 h-8 ${item.color} rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow mr-3`}>
+                      <Icon className="w-4 h-4 text-white" />
+                    </div>
+                    <span className="truncate">{item.title}</span>
+                  </>
+                )}
               </NavLink>
             );
           })}

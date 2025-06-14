@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,10 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Edit, Phone, ArrowRight } from 'lucide-react';
+import { Plus, Phone } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
+import { USSDMenuBuilder } from './USSDMenuBuilder';
+import { USSDApplicationCard } from './USSDApplicationCard';
 
 interface MenuNode {
   id: string;
@@ -19,7 +20,6 @@ interface MenuNode {
   response?: string;
 }
 
-// Use the database type directly
 type USSDApplicationFromDB = Tables<'mspace_ussd_applications'>;
 
 interface USSDApplication {
@@ -38,7 +38,6 @@ const fetchUSSDApplications = async (): Promise<USSDApplication[]> => {
 
   if (error) throw error;
   
-  // Convert the database records to our interface with proper type handling
   return (data || []).map((item: USSDApplicationFromDB) => ({
     id: item.id,
     service_code: item.service_code,
@@ -49,7 +48,6 @@ const fetchUSSDApplications = async (): Promise<USSDApplication[]> => {
 };
 
 export function USSDApplicationBuilder() {
-  const [selectedApp, setSelectedApp] = useState<USSDApplication | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [serviceCode, setServiceCode] = useState('');
   const [callbackUrl, setCallbackUrl] = useState('');
@@ -77,7 +75,6 @@ export function USSDApplicationBuilder() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // First, check if we have a subscription for USSD service
       const { data: subscription } = await supabase
         .from('user_service_subscriptions')
         .select('id')
@@ -99,7 +96,7 @@ export function USSDApplicationBuilder() {
         .insert({
           subscription_id: subscription.id,
           service_code: appData.service_code,
-          menu_structure: appData.menu_structure as any, // Cast to Json type
+          menu_structure: appData.menu_structure as unknown as any,
           callback_url: appData.callback_url,
           status: 'pending'
         })
@@ -132,43 +129,6 @@ export function USSDApplicationBuilder() {
       ],
       isEndNode: false
     }]);
-  };
-
-  const addMenuNode = () => {
-    const newNode: MenuNode = {
-      id: `node_${Date.now()}`,
-      text: 'New menu text',
-      options: [{ key: '1', text: 'Option 1', nextNodeId: undefined }],
-      isEndNode: false
-    };
-    setMenuNodes([...menuNodes, newNode]);
-  };
-
-  const updateMenuNode = (nodeId: string, updates: Partial<MenuNode>) => {
-    setMenuNodes(nodes => 
-      nodes.map(node => 
-        node.id === nodeId ? { ...node, ...updates } : node
-      )
-    );
-  };
-
-  const addOption = (nodeId: string) => {
-    const node = menuNodes.find(n => n.id === nodeId);
-    if (node) {
-      const newOptionKey = (node.options.length + 1).toString();
-      updateMenuNode(nodeId, {
-        options: [...node.options, { key: newOptionKey, text: `Option ${newOptionKey}`, nextNodeId: undefined }]
-      });
-    }
-  };
-
-  const removeOption = (nodeId: string, optionKey: string) => {
-    const node = menuNodes.find(n => n.id === nodeId);
-    if (node) {
-      updateMenuNode(nodeId, {
-        options: node.options.filter(opt => opt.key !== optionKey)
-      });
-    }
   };
 
   const handleSubmit = () => {
@@ -237,92 +197,10 @@ export function USSDApplicationBuilder() {
               </div>
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <Label>Menu Structure</Label>
-                <Button size="sm" onClick={addMenuNode} variant="outline">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Menu
-                </Button>
-              </div>
-
-              <div className="space-y-4">
-                {menuNodes.map((node, index) => (
-                  <Card key={node.id} className="border-l-4 border-l-blue-500">
-                    <CardContent className="p-4">
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <Badge variant="outline">{node.id === 'root' ? 'Root Menu' : `Menu ${index}`}</Badge>
-                          {node.id !== 'root' && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => setMenuNodes(nodes => nodes.filter(n => n.id !== node.id))}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </div>
-
-                        <div>
-                          <Label>Menu Text</Label>
-                          <Textarea
-                            value={node.text}
-                            onChange={(e) => updateMenuNode(node.id, { text: e.target.value })}
-                            placeholder="Enter the text users will see"
-                          />
-                        </div>
-
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <Label>Options</Label>
-                            <Button size="sm" onClick={() => addOption(node.id)} variant="outline">
-                              <Plus className="w-3 h-3 mr-1" />
-                              Add Option
-                            </Button>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            {node.options.map((option) => (
-                              <div key={option.key} className="flex items-center gap-2 p-2 border rounded">
-                                <Input
-                                  className="w-16"
-                                  value={option.key}
-                                  onChange={(e) => {
-                                    const updatedOptions = node.options.map(opt =>
-                                      opt.key === option.key ? { ...opt, key: e.target.value } : opt
-                                    );
-                                    updateMenuNode(node.id, { options: updatedOptions });
-                                  }}
-                                />
-                                <Input
-                                  className="flex-1"
-                                  value={option.text}
-                                  onChange={(e) => {
-                                    const updatedOptions = node.options.map(opt =>
-                                      opt.key === option.key ? { ...opt, text: e.target.value } : opt
-                                    );
-                                    updateMenuNode(node.id, { options: updatedOptions });
-                                  }}
-                                  placeholder="Option text"
-                                />
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => removeOption(node.id, option.key)}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
+            <USSDMenuBuilder 
+              menuNodes={menuNodes} 
+              setMenuNodes={setMenuNodes} 
+            />
 
             <div className="flex gap-3">
               <Button onClick={handleSubmit} disabled={createApplication.isPending}>
@@ -338,45 +216,7 @@ export function USSDApplicationBuilder() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {applications.map((app) => (
-          <Card key={app.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Phone className="w-5 h-5" />
-                  {app.service_code}
-                </span>
-                <Badge 
-                  variant={app.status === 'active' ? 'default' : 'secondary'}
-                  className={app.status === 'active' ? 'bg-green-100 text-green-800' : ''}
-                >
-                  {app.status}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-gray-600">Callback URL:</p>
-                  <p className="text-sm font-mono bg-gray-50 p-2 rounded truncate">
-                    {app.callback_url}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Menu Nodes:</p>
-                  <p className="text-sm">{app.menu_structure.length} menus configured</p>
-                </div>
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="flex-1">
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit
-                  </Button>
-                  <Button size="sm" variant="outline">
-                    Test
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <USSDApplicationCard key={app.id} application={app} />
         ))}
       </div>
 

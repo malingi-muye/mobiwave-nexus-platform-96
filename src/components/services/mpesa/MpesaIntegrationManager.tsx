@@ -3,13 +3,12 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CreditCard, Plus, Settings, TrendingUp, Wallet } from 'lucide-react';
+import { Plus, TrendingUp, Wallet } from 'lucide-react';
+import { MpesaIntegrationForm } from './MpesaIntegrationForm';
+import { MpesaIntegrationCard } from './MpesaIntegrationCard';
 
 interface MpesaIntegration {
   id: string;
@@ -53,7 +52,6 @@ export function MpesaIntegrationManager() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
-      // Check for active M-Pesa service subscription
       const { data: subscription } = await supabase
         .from('user_service_subscriptions')
         .select('id')
@@ -115,14 +113,6 @@ export function MpesaIntegrationManager() {
     });
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-KE', {
-      style: 'currency',
-      currency: 'KES',
-      minimumFractionDigits: 0
-    }).format(amount);
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -147,58 +137,17 @@ export function MpesaIntegrationManager() {
       </div>
 
       {isCreating && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="w-5 h-5" />
-              Create M-Pesa Integration
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="paybillNumber">Paybill Number *</Label>
-                <Input
-                  id="paybillNumber"
-                  placeholder="e.g., 174379"
-                  value={paybillNumber}
-                  onChange={(e) => setPaybillNumber(e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="tillNumber">Till Number (Optional)</Label>
-                <Input
-                  id="tillNumber"
-                  placeholder="e.g., 123456"
-                  value={tillNumber}
-                  onChange={(e) => setTillNumber(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="callbackUrl">Callback URL *</Label>
-              <Input
-                id="callbackUrl"
-                placeholder="https://your-app.com/mpesa/callback"
-                value={callbackUrl}
-                onChange={(e) => setCallbackUrl(e.target.value)}
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                This URL will receive payment notifications from M-Pesa
-              </p>
-            </div>
-
-            <div className="flex gap-3">
-              <Button onClick={handleSubmit} disabled={createIntegration.isPending}>
-                {createIntegration.isPending ? 'Creating...' : 'Create Integration'}
-              </Button>
-              <Button variant="outline" onClick={() => setIsCreating(false)}>
-                Cancel
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <MpesaIntegrationForm
+          paybillNumber={paybillNumber}
+          setPaybillNumber={setPaybillNumber}
+          tillNumber={tillNumber}
+          setTillNumber={setTillNumber}
+          callbackUrl={callbackUrl}
+          setCallbackUrl={setCallbackUrl}
+          onSubmit={handleSubmit}
+          onCancel={() => setIsCreating(false)}
+          isLoading={createIntegration.isPending}
+        />
       )}
 
       <Tabs defaultValue="integrations" className="w-full">
@@ -211,57 +160,7 @@ export function MpesaIntegrationManager() {
         <TabsContent value="integrations" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {integrations.map((integration) => (
-              <Card key={integration.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span className="flex items-center gap-2">
-                      <CreditCard className="w-5 h-5" />
-                      {integration.paybill_number}
-                    </span>
-                    <Badge 
-                      variant={integration.status === 'active' ? 'default' : 'secondary'}
-                      className={integration.status === 'active' ? 'bg-green-100 text-green-800' : ''}
-                    >
-                      {integration.status}
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {integration.till_number && (
-                      <div>
-                        <p className="text-sm text-gray-600">Till Number:</p>
-                        <p className="font-semibold">{integration.till_number}</p>
-                      </div>
-                    )}
-                    
-                    <div>
-                      <p className="text-sm text-gray-600">Current Balance:</p>
-                      <p className="text-lg font-bold text-green-600">
-                        {formatCurrency(integration.current_balance || 0)}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-gray-600">Callback URL:</p>
-                      <p className="text-xs font-mono bg-gray-50 p-2 rounded truncate">
-                        {integration.callback_url}
-                      </p>
-                    </div>
-
-                    <div className="flex gap-2 pt-2">
-                      <Button size="sm" variant="outline" className="flex-1">
-                        <Settings className="w-4 h-4 mr-2" />
-                        Configure
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <TrendingUp className="w-4 h-4 mr-2" />
-                        Reports
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <MpesaIntegrationCard key={integration.id} integration={integration} />
             ))}
           </div>
 

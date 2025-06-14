@@ -4,25 +4,21 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { 
-  Activity, 
-  LogIn, 
-  UserPlus, 
-  Settings, 
-  Mail, 
-  Phone,
-  Clock
-} from 'lucide-react';
+import { Activity, AlertCircle, CheckCircle, Info, XCircle } from 'lucide-react';
 
 interface ActivityLog {
   id: string;
-  action: string;
   user_id: string;
+  action: string;
+  resource_type: string;
+  resource_id: string;
+  ip_address: string;
+  session_id: string;
+  status: string;
+  severity: string;
+  user_agent: string;
   created_at: string;
   metadata: any;
-  ip_address: string;
-  user_agent: string;
 }
 
 const fetchUserActivity = async (): Promise<ActivityLog[]> => {
@@ -30,10 +26,14 @@ const fetchUserActivity = async (): Promise<ActivityLog[]> => {
     .from('audit_logs')
     .select('*')
     .order('created_at', { ascending: false })
-    .limit(20);
+    .limit(50);
 
   if (error) throw error;
-  return data || [];
+  
+  return (data || []).map(item => ({
+    ...item,
+    ip_address: item.ip_address?.toString() || 'Unknown'
+  }));
 };
 
 export function UserActivityFeed() {
@@ -42,41 +42,31 @@ export function UserActivityFeed() {
     queryFn: fetchUserActivity
   });
 
-  const getActivityIcon = (action: string) => {
-    switch (action.toLowerCase()) {
-      case 'login': return LogIn;
-      case 'signup': return UserPlus;
-      case 'settings_update': return Settings;
-      case 'email_sent': return Mail;
-      case 'sms_sent': return Phone;
-      default: return Activity;
+  const getSeverityIcon = (severity: string) => {
+    switch (severity) {
+      case 'high': return <XCircle className="w-4 h-4 text-red-600" />;
+      case 'medium': return <AlertCircle className="w-4 h-4 text-orange-600" />;
+      case 'low': return <CheckCircle className="w-4 h-4 text-green-600" />;
+      default: return <Info className="w-4 h-4 text-blue-600" />;
     }
   };
 
-  const getActivityColor = (action: string) => {
-    switch (action.toLowerCase()) {
-      case 'login': return 'text-green-600 bg-green-50';
-      case 'signup': return 'text-blue-600 bg-blue-50';
-      case 'settings_update': return 'text-orange-600 bg-orange-50';
-      case 'email_sent': return 'text-purple-600 bg-purple-50';
-      case 'sms_sent': return 'text-indigo-600 bg-indigo-50';
-      default: return 'text-gray-600 bg-gray-50';
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'medium': return 'bg-orange-100 text-orange-800';
+      case 'low': return 'bg-green-100 text-green-800';
+      default: return 'bg-blue-100 text-blue-800';
     }
   };
 
   if (isLoading) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="w-5 h-5" />
-            Recent Activity
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
+        <CardContent className="p-6">
+          <div className="animate-pulse space-y-4">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex items-center gap-3 animate-pulse">
+              <div key={i} className="flex items-center space-x-4">
                 <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
                 <div className="flex-1">
                   <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
@@ -95,55 +85,41 @@ export function UserActivityFeed() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Activity className="w-5 h-5" />
-          Recent Activity
+          Recent User Activity
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {activities.map((activity) => {
-            const ActivityIcon = getActivityIcon(activity.action);
-            const colorClass = getActivityColor(activity.action);
-            
-            return (
-              <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className={`p-2 rounded-full ${colorClass}`}>
-                  <ActivityIcon className="w-4 h-4" />
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-sm">
-                      {activity.action.replace('_', ' ')}
-                    </span>
-                    <Badge variant="outline" className="text-xs">
-                      {activity.user_id?.slice(0, 8)}...
-                    </Badge>
-                  </div>
-                  
-                  <div className="text-sm text-gray-600 mb-2">
-                    {activity.metadata?.description || 'User activity recorded'}
-                  </div>
-                  
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {new Date(activity.created_at).toLocaleString()}
-                    </div>
-                    {activity.ip_address && (
-                      <div>IP: {activity.ip_address}</div>
-                    )}
-                  </div>
-                </div>
+        <div className="space-y-4 max-h-96 overflow-y-auto">
+          {activities.map((activity) => (
+            <div key={activity.id} className="flex items-start space-x-4 p-3 border rounded-lg">
+              <div className="flex-shrink-0">
+                {getSeverityIcon(activity.severity)}
               </div>
-            );
-          })}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {activity.action}
+                  </p>
+                  <Badge variant="outline" className={getSeverityColor(activity.severity)}>
+                    {activity.severity}
+                  </Badge>
+                </div>
+                <p className="text-sm text-gray-600">
+                  {activity.resource_type} • {activity.status}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {new Date(activity.created_at).toLocaleString()}
+                </p>
+              </div>
+            </div>
+          ))}
           
           {activities.length === 0 && (
             <div className="text-center py-8">
               <Activity className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-              <h3 className="text-lg font-semibold mb-2">No recent activity</h3>
+              <h3 className="text-lg font-semibold mb-2">No Activity Yet</h3>
               <p className="text-gray-600">
-                User activity will appear here as it happens.
+                User activity will appear here as actions are performed.
               </p>
             </div>
           )}

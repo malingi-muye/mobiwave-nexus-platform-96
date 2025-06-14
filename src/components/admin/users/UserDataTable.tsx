@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -60,8 +59,8 @@ const fetchUsers = async (searchTerm: string, roleFilter: string): Promise<User[
   if (roleFilter && roleFilter !== 'all') {
     // Ensure roleFilter is a valid role type
     const validRoles: Array<'super_admin' | 'admin' | 'manager' | 'user'> = ['super_admin', 'admin', 'manager', 'user'];
-    if (validRoles.includes(roleFilter as any)) {
-      query = query.eq('role', roleFilter);
+    if (validRoles.includes(roleFilter as 'super_admin' | 'admin' | 'manager' | 'user')) {
+      query = query.eq('role', roleFilter as 'super_admin' | 'admin' | 'manager' | 'user');
     }
   }
 

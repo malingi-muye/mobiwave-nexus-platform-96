@@ -93,7 +93,7 @@ serve(async (req) => {
         endpoint = 'https://api.mspace.co.ke/smsapi/v2/subacctopup';
         payload = {
           username: mspaceUsername,
-          clientname,
+          subaccname: clientname, // Use 'subaccname' as per API docs
           noOfSms
         };
         break;
@@ -144,6 +144,23 @@ serve(async (req) => {
       // Fallback to GET method for query operations only
       if (operation === 'subAccounts' || operation === 'resellerClients') {
         const getUrl = `${endpoint}/apikey=${apiKey}/username=${mspaceUsername}`;
+        const getResponse = await fetch(getUrl);
+
+        if (!getResponse.ok) {
+          throw new Error(`Both POST and GET requests failed. Last error: ${getResponse.status} ${getResponse.statusText}`);
+        }
+
+        const responseText = await getResponse.text();
+        console.log('GET response:', responseText);
+        
+        try {
+          responseData = JSON.parse(responseText);
+        } catch {
+          responseData = { message: responseText, status: 'success' };
+        }
+      } else if (operation === 'topUpSubAccount') {
+        // Try GET method for sub-account top-up with correct parameter format
+        const getUrl = `${endpoint}/apikey=${apiKey}/username=${mspaceUsername}/subaccname=${clientname}/noofsms=${noOfSms}`;
         const getResponse = await fetch(getUrl);
 
         if (!getResponse.ok) {

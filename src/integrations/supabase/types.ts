@@ -222,6 +222,53 @@ export type Database = {
         }
         Relationships: []
       }
+      mspace_pesa_integrations: {
+        Row: {
+          callback_response_type: string | null
+          callback_url: string
+          created_at: string | null
+          current_balance: number | null
+          id: string
+          last_balance_update: string | null
+          paybill_number: string
+          status: string | null
+          subscription_id: string | null
+          till_number: string | null
+        }
+        Insert: {
+          callback_response_type?: string | null
+          callback_url: string
+          created_at?: string | null
+          current_balance?: number | null
+          id?: string
+          last_balance_update?: string | null
+          paybill_number: string
+          status?: string | null
+          subscription_id?: string | null
+          till_number?: string | null
+        }
+        Update: {
+          callback_response_type?: string | null
+          callback_url?: string
+          created_at?: string | null
+          current_balance?: number | null
+          id?: string
+          last_balance_update?: string | null
+          paybill_number?: string
+          status?: string | null
+          subscription_id?: string | null
+          till_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mspace_pesa_integrations_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "user_service_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mspace_users: {
         Row: {
           balance: number | null
@@ -269,6 +316,53 @@ export type Database = {
           username?: string | null
         }
         Relationships: []
+      }
+      mspace_ussd_applications: {
+        Row: {
+          callback_url: string
+          created_at: string | null
+          id: string
+          menu_structure: Json
+          monthly_fee: number | null
+          mspace_application_id: string | null
+          service_code: string
+          setup_fee: number | null
+          status: string | null
+          subscription_id: string | null
+        }
+        Insert: {
+          callback_url: string
+          created_at?: string | null
+          id?: string
+          menu_structure: Json
+          monthly_fee?: number | null
+          mspace_application_id?: string | null
+          service_code: string
+          setup_fee?: number | null
+          status?: string | null
+          subscription_id?: string | null
+        }
+        Update: {
+          callback_url?: string
+          created_at?: string | null
+          id?: string
+          menu_structure?: Json
+          monthly_fee?: number | null
+          mspace_application_id?: string | null
+          service_code?: string
+          setup_fee?: number | null
+          status?: string | null
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mspace_ussd_applications_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "user_service_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -333,6 +427,44 @@ export type Database = {
         }
         Relationships: []
       }
+      service_desk_subscriptions: {
+        Row: {
+          created_at: string | null
+          current_users: number | null
+          id: string
+          max_users: number | null
+          monthly_fee_per_user: number | null
+          status: string | null
+          subscription_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_users?: number | null
+          id?: string
+          max_users?: number | null
+          monthly_fee_per_user?: number | null
+          status?: string | null
+          subscription_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_users?: number | null
+          id?: string
+          max_users?: number | null
+          monthly_fee_per_user?: number | null
+          status?: string | null
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_desk_subscriptions_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "user_service_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           base_price: number | null
@@ -371,6 +503,142 @@ export type Database = {
           setup_fee?: number | null
         }
         Relationships: []
+      }
+      services_catalog: {
+        Row: {
+          configuration_schema: Json | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_premium: boolean | null
+          monthly_fee: number | null
+          provider: string | null
+          service_name: string
+          service_type: string
+          setup_fee: number | null
+          transaction_fee_amount: number | null
+          transaction_fee_type: string | null
+        }
+        Insert: {
+          configuration_schema?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_premium?: boolean | null
+          monthly_fee?: number | null
+          provider?: string | null
+          service_name: string
+          service_type: string
+          setup_fee?: number | null
+          transaction_fee_amount?: number | null
+          transaction_fee_type?: string | null
+        }
+        Update: {
+          configuration_schema?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_premium?: boolean | null
+          monthly_fee?: number | null
+          provider?: string | null
+          service_name?: string
+          service_type?: string
+          setup_fee?: number | null
+          transaction_fee_amount?: number | null
+          transaction_fee_type?: string | null
+        }
+        Relationships: []
+      }
+      short_code_subscriptions: {
+        Row: {
+          activated_at: string | null
+          code: string
+          created_at: string | null
+          id: string
+          monthly_fee: number | null
+          network: string
+          setup_fee: number | null
+          status: string | null
+          subscription_id: string | null
+          type: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          code: string
+          created_at?: string | null
+          id?: string
+          monthly_fee?: number | null
+          network: string
+          setup_fee?: number | null
+          status?: string | null
+          subscription_id?: string | null
+          type?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          code?: string
+          created_at?: string | null
+          id?: string
+          monthly_fee?: number | null
+          network?: string
+          setup_fee?: number | null
+          status?: string | null
+          subscription_id?: string | null
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "short_code_subscriptions_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "user_service_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sms_survey_subscriptions: {
+        Row: {
+          created_at: string | null
+          current_responses: number | null
+          id: string
+          monthly_fee: number | null
+          response_limit: number | null
+          setup_fee: number | null
+          status: string | null
+          subscription_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_responses?: number | null
+          id?: string
+          monthly_fee?: number | null
+          response_limit?: number | null
+          setup_fee?: number | null
+          status?: string | null
+          subscription_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_responses?: number | null
+          id?: string
+          monthly_fee?: number | null
+          response_limit?: number | null
+          setup_fee?: number | null
+          status?: string | null
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_survey_subscriptions_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "user_service_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_credits: {
         Row: {
@@ -427,6 +695,53 @@ export type Database = {
             columns: ["role_id"]
             isOneToOne: false
             referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_service_subscriptions: {
+        Row: {
+          activated_at: string | null
+          configuration: Json | null
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          monthly_billing_active: boolean | null
+          service_id: string | null
+          setup_fee_paid: boolean | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          configuration?: Json | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          monthly_billing_active?: boolean | null
+          service_id?: string | null
+          setup_fee_paid?: boolean | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          configuration?: Json | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          monthly_billing_active?: boolean | null
+          service_id?: string | null
+          setup_fee_paid?: boolean | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_service_subscriptions_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services_catalog"
             referencedColumns: ["id"]
           },
         ]

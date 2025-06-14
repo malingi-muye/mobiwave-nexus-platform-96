@@ -1,12 +1,12 @@
 
 import React from 'react';
 import { Route } from 'react-router-dom';
-import Index from '@/pages/Index';
-import { AuthPage } from '@/components/auth/AuthPage';
-import About from '@/pages/About';
-import Services from '@/pages/Services';
-import Pricing from '@/pages/Pricing';
-import Contact from '@/pages/Contact';
+import Index from '../pages/Index';
+import { AuthPage } from '../components/auth/AuthPage';
+import About from '../pages/About';
+import Services from '../pages/Services';
+import Pricing from '../pages/Pricing';
+import Contact from '../pages/Contact';
 
 export function PublicRoutes() {
   return (

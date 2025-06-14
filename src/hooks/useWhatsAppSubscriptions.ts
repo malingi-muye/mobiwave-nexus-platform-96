@@ -26,8 +26,8 @@ interface WhatsAppTemplate {
   header_text?: string;
   body_text: string;
   footer_text?: string;
-  buttons: any[];
-  variables: any[];
+  buttons: any; // Changed from any[] to any to match Supabase Json type
+  variables: any; // Changed from any[] to any to match Supabase Json type
   status: string;
   whatsapp_template_id?: string;
   created_at: string;

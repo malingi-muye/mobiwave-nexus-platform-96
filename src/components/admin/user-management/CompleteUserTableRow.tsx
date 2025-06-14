@@ -1,13 +1,10 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { User, AlertTriangle, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import { CompleteUser } from '@/hooks/useCompleteUserManagement';
-import { UserActions } from './UserActions';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { CheckCircle, XCircle, AlertTriangle, User, Mail, Calendar } from 'lucide-react';
 
 interface CompleteUserTableRowProps {
   user: CompleteUser;
@@ -15,159 +12,150 @@ interface CompleteUserTableRowProps {
 }
 
 export function CompleteUserTableRow({ user, onUserUpdated }: CompleteUserTableRowProps) {
-  const [isCreatingProfile, setIsCreatingProfile] = useState(false);
-
-  const handleCreateProfile = async () => {
-    setIsCreatingProfile(true);
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .insert({
-          id: user.id,
-          email: user.email,
-          first_name: user.first_name || '',
-          last_name: user.last_name || '',
-          role: 'user',
-          user_type: 'demo'
-        });
-
-      if (error) throw error;
-
-      // Also initialize credits
-      await supabase
-        .from('user_credits')
-        .insert({
-          user_id: user.id,
-          credits_remaining: 10.00,
-          credits_purchased: 10.00
-        });
-
-      toast.success('Profile created successfully');
-      onUserUpdated();
-    } catch (error: any) {
-      toast.error(`Failed to create profile: ${error.message}`);
-    } finally {
-      setIsCreatingProfile(false);
-    }
-  };
-
-  const getRoleColor = (role: string) => {
+  const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case 'super_admin': return 'bg-red-100 text-red-800';
-      case 'admin': return 'bg-purple-100 text-purple-800';
-      case 'manager': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'super_admin': return 'bg-purple-100 text-purple-800';
+      case 'admin': return 'bg-red-100 text-red-800';
+      case 'manager': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-blue-100 text-blue-800';
     }
   };
 
-  const getTypeColor = (userType: string) => {
+  const getUserTypeBadgeColor = (userType: string) => {
     switch (userType) {
       case 'real': return 'bg-green-100 text-green-800';
-      case 'demo': return 'bg-yellow-100 text-yellow-800';
+      case 'demo': return 'bg-gray-100 text-gray-800';
+      case 'mspace_client': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const formatDate = (dateString?: string) => {
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch {
+      return 'Invalid Date';
+    }
+  };
+
+  const formatDateTime = (dateString?: string) => {
     if (!dateString) return 'Never';
-    return new Date(dateString).toLocaleDateString();
+    try {
+      return new Date(dateString).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return 'Invalid Date';
+    }
   };
 
   return (
-    <TableRow className={!user.has_profile ? 'bg-amber-50' : ''}>
+    <TableRow>
       <TableCell>
-        <div className="flex items-center gap-3">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-            user.has_profile ? 'bg-blue-100' : 'bg-amber-100'
-          }`}>
-            <User className={`w-4 h-4 ${user.has_profile ? 'text-blue-600' : 'text-amber-600'}`} />
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+            <User className="w-4 h-4 text-gray-600" />
           </div>
           <div>
-            <div className="font-medium flex items-center gap-2">
+            <div className="font-medium">
               {user.first_name || user.last_name 
                 ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
                 : user.email.split('@')[0]
               }
-              {!user.has_profile && (
-                <div className="relative group">
-                  <AlertTriangle className="w-4 h-4 text-amber-500" />
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                    Missing profile
-                  </div>
-                </div>
-              )}
             </div>
-            <div className="text-sm text-gray-500">{user.email}</div>
-            <div className="text-xs text-gray-400">ID: {user.id.slice(0, 8)}...</div>
+            <div className="text-sm text-gray-500 flex items-center gap-1">
+              <Mail className="w-3 h-3" />
+              {user.email}
+            </div>
+            <div className="text-xs text-gray-400 flex items-center gap-1 mt-1">
+              <Calendar className="w-3 h-3" />
+              Joined: {formatDate(user.created_at)}
+            </div>
           </div>
         </div>
       </TableCell>
       
       <TableCell>
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-1">
-            {user.email_confirmed_at ? (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            {user.has_profile ? (
               <CheckCircle className="w-4 h-4 text-green-500" />
             ) : (
               <XCircle className="w-4 h-4 text-red-500" />
             )}
-            <span className="text-xs">
-              {user.email_confirmed_at ? 'Verified' : 'Unverified'}
+            <span className="text-sm">
+              {user.has_profile ? 'Profile Created' : 'Missing Profile'}
             </span>
           </div>
-          <Badge variant={user.has_profile ? 'default' : 'destructive'} className="text-xs">
-            {user.has_profile ? 'Complete' : 'Incomplete'}
-          </Badge>
+          
+          <div className="flex items-center gap-2">
+            {user.email_confirmed_at ? (
+              <CheckCircle className="w-4 h-4 text-green-500" />
+            ) : user.email_confirmed_at === undefined ? (
+              <AlertTriangle className="w-4 h-4 text-yellow-500" />
+            ) : (
+              <XCircle className="w-4 h-4 text-red-500" />
+            )}
+            <span className="text-sm">
+              {user.email_confirmed_at 
+                ? 'Email Verified' 
+                : user.email_confirmed_at === undefined 
+                  ? 'Status Unknown'
+                  : 'Email Unverified'
+              }
+            </span>
+          </div>
         </div>
       </TableCell>
       
       <TableCell>
-        <div className="flex flex-col gap-1">
-          <Badge className={getRoleColor(user.role || 'user')} variant="secondary">
+        <div className="space-y-2">
+          <Badge className={getRoleBadgeColor(user.role || 'user')} variant="secondary">
             {user.role || 'user'}
           </Badge>
-          <Badge className={getTypeColor(user.user_type || 'demo')} variant="secondary">
+          <br />
+          <Badge className={getUserTypeBadgeColor(user.user_type || 'demo')} variant="outline">
             {user.user_type || 'demo'}
           </Badge>
         </div>
       </TableCell>
       
       <TableCell>
-        <div className="text-sm">
-          <div className="font-medium text-green-600">
-            ${user.credits_remaining?.toFixed(2) || '0.00'}
+        <div className="space-y-1">
+          <div className="text-sm font-medium">
+            Remaining: {user.credits_remaining?.toFixed(2) || '0.00'}
           </div>
           <div className="text-xs text-gray-500">
-            Purchased: ${user.credits_purchased?.toFixed(2) || '0.00'}
+            Purchased: {user.credits_purchased?.toFixed(2) || '0.00'}
           </div>
         </div>
       </TableCell>
       
       <TableCell>
-        <div className="text-sm text-gray-500">
-          <div>Created: {formatDate(user.created_at)}</div>
-          <div>Last Login: {formatDate(user.last_sign_in_at)}</div>
+        <div className="space-y-1">
+          <div className="text-sm">
+            Last Sign In: 
+          </div>
+          <div className="text-xs text-gray-500">
+            {formatDateTime(user.last_sign_in_at)}
+          </div>
         </div>
       </TableCell>
       
       <TableCell>
-        <div className="flex gap-1">
-          {!user.has_profile ? (
-            <Button
-              size="sm"
-              onClick={handleCreateProfile}
-              disabled={isCreatingProfile}
-              className="bg-amber-600 hover:bg-amber-700 text-white"
-            >
-              {isCreatingProfile ? (
-                <RefreshCw className="w-4 h-4 animate-spin" />
-              ) : (
-                'Create Profile'
-              )}
-            </Button>
-          ) : (
-            <UserActions user={user} onUserUpdated={onUserUpdated} />
-          )}
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" disabled>
+            Manage
+          </Button>
         </div>
       </TableCell>
     </TableRow>

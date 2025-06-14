@@ -50,31 +50,70 @@ export const useCompleteUserManagement = (searchTerm: string, roleFilter: string
       console.log('Fetching complete user data...');
       
       try {
-        // First, try to fetch auth users using admin API
-        console.log('Attempting to fetch auth users...');
-        const { data: authUsersResponse, error: authError } = await supabase.auth.admin.listUsers();
+        // Check if we have admin access by attempting to list users
+        console.log('Checking admin access...');
+        let authUsers: any[] = [];
+        let hasAdminAccess = false;
         
-        if (authError) {
-          console.warn('Admin listUsers failed:', authError);
-          // If admin API fails, fall back to profiles-only approach
-          const { data: profiles, error: profileError } = await supabase
-            .from('profiles')
-            .select('*');
+        try {
+          const { data: authUsersResponse, error: authError } = await supabase.auth.admin.listUsers();
           
-          if (profileError) throw profileError;
-          
-          console.log('Fetched profiles only:', profiles?.length || 0);
-          
-          // Fetch user credits
-          const { data: credits, error: creditsError } = await supabase
-            .from('user_credits')
-            .select('*');
-          if (creditsError) throw creditsError;
-          
-          const creditsMap = new Map(credits?.map(c => [c.user_id, c]) || []);
-          
-          // Return profile-based users
-          const profileUsers: CompleteUser[] = (profiles || []).map(profile => {
+          if (!authError && authUsersResponse?.users) {
+            authUsers = authUsersResponse.users;
+            hasAdminAccess = true;
+            console.log('Admin access confirmed. Fetched auth users:', authUsers.length);
+          } else {
+            console.log('Admin access denied:', authError?.message || 'Unknown error');
+          }
+        } catch (adminError) {
+          console.log('Admin API not accessible:', adminError);
+        }
+
+        // Always fetch profiles and credits
+        const { data: profiles, error: profileError } = await supabase
+          .from('profiles')
+          .select('*');
+        if (profileError) throw profileError;
+        console.log('Fetched profiles:', profiles?.length || 0);
+
+        const { data: credits, error: creditsError } = await supabase
+          .from('user_credits')
+          .select('*');
+        if (creditsError) throw creditsError;
+        console.log('Fetched credits:', credits?.length || 0);
+
+        // Create lookup maps
+        const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+        const creditsMap = new Map(credits?.map(c => [c.user_id, c]) || []);
+
+        let combinedUsers: CompleteUser[] = [];
+
+        if (hasAdminAccess && authUsers.length > 0) {
+          // If we have admin access, combine auth users with profiles
+          combinedUsers = authUsers.map(authUser => {
+            const profile = profileMap.get(authUser.id);
+            const userCredits = creditsMap.get(authUser.id);
+
+            return {
+              id: authUser.id,
+              email: authUser.email || '',
+              first_name: profile?.first_name || authUser.user_metadata?.first_name,
+              last_name: profile?.last_name || authUser.user_metadata?.last_name,
+              role: profile?.role || 'user',
+              user_type: profile?.user_type || 'demo',
+              created_at: authUser.created_at,
+              email_confirmed_at: authUser.email_confirmed_at,
+              last_sign_in_at: authUser.last_sign_in_at,
+              credits_remaining: userCredits?.credits_remaining || 0,
+              credits_purchased: userCredits?.credits_purchased || 0,
+              has_profile: !!profile,
+              raw_user_meta_data: authUser.user_metadata
+            };
+          });
+        } else {
+          // If no admin access, work with profiles only
+          console.log('Using profiles-only mode');
+          combinedUsers = (profiles || []).map(profile => {
             const userCredits = creditsMap.get(profile.id);
             return {
               id: profile.id,
@@ -92,54 +131,9 @@ export const useCompleteUserManagement = (searchTerm: string, roleFilter: string
               raw_user_meta_data: {}
             };
           });
-          
-          return applyFilters(profileUsers, searchTerm, roleFilter, userTypeFilter);
         }
 
-        const authUsers = authUsersResponse.users;
-        console.log('Fetched auth users:', authUsers?.length || 0);
-
-        // Fetch all profiles
-        const { data: profiles, error: profileError } = await supabase
-          .from('profiles')
-          .select('*');
-        if (profileError) throw profileError;
-        console.log('Fetched profiles:', profiles?.length || 0);
-
-        // Fetch all user credits
-        const { data: credits, error: creditsError } = await supabase
-          .from('user_credits')
-          .select('*');
-        if (creditsError) throw creditsError;
-        console.log('Fetched credits:', credits?.length || 0);
-
-        // Create lookup maps
-        const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
-        const creditsMap = new Map(credits?.map(c => [c.user_id, c]) || []);
-
-        // Combine all data
-        const combinedUsers: CompleteUser[] = authUsers.map(authUser => {
-          const profile = profileMap.get(authUser.id);
-          const userCredits = creditsMap.get(authUser.id);
-
-          return {
-            id: authUser.id,
-            email: authUser.email || '',
-            first_name: profile?.first_name || authUser.user_metadata?.first_name,
-            last_name: profile?.last_name || authUser.user_metadata?.last_name,
-            role: profile?.role || 'user',
-            user_type: profile?.user_type || 'demo',
-            created_at: authUser.created_at,
-            email_confirmed_at: authUser.email_confirmed_at,
-            last_sign_in_at: authUser.last_sign_in_at,
-            credits_remaining: userCredits?.credits_remaining || 0,
-            credits_purchased: userCredits?.credits_purchased || 0,
-            has_profile: !!profile,
-            raw_user_meta_data: authUser.user_metadata
-          };
-        });
-
-        console.log('Combined users:', combinedUsers.length);
+        console.log('Combined users before filtering:', combinedUsers.length);
         return applyFilters(combinedUsers, searchTerm, roleFilter, userTypeFilter);
         
       } catch (error) {

@@ -1,61 +1,47 @@
 
-import { useCallback } from 'react';
-import AuditLogger from '@/lib/audit-logger';
-import Logger from '@/lib/logger';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useAuditLogger = () => {
-  const auditLogger = AuditLogger.getInstance();
-  const logger = Logger.getInstance();
-
-  const logUserAction = useCallback(async (
-    userId: string,
-    action: string,
-    options?: {
-      resourceType?: string;
-      resourceId?: string;
-      metadata?: Record<string, any>;
-      severity?: 'low' | 'medium' | 'high' | 'critical';
-    }
-  ) => {
-    try {
-      await auditLogger.logAction(userId, action, options);
-      logger.info(`User action logged: ${action}`, { userId, ...options });
-    } catch (error) {
-      logger.error('Failed to log user action', { error, userId, action });
-    }
-  }, [auditLogger, logger]);
-
-  const logSecurityEvent = useCallback(async (
-    userId: string,
-    action: string,
+  const logSecurityEvent = async (
+    userId: string, 
+    action: string, 
     metadata?: Record<string, any>
   ) => {
-    await logUserAction(userId, action, {
-      resourceType: 'security',
-      metadata,
-      severity: 'high'
-    });
-  }, [logUserAction]);
+    try {
+      await supabase.rpc('log_audit_event', {
+        p_action: action,
+        p_table_name: 'security_events',
+        p_record_id: null,
+        p_old_data: null,
+        p_new_data: metadata ? JSON.stringify(metadata) : null
+      });
+    } catch (error) {
+      console.error('Failed to log security event:', error);
+    }
+  };
 
-  const logDataAccess = useCallback(async (
-    userId: string,
-    resourceType: string,
-    resourceId: string,
-    action: 'read' | 'write' | 'delete'
+  const logUserAction = async (
+    action: string,
+    tableName: string,
+    recordId?: string,
+    oldData?: any,
+    newData?: any
   ) => {
-    await logUserAction(userId, `data_${action}`, {
-      resourceType,
-      resourceId,
-      severity: action === 'delete' ? 'medium' : 'low'
-    });
-  }, [logUserAction]);
+    try {
+      await supabase.rpc('log_audit_event', {
+        p_action: action,
+        p_table_name: tableName,
+        p_record_id: recordId || null,
+        p_old_data: oldData ? JSON.stringify(oldData) : null,
+        p_new_data: newData ? JSON.stringify(newData) : null
+      });
+    } catch (error) {
+      console.error('Failed to log user action:', error);
+    }
+  };
 
   return {
-    logUserAction,
     logSecurityEvent,
-    logDataAccess,
-    getLogs: auditLogger.getLogs.bind(auditLogger),
-    getLogsByUser: auditLogger.getLogsByUser.bind(auditLogger),
-    getLogsByAction: auditLogger.getLogsByAction.bind(auditLogger)
+    logUserAction
   };
 };

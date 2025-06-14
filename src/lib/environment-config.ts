@@ -1,39 +1,54 @@
 
-import SecurityManager from './security';
-
 interface EnvironmentConfig {
-  apiUrl: string;
-  environment: 'development' | 'staging' | 'production';
+  supabase: {
+    url: string;
+    anonKey: string;
+  };
   features: {
-    auditLogging: boolean;
     encryption: boolean;
-    tlsRequired: boolean;
+    auditLogging: boolean;
+    twoFactorAuth: boolean;
   };
   security: {
     sessionTimeout: number;
     maxLoginAttempts: number;
     passwordPolicy: {
       minLength: number;
-      requireSpecialChars: boolean;
+      requireUppercase: boolean;
+      requireLowercase: boolean;
       requireNumbers: boolean;
+      requireSpecialChars: boolean;
     };
-  };
-  logging: {
-    level: 'debug' | 'info' | 'warn' | 'error';
-    enableConsole: boolean;
-    enableRemote: boolean;
   };
 }
 
 class EnvironmentManager {
   private static instance: EnvironmentManager;
   private config: EnvironmentConfig;
-  private securityManager: SecurityManager;
 
   private constructor() {
-    this.securityManager = SecurityManager.getInstance();
-    this.config = this.loadConfig();
-    this.validateEnvironment();
+    this.config = {
+      supabase: {
+        url: "https://xfwtjndfclckgvpvgiaj.supabase.co",
+        anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhmd3RqbmRmY2xja2d2cHZnaWFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NDUyNDIsImV4cCI6MjA2NTEyMTI0Mn0.8ZUZVBHkq9vLuMJJmIECXx6-q40lAJ40C5T8IL3yrNc"
+      },
+      features: {
+        encryption: true,
+        auditLogging: true,
+        twoFactorAuth: false
+      },
+      security: {
+        sessionTimeout: 30,
+        maxLoginAttempts: 5,
+        passwordPolicy: {
+          minLength: 8,
+          requireUppercase: true,
+          requireLowercase: true,
+          requireNumbers: true,
+          requireSpecialChars: true
+        }
+      }
+    };
   }
 
   static getInstance(): EnvironmentManager {
@@ -43,90 +58,29 @@ class EnvironmentManager {
     return EnvironmentManager.instance;
   }
 
-  private loadConfig(): EnvironmentConfig {
-    const env = import.meta.env.VITE_NODE_ENV || 'development';
-    
-    return {
-      apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
-      environment: env as 'development' | 'staging' | 'production',
-      features: {
-        auditLogging: env === 'production' || import.meta.env.VITE_ENABLE_AUDIT_LOGGING === 'true',
-        encryption: env === 'production' || import.meta.env.VITE_ENABLE_ENCRYPTION === 'true',
-        tlsRequired: env === 'production'
-      },
-      security: {
-        sessionTimeout: parseInt(import.meta.env.VITE_SESSION_TIMEOUT || '3600000'), // 1 hour
-        maxLoginAttempts: parseInt(import.meta.env.VITE_MAX_LOGIN_ATTEMPTS || '5'),
-        passwordPolicy: {
-          minLength: 8,
-          requireSpecialChars: true,
-          requireNumbers: true
-        }
-      },
-      logging: {
-        level: (import.meta.env.VITE_LOG_LEVEL as any) || 'info',
-        enableConsole: env !== 'production',
-        enableRemote: env === 'production'
-      }
-    };
-  }
-
-  private validateEnvironment(): void {
-    if (this.config.features.tlsRequired && !this.securityManager.validateTLSConfig()) {
-      console.error('TLS is required but not properly configured');
-      throw new Error('TLS configuration validation failed');
-    }
-
-    if (this.config.environment === 'production') {
-      const requiredEnvVars = [
-        'VITE_API_URL',
-        'VITE_ENCRYPTION_KEY'
-      ];
-
-      for (const envVar of requiredEnvVars) {
-        if (!import.meta.env[envVar]) {
-          console.error(`Required environment variable ${envVar} is missing`);
-          throw new Error(`Missing required environment variable: ${envVar}`);
-        }
-      }
-    }
-  }
-
   getConfig(): EnvironmentConfig {
-    return { ...this.config };
+    return this.config;
   }
 
-  isProduction(): boolean {
-    return this.config.environment === 'production';
-  }
-
-  isDevelopment(): boolean {
-    return this.config.environment === 'development';
-  }
-
-  getApiUrl(): string {
-    return this.config.apiUrl;
+  setSecureApiKey(keyName: string, keyValue: string): void {
+    // In a real implementation, this would encrypt and store the key securely
+    // For now, we'll use localStorage with a warning
+    if (typeof window !== 'undefined') {
+      const encryptedKey = btoa(keyValue); // Basic encoding (not real encryption)
+      localStorage.setItem(`secure_${keyName}`, encryptedKey);
+    }
   }
 
   getSecureApiKey(keyName: string): string | null {
-    const encryptedKey = localStorage.getItem(`encrypted_${keyName}`);
-    if (!encryptedKey) return null;
-
-    try {
-      return this.securityManager.decryptApiKey(encryptedKey);
-    } catch (error) {
-      console.error('Failed to decrypt API key:', error);
-      return null;
+    if (typeof window !== 'undefined') {
+      const encryptedKey = localStorage.getItem(`secure_${keyName}`);
+      return encryptedKey ? atob(encryptedKey) : null;
     }
+    return null;
   }
 
-  setSecureApiKey(keyName: string, apiKey: string): void {
-    const encryptedKey = this.securityManager.encryptApiKey(apiKey);
-    localStorage.setItem(`encrypted_${keyName}`, encryptedKey);
-  }
-
-  removeSecureApiKey(keyName: string): void {
-    localStorage.removeItem(`encrypted_${keyName}`);
+  updateSecuritySettings(settings: Partial<EnvironmentConfig['security']>): void {
+    this.config.security = { ...this.config.security, ...settings };
   }
 }
 

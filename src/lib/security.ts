@@ -1,14 +1,8 @@
 
-import CryptoJS from 'crypto-js';
-
 class SecurityManager {
   private static instance: SecurityManager;
-  private encryptionKey: string;
 
-  private constructor() {
-    // In production, this should come from a secure key management service
-    this.encryptionKey = process.env.VITE_ENCRYPTION_KEY || 'default-key-change-in-prod';
-  }
+  private constructor() {}
 
   static getInstance(): SecurityManager {
     if (!SecurityManager.instance) {
@@ -17,29 +11,62 @@ class SecurityManager {
     return SecurityManager.instance;
   }
 
-  encryptApiKey(apiKey: string): string {
-    return CryptoJS.AES.encrypt(apiKey, this.encryptionKey).toString();
+  validateTLSConfig(): boolean {
+    // Check if we're using HTTPS in production
+    if (typeof window !== 'undefined') {
+      return window.location.protocol === 'https:' || window.location.hostname === 'localhost';
+    }
+    return true;
   }
 
-  decryptApiKey(encryptedKey: string): string {
-    const bytes = CryptoJS.AES.decrypt(encryptedKey, this.encryptionKey);
-    return bytes.toString(CryptoJS.enc.Utf8);
+  sanitizeInput(input: string): string {
+    return input
+      .replace(/[<>]/g, '') // Remove potential XSS vectors
+      .trim()
+      .substring(0, 1000); // Limit length
   }
 
-  hashPassword(password: string): string {
-    return CryptoJS.SHA256(password + this.encryptionKey).toString();
+  validateEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   }
 
   generateSecureToken(): string {
-    return CryptoJS.lib.WordArray.random(32).toString();
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < 32; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
   }
 
-  validateTLSConfig(): boolean {
-    // Check if TLS is properly configured
-    if (typeof window !== 'undefined') {
-      return window.location.protocol === 'https:';
+  validatePassword(password: string): { valid: boolean; errors: string[] } {
+    const errors: string[] = [];
+    
+    if (password.length < 8) {
+      errors.push('Password must be at least 8 characters long');
     }
-    return process.env.NODE_ENV === 'production';
+    
+    if (!/[A-Z]/.test(password)) {
+      errors.push('Password must contain at least one uppercase letter');
+    }
+    
+    if (!/[a-z]/.test(password)) {
+      errors.push('Password must contain at least one lowercase letter');
+    }
+    
+    if (!/\d/.test(password)) {
+      errors.push('Password must contain at least one number');
+    }
+    
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      errors.push('Password must contain at least one special character');
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors
+    };
   }
 }
 

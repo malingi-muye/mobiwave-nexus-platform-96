@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
@@ -11,6 +10,11 @@ interface SubAccountPayload {
 interface SubUser {
   smsBalance: string;
   subAccUser: string;
+}
+
+interface ResellerClientApiResponse {
+  clientUserName: string;
+  smsBalance: string;
 }
 
 interface ResellerClient {
@@ -65,7 +69,13 @@ export const useMspaceAccounts = () => {
           throw new Error(error.message);
         }
         
-        return data || [];
+        // Map the API response to our expected format
+        const apiResponse: ResellerClientApiResponse[] = data || [];
+        return apiResponse.map(client => ({
+          clientname: client.clientUserName,
+          balance: client.smsBalance,
+          status: 'active'
+        }));
       };
 
       const result = await handleRetry(resellerClientsOperation);

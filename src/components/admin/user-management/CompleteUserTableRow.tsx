@@ -1,14 +1,16 @@
 
 import React, { useState } from 'react';
-import { TableRow, TableCell } from "@/components/ui/table";
-import { CompleteUser } from '@/hooks/useCompleteUserManagement';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { TableCell, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { UserTableCell } from './UserTableCell';
 import { UserActions } from './UserActions';
 import { UserEditDialog } from './UserEditDialog';
 import { UserCreditsDialog } from './UserCreditsDialog';
 import { UserDeleteDialog } from './UserDeleteDialog';
+import { CompleteUser } from '@/hooks/useCompleteUserManagement';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { User, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 
 interface CompleteUserTableRowProps {
   user: CompleteUser;
@@ -18,31 +20,29 @@ interface CompleteUserTableRowProps {
 type UserRole = 'user' | 'manager' | 'admin' | 'super_admin';
 
 export function CompleteUserTableRow({ user, onUserUpdated }: CompleteUserTableRowProps) {
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [creditsDialogOpen, setCreditsDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showCreditsDialog, setShowCreditsDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Helper function to ensure valid role
-  const getValidRole = (role?: string): UserRole => {
-    const validRoles: UserRole[] = ['user', 'manager', 'admin', 'super_admin'];
-    return validRoles.includes(role as UserRole) ? (role as UserRole) : 'user';
-  };
-
+  
   const [editForm, setEditForm] = useState({
     first_name: user.first_name || '',
     last_name: user.last_name || '',
-    role: getValidRole(user.role),
+    role: (user.role || 'user') as UserRole,
     user_type: user.user_type || 'demo'
   });
 
-  const [creditsForm, setCreditForm] = useState({
-    amount: '',
-    type: 'add' as 'add' | 'subtract',
-    description: ''
-  });
+  const handleEdit = () => {
+    setEditForm({
+      first_name: user.first_name || '',
+      last_name: user.last_name || '',
+      role: (user.role || 'user') as UserRole,
+      user_type: user.user_type || 'demo'
+    });
+    setShowEditDialog(true);
+  };
 
-  const handleUpdateUser = async () => {
+  const handleSaveEdit = async () => {
     setIsLoading(true);
     try {
       const { error } = await supabase
@@ -51,94 +51,41 @@ export function CompleteUserTableRow({ user, onUserUpdated }: CompleteUserTableR
           first_name: editForm.first_name,
           last_name: editForm.last_name,
           role: editForm.role,
-          user_type: editForm.user_type
+          user_type: editForm.user_type,
+          updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
 
       if (error) throw error;
 
       toast.success('User updated successfully');
-      setEditDialogOpen(false);
       onUserUpdated();
-    } catch (error: any) {
-      toast.error(`Failed to update user: ${error.message}`);
+      setShowEditDialog(false);
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast.error('Failed to update user');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleAdjustCredits = async () => {
-    setIsLoading(true);
-    try {
-      const amount = parseFloat(creditsForm.amount);
-      if (isNaN(amount) || amount <= 0) {
-        toast.error('Please enter a valid amount');
-        return;
-      }
-
-      // Get current credits
-      const { data: currentCredits, error: fetchError } = await supabase
-        .from('user_credits')
-        .select('credits_remaining')
-        .eq('user_id', user.id)
-        .single();
-
-      if (fetchError) {
-        // If no credits record exists, create one
-        const { error: insertError } = await supabase
-          .from('user_credits')
-          .insert({
-            user_id: user.id,
-            credits_remaining: creditsForm.type === 'add' ? amount : 0,
-            credits_purchased: creditsForm.type === 'add' ? amount : 0
-          });
-
-        if (insertError) throw insertError;
-      } else {
-        // Update existing credits
-        const newAmount = creditsForm.type === 'add' 
-          ? currentCredits.credits_remaining + amount
-          : Math.max(0, currentCredits.credits_remaining - amount);
-
-        const { error: updateError } = await supabase
-          .from('user_credits')
-          .update({ 
-            credits_remaining: newAmount,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', user.id);
-
-        if (updateError) throw updateError;
-      }
-
-      // Record transaction
-      const { error: transactionError } = await supabase
-        .from('credit_transactions')
-        .insert({
-          user_id: user.id,
-          amount: creditsForm.type === 'add' ? amount : -amount,
-          transaction_type: creditsForm.type === 'add' ? 'admin_credit' : 'admin_debit',
-          description: creditsForm.description || `Credits ${creditsForm.type}ed by admin`,
-          reference_id: `admin_${Date.now()}`
-        });
-
-      if (transactionError) throw transactionError;
-
-      toast.success(`Credits ${creditsForm.type}ed successfully`);
-      setCreditsDialogOpen(false);
-      setCreditForm({ amount: '', type: 'add', description: '' });
-      onUserUpdated();
-    } catch (error: any) {
-      toast.error(`Failed to adjust credits: ${error.message}`);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleCredits = () => {
+    setShowCreditsDialog(true);
   };
 
-  const handleDeleteUser = async () => {
+  const handleEmail = () => {
+    // TODO: Implement email functionality
+    toast.info('Email functionality coming soon');
+  };
+
+  const handleDelete = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
     setIsLoading(true);
     try {
-      // Delete from profiles table (this should cascade to other tables)
+      // Delete user profile (this will cascade delete related records)
       const { error } = await supabase
         .from('profiles')
         .delete()
@@ -147,68 +94,121 @@ export function CompleteUserTableRow({ user, onUserUpdated }: CompleteUserTableR
       if (error) throw error;
 
       toast.success('User deleted successfully');
-      setDeleteDialogOpen(false);
       onUserUpdated();
-    } catch (error: any) {
-      toast.error(`Failed to delete user: ${error.message}`);
+      setShowDeleteDialog(false);
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error('Failed to delete user');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const sendWelcomeEmail = async () => {
-    setIsLoading(true);
-    try {
-      // This would typically integrate with your email service
-      toast.success('Welcome email sent successfully');
-    } catch (error: any) {
-      toast.error(`Failed to send email: ${error.message}`);
-    } finally {
-      setIsLoading(false);
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case 'super_admin': return 'bg-purple-100 text-purple-800';
+      case 'admin': return 'bg-red-100 text-red-800';
+      case 'manager': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-blue-100 text-blue-800';
     }
+  };
+
+  const getStatusIcon = () => {
+    if (!user.has_profile) {
+      return <AlertTriangle className="w-4 h-4 text-amber-500" />;
+    }
+    if (user.email_confirmed_at) {
+      return <CheckCircle className="w-4 h-4 text-green-500" />;
+    }
+    return <XCircle className="w-4 h-4 text-red-500" />;
   };
 
   return (
     <>
       <TableRow>
-        <UserTableCell user={user} />
+        <TableCell>
+          <UserTableCell 
+            user={user}
+            icon={User}
+            showStatus={true}
+          />
+        </TableCell>
+        
+        <TableCell>
+          <div className="flex items-center gap-2">
+            {getStatusIcon()}
+            <div className="text-sm">
+              {!user.has_profile && <div className="text-amber-600">Missing Profile</div>}
+              {user.has_profile && user.email_confirmed_at && <div className="text-green-600">Verified</div>}
+              {user.has_profile && !user.email_confirmed_at && <div className="text-red-600">Unverified</div>}
+            </div>
+          </div>
+        </TableCell>
+        
+        <TableCell>
+          <div className="space-y-1">
+            <Badge className={getRoleBadgeColor(user.role || 'user')} variant="secondary">
+              {user.role || 'user'}
+            </Badge>
+            <div className="text-xs text-gray-500">
+              {user.user_type || 'demo'}
+            </div>
+          </div>
+        </TableCell>
+        
+        <TableCell>
+          <div className="text-sm">
+            <div className="font-medium text-green-600">
+              {user.credits_remaining?.toFixed(2) || '0.00'} credits
+            </div>
+            <div className="text-gray-500">
+              Purchased: {user.credits_purchased?.toFixed(2) || '0.00'}
+            </div>
+          </div>
+        </TableCell>
+        
+        <TableCell>
+          <div className="text-sm text-gray-500">
+            {user.last_sign_in_at 
+              ? new Date(user.last_sign_in_at).toLocaleDateString()
+              : 'Never'
+            }
+          </div>
+        </TableCell>
         
         <TableCell>
           <UserActions
-            onEdit={() => setEditDialogOpen(true)}
-            onCredits={() => setCreditsDialogOpen(true)}
-            onEmail={sendWelcomeEmail}
-            onDelete={() => setDeleteDialogOpen(true)}
+            onEdit={handleEdit}
+            onCredits={handleCredits}
+            onEmail={handleEmail}
+            onDelete={handleDelete}
             isLoading={isLoading}
           />
         </TableCell>
       </TableRow>
 
       <UserEditDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
         user={user}
         editForm={editForm}
         onFormChange={setEditForm}
-        onSubmit={handleUpdateUser}
+        onSubmit={handleSaveEdit}
         isLoading={isLoading}
       />
 
       <UserCreditsDialog
-        open={creditsDialogOpen}
-        onOpenChange={setCreditsDialogOpen}
+        open={showCreditsDialog}
+        onOpenChange={setShowCreditsDialog}
         user={user}
-        creditsForm={creditsForm}
-        onFormChange={setCreditForm}
-        onSubmit={handleAdjustCredits}
-        isLoading={isLoading}
+        onUserUpdated={onUserUpdated}
       />
 
       <UserDeleteDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
         user={user}
-        onConfirm={handleDeleteUser}
+        onConfirm={handleConfirmDelete}
         isLoading={isLoading}
       />
     </>

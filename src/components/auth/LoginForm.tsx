@@ -38,7 +38,7 @@ export function LoginForm() {
 
     try {
       // Check if account is locked first
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('failed_login_attempts, locked_until')
         .eq('email', email)

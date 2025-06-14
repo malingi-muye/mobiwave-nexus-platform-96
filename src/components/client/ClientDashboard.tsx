@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ClientDashboardLayout } from './ClientDashboardLayout';
 import { ClientMetrics } from '../dashboard/ClientMetrics';
@@ -81,7 +80,7 @@ export function ClientDashboard() {
                 <p className="mb-1">• Real-time delivery tracking</p>
                 <p>• Cost-effective bulk messaging</p>
               </div>
-              <Link to="/bulk-sms">
+              <Link to="/bulk-sms?tab=compose">
                 <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6">
                   <Send className="w-4 h-4 mr-2" />
                   Send SMS Now
@@ -103,7 +102,7 @@ export function ClientDashboard() {
               <CardDescription>Create and manage SMS marketing campaigns</CardDescription>
             </CardHeader>
             <CardContent>
-              <Link to="/bulk-sms">
+              <Link to="/bulk-sms?tab=bulk-ops">
                 <Button className="w-full bg-blue-600 hover:bg-blue-700">
                   <Plus className="w-4 h-4 mr-2" />
                   New SMS Campaign
@@ -203,7 +202,7 @@ export function ClientDashboard() {
                 <div className="text-center py-8">
                   <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                   <p className="text-gray-500 mb-4">No campaigns yet</p>
-                  <Link to="/bulk-sms">
+                  <Link to="/bulk-sms?tab=compose">
                     <Button size="sm">
                       <Plus className="w-4 h-4 mr-2" />
                       Create Your First Campaign

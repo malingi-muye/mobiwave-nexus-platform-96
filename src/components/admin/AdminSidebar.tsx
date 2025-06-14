@@ -31,6 +31,8 @@ const adminSidebarItems = [
   { title: "Analytics", icon: BarChart, badge: null, path: "/admin/analytics", color: "bg-purple-500" },
   { title: "Revenue Reports", icon: TrendingUp, badge: null, path: "/admin/revenue", color: "bg-yellow-500" },
   { title: "System Logs", icon: MessageSquare, badge: null, path: "/admin/logs", color: "bg-indigo-500" },
+  { title: "Security Center", icon: Shield, badge: "New", path: "/admin/security-center", color: "bg-red-600" },
+  { title: "System Health", icon: Activity, badge: null, path: "/admin/system-health", color: "bg-green-600" },
   { title: "Monitoring", icon: Activity, badge: "Live", path: "/admin/monitoring", color: "bg-orange-500" },
 ];
 

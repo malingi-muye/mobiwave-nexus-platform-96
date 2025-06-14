@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Route } from 'react-router-dom';
 import { RoleBasedRoute } from '@/components/auth/RoleBasedRoute';
@@ -16,6 +15,8 @@ import Monitoring from '@/pages/admin/Monitoring';
 import DatabaseAdmin from '@/pages/admin/DatabaseAdmin';
 import RevenueReports from '@/pages/admin/RevenueReports';
 import ProjectProgress from '@/pages/admin/ProjectProgress';
+import AdvancedSecurityCenter from '@/pages/admin/AdvancedSecurityCenter';
+import SystemDiagnostics from '@/pages/admin/SystemDiagnostics';
 
 export function AdminRoutes() {
   return (
@@ -88,6 +89,16 @@ export function AdminRoutes() {
       <Route path="/admin/projects" element={
         <RoleBasedRoute allowedRoles={['super_admin', 'admin', 'manager']}>
           <ProjectProgress />
+        </RoleBasedRoute>
+      } />
+      <Route path="/admin/security-center" element={
+        <RoleBasedRoute allowedRoles={['super_admin', 'admin']}>
+          <AdvancedSecurityCenter />
+        </RoleBasedRoute>
+      } />
+      <Route path="/admin/system-health" element={
+        <RoleBasedRoute allowedRoles={['super_admin', 'admin', 'manager']}>
+          <SystemDiagnostics />
         </RoleBasedRoute>
       } />
     </>

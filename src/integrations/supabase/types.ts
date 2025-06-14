@@ -368,9 +368,12 @@ export type Database = {
         Row: {
           created_at: string | null
           email: string
+          failed_login_attempts: number | null
           first_name: string | null
           id: string
           last_name: string | null
+          last_password_change: string | null
+          locked_until: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string | null
           user_type: string | null
@@ -378,9 +381,12 @@ export type Database = {
         Insert: {
           created_at?: string | null
           email: string
+          failed_login_attempts?: number | null
           first_name?: string | null
           id?: string
           last_name?: string | null
+          last_password_change?: string | null
+          locked_until?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
           user_type?: string | null
@@ -388,9 +394,12 @@ export type Database = {
         Update: {
           created_at?: string | null
           email?: string
+          failed_login_attempts?: number | null
           first_name?: string | null
           id?: string
           last_name?: string | null
+          last_password_change?: string | null
+          locked_until?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
           user_type?: string | null
@@ -424,6 +433,45 @@ export type Database = {
           name?: string
           permissions?: string[] | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      security_events: {
+        Row: {
+          created_at: string | null
+          details: Json | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          details?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          details?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1092,6 +1140,10 @@ export type Database = {
           p_old_data?: Json
           p_new_data?: Json
         }
+        Returns: string
+      }
+      log_security_event: {
+        Args: { p_event_type: string; p_severity?: string; p_details?: Json }
         Returns: string
       }
       sync_existing_users: {

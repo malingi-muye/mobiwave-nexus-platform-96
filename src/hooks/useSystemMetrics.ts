@@ -35,22 +35,34 @@ export const useSystemMetrics = () => {
         const { count: activeCampaigns } = await supabase
           .from('campaigns')
           .select('*', { count: 'exact', head: true })
-          .eq('status', 'active');
+          .eq('status', 'sending');
 
-        // Get total campaigns as a proxy for total messages
-        const { count: totalMessages } = await supabase
+        // Get total messages from recent campaigns
+        const { data: recentCampaigns } = await supabase
           .from('campaigns')
-          .select('*', { count: 'exact', head: true });
+          .select('sent_count')
+          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
 
-        // Mock system health data
-        const systemHealth: 'healthy' | 'warning' | 'critical' = 'healthy';
+        const totalMessages = recentCampaigns?.reduce((sum, c) => sum + (c.sent_count || 0), 0) || 0;
+
+        // Enhanced system health calculation
+        const errorRate = Math.random() * 2; // Mock error rate
+        const responseTime = Math.random() * 100 + 50;
+        const systemLoad = Math.random() * 60 + 20;
+        
+        let systemHealth: 'healthy' | 'warning' | 'critical' = 'healthy';
+        if (errorRate > 5 || responseTime > 200 || systemLoad > 80) {
+          systemHealth = 'critical';
+        } else if (errorRate > 2 || responseTime > 150 || systemLoad > 60) {
+          systemHealth = 'warning';
+        }
+
         const uptime = '99.9%';
-        const responseTime = Math.random() * 100 + 50; // Random response time between 50-150ms
 
         return {
           totalUsers: totalUsers || 0,
           activeCampaigns: activeCampaigns || 0,
-          totalMessages: totalMessages || 0,
+          totalMessages,
           systemHealth,
           uptime,
           responseTime
@@ -58,7 +70,6 @@ export const useSystemMetrics = () => {
       } catch (error) {
         console.error('Error fetching system metrics:', error);
         
-        // Return default values on error
         return {
           totalUsers: 0,
           activeCampaigns: 0,
@@ -69,8 +80,8 @@ export const useSystemMetrics = () => {
         };
       }
     },
-    refetchInterval: 30000, // Refetch every 30 seconds
-    staleTime: 15000, // Consider data stale after 15 seconds
+    refetchInterval: 2000, // More frequent updates for real-time feel
+    staleTime: 1000, // Consider data stale after 1 second
   });
 };
 

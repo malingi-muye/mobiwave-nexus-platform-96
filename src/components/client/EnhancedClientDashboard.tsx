@@ -1,98 +1,85 @@
 
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useUserCredits } from '@/hooks/useUserCredits';
-import { useSystemMetrics } from '@/hooks/useSystemMetrics';
-import { useSMSService } from '@/hooks/useSMSService';
-import { 
-  Users, 
-  Zap, 
-  Mail, 
-  MessageSquare, 
-  TrendingUp,
-  Activity,
-  Server,
-  CreditCard
-} from 'lucide-react';
+import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Activity, BarChart3, Target, Zap } from 'lucide-react';
+import { ClientMetrics } from '../dashboard/ClientMetrics';
+import { CampaignsList } from '../dashboard/CampaignsList';
+import { RecentActivity } from '../dashboard/RecentActivity';
+import { RealTimeDashboard } from '../dashboard/RealTimeDashboard';
+import { AdvancedCampaignAnalytics } from '../analytics/AdvancedCampaignAnalytics';
 
 export function EnhancedClientDashboard() {
-  const { data: userCredits } = useUserCredits();
-  const { data: systemMetrics } = useSystemMetrics();
+  const [activeTab, setActiveTab] = useState('overview');
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {/* User Statistics */}
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-blue-900">Total Users</h3>
-          <Users className="w-6 h-6 text-blue-600" />
-        </div>
-        <div className="space-y-2">
-          <div className="text-3xl font-bold text-blue-600">{systemMetrics?.totalUsers || 0}</div>
-          <p className="text-sm text-blue-700">Registered users on the platform</p>
-        </div>
+    <div className="space-y-6">
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold tracking-tight mb-3 bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700 bg-clip-text text-transparent">
+          Dashboard
+        </h1>
+        <p className="text-lg text-gray-600 max-w-2xl">
+          Monitor your campaigns, track performance, and get real-time insights into your messaging activities.
+        </p>
       </div>
 
-      {/* Campaign Statistics */}
-      <div className="bg-gradient-to-br from-green-50 to-teal-50 rounded-xl p-6 border border-green-200">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-green-900">Active Campaigns</h3>
-          <Zap className="w-6 h-6 text-green-600" />
-        </div>
-        <div className="space-y-2">
-          <div className="text-3xl font-bold text-green-600">{systemMetrics?.activeCampaigns || 0}</div>
-          <p className="text-sm text-green-700">Currently running campaigns</p>
-        </div>
-      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <BarChart3 className="w-4 h-4" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="realtime" className="flex items-center gap-2">
+            <Activity className="w-4 h-4" />
+            Real-Time
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <Target className="w-4 h-4" />
+            Analytics
+          </TabsTrigger>
+          <TabsTrigger value="performance" className="flex items-center gap-2">
+            <Zap className="w-4 h-4" />
+            Performance
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Messages Sent */}
-      <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-200">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-purple-900">Total Messages</h3>
-          <MessageSquare className="w-6 h-6 text-purple-600" />
-        </div>
-        <div className="space-y-2">
-          <div className="text-3xl font-bold text-purple-600">{systemMetrics?.totalMessages || 0}</div>
-          <p className="text-sm text-purple-700">Total messages sent across all campaigns</p>
-        </div>
-      </div>
-
-      {/* Credit Balance */}
-      <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-6 border border-yellow-200">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-yellow-900">Credit Balance</h3>
-          <CreditCard className="w-6 h-6 text-yellow-600" />
-        </div>
-        <div className="space-y-2">
-          <div className="text-3xl font-bold text-yellow-600">${userCredits?.credits_remaining?.toFixed(2) || '0.00'}</div>
-          <p className="text-sm text-yellow-700">Remaining credits for sending messages</p>
-        </div>
-      </div>
-
-      <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-6 border border-orange-200">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-orange-900">Credits Used</h3>
-          <TrendingUp className="w-6 h-6 text-orange-600" />
-        </div>
-        <div className="space-y-2">
-          <div className="text-3xl font-bold text-orange-600">
-            ${((userCredits?.total_purchased || 0) - (userCredits?.credits_remaining || 0)).toFixed(2)}
+        <TabsContent value="overview" className="space-y-6">
+          <ClientMetrics />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <CampaignsList />
+            <RecentActivity />
           </div>
-          <p className="text-sm text-orange-700">Total spent on campaigns</p>
-        </div>
-      </div>
+        </TabsContent>
 
-      {/* System Health */}
-      <div className="bg-gradient-to-br from-gray-50 to-zinc-50 rounded-xl p-6 border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">System Health</h3>
-          <Server className="w-6 h-6 text-gray-600" />
-        </div>
-        <div className="space-y-2">
-          <div className="text-3xl font-bold text-gray-600">{systemMetrics?.systemHealth || 'N/A'}</div>
-          <p className="text-sm text-gray-700">Overall system status</p>
-        </div>
-      </div>
+        <TabsContent value="realtime" className="space-y-6">
+          <RealTimeDashboard />
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-6">
+          <AdvancedCampaignAnalytics />
+        </TabsContent>
+
+        <TabsContent value="performance" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                System Performance Overview
+                <Badge variant="outline">Beta</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <Zap className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500 mb-2">Advanced performance monitoring</p>
+                <p className="text-sm text-gray-400">
+                  Detailed performance metrics and optimization recommendations coming soon.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

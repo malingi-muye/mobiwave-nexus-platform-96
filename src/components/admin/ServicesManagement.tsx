@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Users, Search, Shield, Crown, Plus, DollarSign, Activity } from 'lucide-react';
+import { Settings, Users, Search, Crown, DollarSign } from 'lucide-react';
 import { useRealServicesManagement } from '@/hooks/useRealServicesManagement';
 
 interface User {
@@ -67,6 +67,7 @@ export function ServicesManagement() {
       case 'survey': return '📊';
       case 'servicedesk': return '🎫';
       case 'rewards': return '🎁';
+      case 'whatsapp': return '💚';
       default: return '⚙️';
     }
   };

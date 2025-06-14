@@ -815,6 +815,56 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_subscriptions: {
+        Row: {
+          access_token_encrypted: string
+          business_account_id: string
+          created_at: string | null
+          current_messages: number | null
+          id: string
+          message_limit: number | null
+          phone_number_id: string
+          status: string | null
+          subscription_id: string | null
+          verify_token: string
+          webhook_url: string
+        }
+        Insert: {
+          access_token_encrypted: string
+          business_account_id: string
+          created_at?: string | null
+          current_messages?: number | null
+          id?: string
+          message_limit?: number | null
+          phone_number_id: string
+          status?: string | null
+          subscription_id?: string | null
+          verify_token: string
+          webhook_url: string
+        }
+        Update: {
+          access_token_encrypted?: string
+          business_account_id?: string
+          created_at?: string | null
+          current_messages?: number | null
+          id?: string
+          message_limit?: number | null
+          phone_number_id?: string
+          status?: string | null
+          subscription_id?: string | null
+          verify_token?: string
+          webhook_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_subscriptions_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "user_service_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

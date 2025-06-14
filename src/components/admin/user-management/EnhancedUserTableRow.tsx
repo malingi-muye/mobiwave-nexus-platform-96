@@ -120,6 +120,27 @@ export function EnhancedUserTableRow({ user, onUserUpdated }: EnhancedUserTableR
     }
   };
 
+  // Placeholder handlers for database users (Enhanced functionality not implemented yet)
+  const handleEdit = () => {
+    console.log('Edit user:', user.id);
+    // TODO: Implement edit functionality for enhanced user management
+  };
+
+  const handleCredits = () => {
+    console.log('Manage credits for user:', user.id);
+    // TODO: Implement credits management for enhanced user management
+  };
+
+  const handleEmail = () => {
+    console.log('Send email to user:', user.id);
+    // TODO: Implement email functionality for enhanced user management
+  };
+
+  const handleDelete = () => {
+    console.log('Delete user:', user.id);
+    // TODO: Implement delete functionality for enhanced user management
+  };
+
   const SourceIcon = getSourceIcon(user.source);
 
   return (
@@ -154,7 +175,13 @@ export function EnhancedUserTableRow({ user, onUserUpdated }: EnhancedUserTableR
       
       <TableCell>
         {user.source === 'database' && (
-          <UserActions user={user as any} onUserUpdated={onUserUpdated} />
+          <UserActions
+            onEdit={handleEdit}
+            onCredits={handleCredits}
+            onEmail={handleEmail}
+            onDelete={handleDelete}
+            isLoading={false}
+          />
         )}
         {user.source === 'mspace_api' && (
           <Badge variant="outline" className="text-xs">

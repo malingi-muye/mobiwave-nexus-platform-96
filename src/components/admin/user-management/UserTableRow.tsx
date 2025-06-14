@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UserActions } from './UserActions';
+import { toast } from 'sonner';
 
 interface User {
   id: string;
@@ -21,6 +22,8 @@ interface UserTableRowProps {
 }
 
 export function UserTableRow({ user, onRoleUpdate, onUserUpdated }: UserTableRowProps) {
+  const [isLoading, setIsLoading] = useState(false);
+
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'super_admin': return 'bg-purple-100 text-purple-800';
@@ -28,6 +31,47 @@ export function UserTableRow({ user, onRoleUpdate, onUserUpdated }: UserTableRow
       case 'manager': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-blue-100 text-blue-800';
     }
+  };
+
+  // Placeholder handlers (basic functionality for UserTableRow)
+  const handleEdit = () => {
+    setIsLoading(true);
+    // TODO: Implement edit functionality for basic user management
+    console.log('Edit user:', user.id);
+    setTimeout(() => {
+      setIsLoading(false);
+      toast.success('Edit functionality not yet implemented');
+    }, 1000);
+  };
+
+  const handleCredits = () => {
+    setIsLoading(true);
+    // TODO: Implement credits management for basic user management
+    console.log('Manage credits for user:', user.id);
+    setTimeout(() => {
+      setIsLoading(false);
+      toast.success('Credits management not yet implemented');
+    }, 1000);
+  };
+
+  const handleEmail = () => {
+    setIsLoading(true);
+    // TODO: Implement email functionality for basic user management
+    console.log('Send email to user:', user.id);
+    setTimeout(() => {
+      setIsLoading(false);
+      toast.success('Email functionality not yet implemented');
+    }, 1000);
+  };
+
+  const handleDelete = () => {
+    setIsLoading(true);
+    // TODO: Implement delete functionality for basic user management
+    console.log('Delete user:', user.id);
+    setTimeout(() => {
+      setIsLoading(false);
+      toast.success('Delete functionality not yet implemented');
+    }, 1000);
   };
 
   return (
@@ -67,7 +111,13 @@ export function UserTableRow({ user, onRoleUpdate, onUserUpdated }: UserTableRow
         {new Date(user.created_at).toLocaleDateString()}
       </TableCell>
       <TableCell>
-        <UserActions user={user} onUserUpdated={onUserUpdated} />
+        <UserActions
+          onEdit={handleEdit}
+          onCredits={handleCredits}
+          onEmail={handleEmail}
+          onDelete={handleDelete}
+          isLoading={isLoading}
+        />
       </TableCell>
     </TableRow>
   );

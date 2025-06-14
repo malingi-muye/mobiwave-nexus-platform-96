@@ -32,6 +32,7 @@ export interface CompleteUser {
   email: string;
   first_name?: string;
   last_name?: string;
+  phone?: string;
   role?: string;
   user_type?: string;
   created_at: string;

@@ -13,7 +13,7 @@ export function SidebarGroup({ section, currentPath }: SidebarGroupProps) {
   const [isExpanded, setIsExpanded] = useState(true);
 
   return (
-    <div className="mb-4">
+    <div className="mb-2">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="flex items-center justify-between w-full px-3 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-700 transition-colors"
@@ -30,9 +30,9 @@ export function SidebarGroup({ section, currentPath }: SidebarGroupProps) {
         <div className="mt-1 space-y-0.5">
           {section.items.map((item) => (
             <MenuItem
-              key={item.path}
+              key={item.href}
               item={item}
-              isActive={currentPath === item.path}
+              isActive={currentPath === item.href}
             />
           ))}
         </div>

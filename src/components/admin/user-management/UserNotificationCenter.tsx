@@ -203,7 +203,7 @@ export function UserNotificationCenter({ selectedUsers = [], onSendNotification 
             className="mt-1"
           />
           <div className="mt-1 text-xs text-gray-500">
-            Use {{user_name}}, {{service_name}}, {{credits_remaining}} for personalization
+            Use {`{{user_name}}, {{service_name}}, {{credits_remaining}}`} for personalization
           </div>
         </div>
 

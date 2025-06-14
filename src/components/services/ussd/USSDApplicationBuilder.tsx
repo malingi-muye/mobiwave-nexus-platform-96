@@ -15,9 +15,8 @@ import { USSDApplicationCard } from './USSDApplicationCard';
 interface MenuNode {
   id: string;
   text: string;
-  options: { key: string; text: string; nextNodeId?: string }[];
+  options: string[];
   isEndNode: boolean;
-  response?: string;
 }
 
 type USSDApplicationFromDB = Tables<'mspace_ussd_applications'>;
@@ -51,14 +50,11 @@ export function USSDApplicationBuilder() {
   const [isCreating, setIsCreating] = useState(false);
   const [serviceCode, setServiceCode] = useState('');
   const [callbackUrl, setCallbackUrl] = useState('');
-  const [menuNodes, setMenuNodes] = useState<MenuNode[]>([
+  const [menuStructure, setMenuStructure] = useState<MenuNode[]>([
     {
       id: 'root',
       text: 'Welcome to our service. Please select an option:',
-      options: [
-        { key: '1', text: 'Option 1', nextNodeId: undefined },
-        { key: '2', text: 'Option 2', nextNodeId: undefined }
-      ],
+      options: ['Option 1', 'Option 2'],
       isEndNode: false
     }
   ]);
@@ -120,28 +116,29 @@ export function USSDApplicationBuilder() {
   const resetForm = () => {
     setServiceCode('');
     setCallbackUrl('');
-    setMenuNodes([{
+    setMenuStructure([{
       id: 'root',
       text: 'Welcome to our service. Please select an option:',
-      options: [
-        { key: '1', text: 'Option 1', nextNodeId: undefined },
-        { key: '2', text: 'Option 2', nextNodeId: undefined }
-      ],
+      options: ['Option 1', 'Option 2'],
       isEndNode: false
     }]);
   };
 
   const handleSubmit = () => {
-    if (!serviceCode || !callbackUrl || menuNodes.length === 0) {
+    if (!serviceCode || !callbackUrl || menuStructure.length === 0) {
       toast.error('Please fill in all required fields');
       return;
     }
 
     createApplication.mutate({
       service_code: serviceCode,
-      menu_structure: menuNodes,
+      menu_structure: menuStructure,
       callback_url: callbackUrl
     });
+  };
+
+  const handleMenuUpdate = (updatedMenu: MenuNode[]) => {
+    setMenuStructure(updatedMenu);
   };
 
   if (isLoading) {
@@ -198,8 +195,8 @@ export function USSDApplicationBuilder() {
             </div>
 
             <USSDMenuBuilder 
-              menuNodes={menuNodes} 
-              setMenuNodes={setMenuNodes} 
+              menuStructure={menuStructure} 
+              onUpdateMenu={handleMenuUpdate}
             />
 
             <div className="flex gap-3">

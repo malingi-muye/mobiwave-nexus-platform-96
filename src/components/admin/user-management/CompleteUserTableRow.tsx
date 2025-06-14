@@ -10,7 +10,7 @@ import { UserDeleteDialog } from './UserDeleteDialog';
 import { CompleteUser } from '@/hooks/useCompleteUserManagement';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { User, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 
 interface CompleteUserTableRowProps {
   user: CompleteUser;
@@ -127,11 +127,7 @@ export function CompleteUserTableRow({ user, onUserUpdated }: CompleteUserTableR
     <>
       <TableRow>
         <TableCell>
-          <UserTableCell 
-            user={user}
-            icon={User}
-            showStatus={true}
-          />
+          <UserTableCell user={user} />
         </TableCell>
         
         <TableCell>

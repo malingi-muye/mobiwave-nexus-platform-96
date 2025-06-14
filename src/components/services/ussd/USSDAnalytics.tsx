@@ -40,7 +40,7 @@ export function USSDAnalytics({ applicationId, timeRange = '7d' }: USSDAnalytics
         application: session.application ? {
           service_code: session.application.service_code,
           menu_structure: Array.isArray(session.application.menu_structure) 
-            ? session.application.menu_structure as MenuNode[]
+            ? session.application.menu_structure as unknown as MenuNode[]
             : []
         } : undefined
       })) as USSDSession[];

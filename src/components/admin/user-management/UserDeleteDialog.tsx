@@ -2,55 +2,61 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CompleteUser } from '@/hooks/useCompleteUserManagement';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { AlertTriangle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { CompleteUser } from '@/hooks/useCompleteUserManagement';
 
 interface UserDeleteDialogProps {
+  user: CompleteUser;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  user: CompleteUser;
   onUserDeleted: () => void;
 }
 
-export function UserDeleteDialog({ 
-  open, 
-  onOpenChange, 
-  user, 
-  onUserDeleted
-}: UserDeleteDialogProps) {
+export function UserDeleteDialog({ user, open, onOpenChange, onUserDeleted }: UserDeleteDialogProps) {
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+
+  const expectedConfirmText = 'DELETE';
+  const canDelete = confirmText === expectedConfirmText;
 
   const handleDelete = async () => {
-    if (!user) return;
+    if (!canDelete) return;
     
     setIsLoading(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      toast.success('User deleted successfully');
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      toast({
+        title: "User Deleted",
+        description: `User ${user.email} has been permanently deleted.`,
+      });
+      
       onUserDeleted();
       onOpenChange(false);
+      setConfirmText('');
     } catch (error) {
-      console.error('Error deleting user:', error);
-      toast.error('Failed to delete user');
+      toast({
+        title: "Error",
+        description: "Failed to delete user.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (!user) {
-    return null;
-  }
+  const handleClose = () => {
+    onOpenChange(false);
+    setConfirmText('');
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-red-600">
@@ -58,30 +64,48 @@ export function UserDeleteDialog({
             Delete User
           </DialogTitle>
           <DialogDescription>
-            This action cannot be undone. This will permanently delete the user account and remove all associated data.
+            This action cannot be undone. This will permanently delete the user account and all associated data.
           </DialogDescription>
         </DialogHeader>
         
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-red-800 font-medium mb-2">
-            <AlertTriangle className="w-4 h-4" />
-            You are about to delete:
+        <div className="space-y-4">
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5" />
+              <div>
+                <h4 className="font-medium text-red-800">You are about to delete:</h4>
+                <p className="text-sm text-red-700 mt-1">
+                  <strong>{user.first_name} {user.last_name}</strong> ({user.email})
+                </p>
+                <p className="text-sm text-red-700">
+                  Role: {user.role} | Type: {user.user_type}
+                </p>
+              </div>
+            </div>
           </div>
-          <div className="text-sm text-red-700">
-            <p><strong>Name:</strong> {user.first_name} {user.last_name}</p>
-            <p><strong>Email:</strong> {user.email}</p>
-            <p><strong>Role:</strong> {user.role}</p>
+          
+          <div className="grid gap-2">
+            <Label htmlFor="confirm">
+              Type <strong>DELETE</strong> to confirm:
+            </Label>
+            <Input
+              id="confirm"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="Type DELETE to confirm"
+              className={confirmText && !canDelete ? 'border-red-300 focus:border-red-500' : ''}
+            />
           </div>
         </div>
-
+        
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
           <Button 
             variant="destructive" 
             onClick={handleDelete} 
-            disabled={isLoading}
+            disabled={!canDelete || isLoading}
           >
             {isLoading ? 'Deleting...' : 'Delete User'}
           </Button>

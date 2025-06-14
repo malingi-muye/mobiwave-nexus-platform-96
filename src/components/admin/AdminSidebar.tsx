@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -51,18 +50,32 @@ const adminMenuItems = [
     color: 'text-green-600'
   },
   { 
-    title: 'Advanced Analytics', 
+    title: 'Analytics', 
     href: '/admin/analytics', 
+    icon: BarChart3,
+    description: 'Platform usage analytics',
+    color: 'text-cyan-600'
+  },
+  { 
+    title: 'Advanced Analytics', 
+    href: '/admin/advanced-analytics', 
     icon: Brain,
     description: 'AI-powered insights and predictions',
     color: 'text-indigo-600'
   },
   { 
-    title: 'System Analytics', 
-    href: '/admin/system-analytics', 
-    icon: BarChart3,
-    description: 'Platform usage analytics',
-    color: 'text-cyan-600'
+    title: 'Real-Time Monitoring', 
+    href: '/admin/real-time-monitoring', 
+    icon: Activity,
+    description: 'Live system monitoring',
+    color: 'text-pink-600'
+  },
+  { 
+    title: 'System Health', 
+    href: '/admin/system-health', 
+    icon: Monitor,
+    description: 'Infrastructure health monitoring',
+    color: 'text-teal-600'
   },
   { 
     title: 'Security Center', 
@@ -77,13 +90,6 @@ const adminMenuItems = [
     icon: Database,
     description: 'Database management tools',
     color: 'text-emerald-600'
-  },
-  { 
-    title: 'System Monitoring', 
-    href: '/admin/monitoring', 
-    icon: Activity,
-    description: 'Real-time system monitoring',
-    color: 'text-pink-600'
   },
   { 
     title: 'API Management', 
@@ -105,13 +111,6 @@ const adminMenuItems = [
     icon: Bell,
     description: 'System notifications and alerts',
     color: 'text-amber-600'
-  },
-  { 
-    title: 'System Health', 
-    href: '/admin/system-health', 
-    icon: Monitor,
-    description: 'Infrastructure monitoring',
-    color: 'text-teal-600'
   },
   { 
     title: 'Settings', 

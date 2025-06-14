@@ -1,130 +1,85 @@
 
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { LoadingWrapper } from '@/components/ui/loading-wrapper';
-import { useOptimizedQuery } from '@/hooks/useOptimizedQueries';
-import { UserStats } from './user-management/UserStats';
-import { UserFilters } from './user-management/UserFilters';
-import { UserTable } from './user-management/UserTable';
-
-interface User {
-  id: string;
-  email: string;
-  first_name?: string;
-  last_name?: string;
-  created_at: string;
-  last_sign_in_at?: string;
-  role?: 'super_admin' | 'admin' | 'manager' | 'user';
-}
-
-const fetchUsers = async (searchTerm: string, roleFilter: string): Promise<User[]> => {
-  let query = supabase
-    .from('profiles')
-    .select('*');
-
-  if (searchTerm) {
-    query = query.or(`email.ilike.%${searchTerm}%,first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%`);
-  }
-
-  // Only filter by role if the filter is not 'all'
-  if (roleFilter !== 'all') {
-    const validRoles: ('super_admin' | 'admin' | 'manager' | 'user')[] = ['super_admin', 'admin', 'manager', 'user'];
-    if (validRoles.includes(roleFilter as 'super_admin' | 'admin' | 'manager' | 'user')) {
-      query = query.eq('role', roleFilter as 'super_admin' | 'admin' | 'manager' | 'user');
-    }
-  }
-
-  const { data, error } = await query.order('created_at', { ascending: false });
-
-  if (error) throw error;
-
-  return (data || []).map(user => ({
-    id: user.id,
-    email: user.email,
-    first_name: user.first_name,
-    last_name: user.last_name,
-    created_at: user.created_at,
-    role: user.role || 'user'
-  }));
-};
+import { useEnhancedUserManagement } from '@/hooks/useEnhancedUserManagement';
+import { EnhancedUserStats } from './user-management/EnhancedUserStats';
+import { EnhancedUserFilters } from './user-management/EnhancedUserFilters';
+import { EnhancedUserTable } from './user-management/EnhancedUserTable';
+import { MspaceUserManagement } from './mspace/MspaceUserManagement';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Users, Globe } from 'lucide-react';
 
 export function UserManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
-  const queryClient = useQueryClient();
+  const [userTypeFilter, setUserTypeFilter] = useState('all');
 
-  const { data: users, isLoading, error, refetch } = useOptimizedQuery({
-    queryKey: ['admin-users', searchTerm, roleFilter],
-    queryFn: () => fetchUsers(searchTerm, roleFilter),
-    staleTime: 60000 // 1 minute
-  });
-
-  const updateUserRole = useMutation({
-    mutationFn: async ({ userId, newRole }: { userId: string; newRole: 'super_admin' | 'admin' | 'manager' | 'user' }) => {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: newRole })
-        .eq('id', userId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      toast.success('User role updated successfully');
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to update user role: ${error.message}`);
-    }
-  });
+  const { users, isLoading, stats } = useEnhancedUserManagement(searchTerm, roleFilter, userTypeFilter);
 
   const handleUserUpdated = () => {
-    refetch();
+    // The useEnhancedUserManagement hook will automatically refetch data
+    window.location.reload(); // Simple refresh for now
   };
-
-  const filteredUsers = users || [];
 
   return (
     <div className="space-y-6">
       <div className="mb-8">
         <h2 className="text-4xl font-bold tracking-tight mb-3 bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700 bg-clip-text text-transparent">
-          User Management
+          Enhanced User Management
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl">
-          Manage user accounts, roles, and permissions across the platform.
+          Manage both database users and Mspace API clients with real-time synchronization and comprehensive filtering.
         </p>
       </div>
 
-      <UserFilters 
-        searchTerm={searchTerm}
-        roleFilter={roleFilter}
-        onSearchChange={setSearchTerm}
-        onRoleFilterChange={setRoleFilter}
-      />
+      <Tabs defaultValue="users" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="users" className="flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            All Users
+          </TabsTrigger>
+          <TabsTrigger value="mspace" className="flex items-center gap-2">
+            <Globe className="w-4 h-4" />
+            Mspace Management
+          </TabsTrigger>
+        </TabsList>
 
-      <LoadingWrapper 
-        isLoading={isLoading} 
-        error={error}
-        fallback={
-          <div className="space-y-4">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="h-20 bg-gray-200 rounded-lg"></div>
+        <TabsContent value="users" className="space-y-6">
+          <EnhancedUserStats stats={stats} />
+          
+          <EnhancedUserFilters 
+            searchTerm={searchTerm}
+            roleFilter={roleFilter}
+            userTypeFilter={userTypeFilter}
+            onSearchChange={setSearchTerm}
+            onRoleFilterChange={setRoleFilter}
+            onUserTypeFilterChange={setUserTypeFilter}
+          />
+
+          <LoadingWrapper 
+            isLoading={isLoading} 
+            fallback={
+              <div className="space-y-4">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="h-20 bg-gray-200 rounded-lg"></div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        }
-      >
-        <UserStats users={users || []} />
-        
-        <UserTable 
-          users={filteredUsers}
-          isLoading={isLoading}
-          onRoleUpdate={(userId, newRole) => updateUserRole.mutate({ userId, newRole })}
-          onUserUpdated={handleUserUpdated}
-        />
-      </LoadingWrapper>
+            }
+          >
+            <EnhancedUserTable 
+              users={users}
+              isLoading={isLoading}
+              onUserUpdated={handleUserUpdated}
+            />
+          </LoadingWrapper>
+        </TabsContent>
+
+        <TabsContent value="mspace" className="space-y-6">
+          <MspaceUserManagement />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

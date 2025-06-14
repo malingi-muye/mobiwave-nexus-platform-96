@@ -222,6 +222,54 @@ export type Database = {
         }
         Relationships: []
       }
+      mspace_users: {
+        Row: {
+          balance: number | null
+          client_name: string
+          created_date: string | null
+          email: string | null
+          fetched_at: string | null
+          id: string
+          last_login: string | null
+          mspace_client_id: string
+          phone: string | null
+          status: string | null
+          updated_at: string | null
+          user_type: string | null
+          username: string | null
+        }
+        Insert: {
+          balance?: number | null
+          client_name: string
+          created_date?: string | null
+          email?: string | null
+          fetched_at?: string | null
+          id?: string
+          last_login?: string | null
+          mspace_client_id: string
+          phone?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_type?: string | null
+          username?: string | null
+        }
+        Update: {
+          balance?: number | null
+          client_name?: string
+          created_date?: string | null
+          email?: string | null
+          fetched_at?: string | null
+          id?: string
+          last_login?: string | null
+          mspace_client_id?: string
+          phone?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_type?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -231,6 +279,7 @@ export type Database = {
           last_name: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string | null
+          user_type: string | null
         }
         Insert: {
           created_at?: string | null
@@ -240,6 +289,7 @@ export type Database = {
           last_name?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
+          user_type?: string | null
         }
         Update: {
           created_at?: string | null
@@ -249,6 +299,7 @@ export type Database = {
           last_name?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
+          user_type?: string | null
         }
         Relationships: []
       }
@@ -279,6 +330,45 @@ export type Database = {
           name?: string
           permissions?: string[] | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          base_price: number | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          is_premium: boolean | null
+          name: string
+          pricing_model: string | null
+          route: string | null
+          setup_fee: number | null
+        }
+        Insert: {
+          base_price?: number | null
+          description?: string | null
+          icon?: string | null
+          id: string
+          is_active?: boolean | null
+          is_premium?: boolean | null
+          name: string
+          pricing_model?: string | null
+          route?: string | null
+          setup_fee?: number | null
+        }
+        Update: {
+          base_price?: number | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_premium?: boolean | null
+          name?: string
+          pricing_model?: string | null
+          route?: string | null
+          setup_fee?: number | null
         }
         Relationships: []
       }
@@ -340,6 +430,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_services: {
+        Row: {
+          activated_at: string | null
+          id: string
+          is_enabled: boolean | null
+          service_id: string | null
+          subscription_tier: string | null
+          user_id: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          id: string
+          is_enabled?: boolean | null
+          service_id?: string | null
+          subscription_tier?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          service_id?: string | null
+          subscription_tier?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_services_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_types: {
+        Row: {
+          created_at: string | null
+          id: string
+          source: string
+          updated_at: string | null
+          user_id: string | null
+          user_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          source: string
+          updated_at?: string | null
+          user_id?: string | null
+          user_type: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          source?: string
+          updated_at?: string | null
+          user_id?: string | null
+          user_type?: string
+        }
+        Relationships: []
       }
     }
     Views: {

@@ -33,6 +33,8 @@ interface MspaceUser {
 
 export type CombinedUser = DatabaseUser | MspaceUser;
 
+type ValidRole = 'super_admin' | 'admin' | 'manager' | 'user';
+
 export const useEnhancedUserManagement = (searchTerm: string, roleFilter: string, userTypeFilter: string) => {
   // Get database users
   const { data: databaseUsers, isLoading: isLoadingDatabase } = useQuery({
@@ -47,9 +49,9 @@ export const useEnhancedUserManagement = (searchTerm: string, roleFilter: string
       }
 
       if (roleFilter !== 'all') {
-        const validRoles = ['super_admin', 'admin', 'manager', 'user'];
-        if (validRoles.includes(roleFilter)) {
-          query = query.eq('role', roleFilter);
+        const validRoles: ValidRole[] = ['super_admin', 'admin', 'manager', 'user'];
+        if (validRoles.includes(roleFilter as ValidRole)) {
+          query = query.eq('role', roleFilter as ValidRole);
         }
       }
 

@@ -2,14 +2,14 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from "@/components/ui/sonner";
-import { AuthProvider } from '@/components/auth/AuthProvider';
-import NotFound from '@/pages/NotFound';
+import { Toaster } from "./components/ui/sonner";
+import { AuthProvider } from './components/auth/AuthProvider';
+import NotFound from './pages/NotFound';
 
-// Route components
-import { PublicRoutes } from '@/routes/PublicRoutes';
-import { ClientRoutes } from '@/routes/ClientRoutes';
-import { AdminRoutes } from '@/routes/AdminRoutes';
+// Route arrays
+import { publicRoutes } from './routes/PublicRoutes';
+import { clientRoutes } from './routes/ClientRoutes';
+import { adminRoutes } from './routes/AdminRoutes';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,13 +28,13 @@ function App() {
           <div className="min-h-screen bg-gray-50">
             <Routes>
               {/* Public Routes */}
-              <PublicRoutes />
+              {publicRoutes}
 
               {/* Client Routes */}
-              <ClientRoutes />
+              {clientRoutes}
 
               {/* Admin Routes */}
-              <AdminRoutes />
+              {adminRoutes}
 
               <Route path="*" element={<NotFound />} />
             </Routes>

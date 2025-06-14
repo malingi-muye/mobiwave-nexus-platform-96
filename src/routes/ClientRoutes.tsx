@@ -18,129 +18,140 @@ import USSDServices from '../pages/USSDServices';
 import MpesaServices from '../pages/MpesaServices';
 import MySubscriptions from '../pages/MySubscriptions';
 
-export function ClientRoutes() {
-  return (
-    <>
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/bulk-sms"
-        element={
-          <ProtectedRoute>
-            <BulkSMS />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/contacts"
-        element={
-          <ProtectedRoute>
-            <Contacts />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/whatsapp"
-        element={
-          <ProtectedRoute>
-            <WhatsAppCampaigns />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/email"
-        element={
-          <ProtectedRoute>
-            <EmailCampaigns />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/analytics"
-        element={
-          <ProtectedRoute>
-            <CampaignAnalytics />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/surveys"
-        element={
-          <ProtectedRoute>
-            <Surveys />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/survey-builder"
-        element={
-          <ProtectedRoute>
-            <SurveyBuilder />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/service-desk"
-        element={
-          <ProtectedRoute>
-            <ServiceDesk />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/user-services"
-        element={
-          <ProtectedRoute>
-            <UserServices />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/ussd"
-        element={
-          <ProtectedRoute>
-            <USSDServices />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/mpesa"
-        element={
-          <ProtectedRoute>
-            <MpesaServices />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/subscriptions"
-        element={
-          <ProtectedRoute>
-            <MySubscriptions />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/billing"
-        element={
-          <ProtectedRoute>
-            <BillingDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <ProfileSettings />
-          </ProtectedRoute>
-        }
-      />
-    </>
-  );
-}
+export const clientRoutes = [
+  <Route
+    key="dashboard"
+    path="/dashboard"
+    element={
+      <ProtectedRoute>
+        <Dashboard />
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="bulk-sms"
+    path="/bulk-sms"
+    element={
+      <ProtectedRoute>
+        <BulkSMS />
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="contacts"
+    path="/contacts"
+    element={
+      <ProtectedRoute>
+        <Contacts />
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="whatsapp"
+    path="/whatsapp"
+    element={
+      <ProtectedRoute>
+        <WhatsAppCampaigns />
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="email"
+    path="/email"
+    element={
+      <ProtectedRoute>
+        <EmailCampaigns />
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="analytics"
+    path="/analytics"
+    element={
+      <ProtectedRoute>
+        <CampaignAnalytics />
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="surveys"
+    path="/surveys"
+    element={
+      <ProtectedRoute>
+        <Surveys />
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="survey-builder"
+    path="/survey-builder"
+    element={
+      <ProtectedRoute>
+        <SurveyBuilder />
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="service-desk"
+    path="/service-desk"
+    element={
+      <ProtectedRoute>
+        <ServiceDesk />
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="user-services"
+    path="/user-services"
+    element={
+      <ProtectedRoute>
+        <UserServices />
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="ussd"
+    path="/ussd"
+    element={
+      <ProtectedRoute>
+        <USSDServices />
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="mpesa"
+    path="/mpesa"
+    element={
+      <ProtectedRoute>
+        <MpesaServices />
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="subscriptions"
+    path="/subscriptions"
+    element={
+      <ProtectedRoute>
+        <MySubscriptions />
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="billing"
+    path="/billing"
+    element={
+      <ProtectedRoute>
+        <BillingDashboard />
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="profile"
+    path="/profile"
+    element={
+      <ProtectedRoute>
+        <ProfileSettings />
+      </ProtectedRoute>
+    }
+  />
+];

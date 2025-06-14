@@ -16,121 +16,131 @@ import SystemIntegrity from '../pages/admin/SystemIntegrity';
 import AdvancedAnalytics from '../pages/AdvancedAnalytics';
 import ApiManagement from '../pages/ApiManagement';
 
-export function AdminRoutes() {
-  return (
-    <>
-      <Route
-        path="/admin"
-        element={
-          <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
-            <Navigate to="/admin/dashboard" replace />
-          </RoleBasedRoute>
-        }
-      />
-      <Route
-        path="/admin/dashboard"
-        element={
-          <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
-            <AdminDashboard />
-          </RoleBasedRoute>
-        }
-      />
-      <Route
-        path="/admin/users"
-        element={
-          <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
-            <UserManagement />
-          </RoleBasedRoute>
-        }
-      />
-      <Route
-        path="/admin/analytics"
-        element={
-          <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
-            <Analytics />
-          </RoleBasedRoute>
-        }
-      />
-      <Route
-        path="/admin/advanced-analytics"
-        element={
-          <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
-            <AdvancedAnalytics />
-          </RoleBasedRoute>
-        }
-      />
-      <Route
-        path="/admin/services"
-        element={
-          <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
-            <ServicesManagement />
-          </RoleBasedRoute>
-        }
-      />
-      <Route
-        path="/admin/settings"
-        element={
-          <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
-            <SystemSettings />
-          </RoleBasedRoute>
-        }
-      />
-      <Route
-        path="/admin/database"
-        element={
-          <RoleBasedRoute allowedRoles={['super_admin']}>
-            <DatabaseAdmin />
-          </RoleBasedRoute>
-        }
-      />
-      <Route
-        path="/admin/logs"
-        element={
-          <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
-            <SystemLogs />
-          </RoleBasedRoute>
-        }
-      />
-      <Route
-        path="/admin/monitoring"
-        element={
-          <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
-            <Monitoring />
-          </RoleBasedRoute>
-        }
-      />
-      <Route
-        path="/admin/security"
-        element={
-          <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
-            <SecurityConfig />
-          </RoleBasedRoute>
-        }
-      />
-      <Route
-        path="/admin/revenue"
-        element={
-          <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
-            <RevenueReports />
-          </RoleBasedRoute>
-        }
-      />
-      <Route
-        path="/admin/integrity"
-        element={
-          <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
-            <SystemIntegrity />
-          </RoleBasedRoute>
-        }
-      />
-      <Route
-        path="/admin/api"
-        element={
-          <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
-            <ApiManagement />
-          </RoleBasedRoute>
-        }
-      />
-    </>
-  );
-}
+export const adminRoutes = [
+  <Route
+    key="admin-redirect"
+    path="/admin"
+    element={
+      <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
+        <Navigate to="/admin/dashboard" replace />
+      </RoleBasedRoute>
+    }
+  />,
+  <Route
+    key="admin-dashboard"
+    path="/admin/dashboard"
+    element={
+      <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
+        <AdminDashboard />
+      </RoleBasedRoute>
+    }
+  />,
+  <Route
+    key="admin-users"
+    path="/admin/users"
+    element={
+      <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
+        <UserManagement />
+      </RoleBasedRoute>
+    }
+  />,
+  <Route
+    key="admin-analytics"
+    path="/admin/analytics"
+    element={
+      <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
+        <Analytics />
+      </RoleBasedRoute>
+    }
+  />,
+  <Route
+    key="admin-advanced-analytics"
+    path="/admin/advanced-analytics"
+    element={
+      <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
+        <AdvancedAnalytics />
+      </RoleBasedRoute>
+    }
+  />,
+  <Route
+    key="admin-services"
+    path="/admin/services"
+    element={
+      <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
+        <ServicesManagement />
+      </RoleBasedRoute>
+    }
+  />,
+  <Route
+    key="admin-settings"
+    path="/admin/settings"
+    element={
+      <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
+        <SystemSettings />
+      </RoleBasedRoute>
+    }
+  />,
+  <Route
+    key="admin-database"
+    path="/admin/database"
+    element={
+      <RoleBasedRoute allowedRoles={['super_admin']}>
+        <DatabaseAdmin />
+      </RoleBasedRoute>
+    }
+  />,
+  <Route
+    key="admin-logs"
+    path="/admin/logs"
+    element={
+      <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
+        <SystemLogs />
+      </RoleBasedRoute>
+    }
+  />,
+  <Route
+    key="admin-monitoring"
+    path="/admin/monitoring"
+    element={
+      <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
+        <Monitoring />
+      </RoleBasedRoute>
+    }
+  />,
+  <Route
+    key="admin-security"
+    path="/admin/security"
+    element={
+      <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
+        <SecurityConfig />
+      </RoleBasedRoute>
+    }
+  />,
+  <Route
+    key="admin-revenue"
+    path="/admin/revenue"
+    element={
+      <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
+        <RevenueReports />
+      </RoleBasedRoute>
+    }
+  />,
+  <Route
+    key="admin-integrity"
+    path="/admin/integrity"
+    element={
+      <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
+        <SystemIntegrity />
+      </RoleBasedRoute>
+    }
+  />,
+  <Route
+    key="admin-api"
+    path="/admin/api"
+    element={
+      <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
+        <ApiManagement />
+      </RoleBasedRoute>
+    }
+  />
+];

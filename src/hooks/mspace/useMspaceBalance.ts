@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { useMspaceCredentials } from './useMspaceCredentials';
+import { supabase } from '@/integrations/supabase/client';
 
 interface BalanceResponse {
   balance: number;
@@ -10,22 +10,16 @@ interface BalanceResponse {
 
 export const useMspaceBalance = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const { getApiCredentials } = useMspaceCredentials();
 
   const checkBalance = async (): Promise<BalanceResponse> => {
     setIsLoading(true);
     try {
-      const credentials = await getApiCredentials();
+      const { data, error } = await supabase.functions.invoke('mspace-balance');
       
-      const response = await fetch(
-        `https://api.mspace.co.ke/smsapi/v2/balance/apikey=${credentials.api_key}/username=${credentials.username}`
-      );
-      
-      if (!response.ok) {
-        throw new Error('Failed to check balance');
+      if (error) {
+        throw new Error(error.message);
       }
-
-      const data = await response.json();
+      
       return data;
     } catch (error: any) {
       console.error('Error checking balance:', error);

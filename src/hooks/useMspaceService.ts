@@ -7,10 +7,9 @@ import { useMspaceDelivery } from './mspace/useMspaceDelivery';
 import { useMspaceAccounts } from './mspace/useMspaceAccounts';
 
 interface SMSPayload {
-  username: string;
-  senderId: string;
-  recipient: string;
+  recipients: string[];
   message: string;
+  senderId?: string;
   campaignId?: string;
 }
 
@@ -23,20 +22,20 @@ export const useMspaceService = () => {
   const sendSMS = async (payload: SMSPayload) => {
     setIsLoading(true);
     try {
-      const response = await supabase.functions.invoke('mspace-sms', {
+      const { data, error } = await supabase.functions.invoke('mspace-sms', {
         body: {
-          recipients: [payload.recipient],
+          recipients: payload.recipients,
           message: payload.message,
           senderId: payload.senderId,
           campaignId: payload.campaignId
         }
       });
 
-      if (response.error) {
-        throw new Error(response.error.message);
+      if (error) {
+        throw new Error(error.message);
       }
 
-      return response.data;
+      return data;
     } catch (error: any) {
       console.error('Error sending SMS:', error);
       toast.error(`Failed to send SMS: ${error.message}`);

@@ -1,12 +1,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { useMspaceCredentials } from './useMspaceCredentials';
-
-interface DeliveryReportPayload {
-  username: string;
-  messageId: string;
-}
+import { supabase } from '@/integrations/supabase/client';
 
 interface MspaceDeliveryMessage {
   messageId: string;
@@ -21,33 +16,17 @@ interface MspaceDeliveryResponse {
 
 export const useMspaceDelivery = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const { getApiCredentials } = useMspaceCredentials();
 
   const getDeliveryReport = async (messageId: string): Promise<MspaceDeliveryMessage | null> => {
     setIsLoading(true);
     try {
-      const credentials = await getApiCredentials();
-      
-      const payload: DeliveryReportPayload = {
-        username: credentials.username,
-        messageId
-      };
-
-      const response = await fetch('https://api.mspace.co.ke/smsapi/v2/deliveryreport', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'apikey': credentials.api_key
-        },
-        body: JSON.stringify(payload)
+      const { data, error } = await supabase.functions.invoke('mspace-delivery', {
+        body: { messageId }
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to get delivery report');
+      
+      if (error) {
+        throw new Error(error.message);
       }
-
-      const data = await response.json() as MspaceDeliveryResponse;
       
       if (data.message && Array.isArray(data.message) && data.message.length > 0) {
         return data.message[0];

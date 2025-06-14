@@ -1,40 +1,28 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { useMspaceCredentials } from './useMspaceCredentials';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SubAccountPayload {
-  username: string;
   clientname: string;
   noOfSms: number;
 }
 
 export const useMspaceAccounts = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const { getApiCredentials } = useMspaceCredentials();
 
   const querySubAccounts = async () => {
     setIsLoading(true);
     try {
-      const credentials = await getApiCredentials();
-      
-      const response = await fetch('https://api.mspace.co.ke/smsapi/v2/subusers', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'apikey': credentials.api_key
-        },
-        body: JSON.stringify({
-          username: credentials.username
-        })
+      const { data, error } = await supabase.functions.invoke('mspace-accounts', {
+        body: { operation: 'subAccounts' }
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to query sub-accounts');
+      
+      if (error) {
+        throw new Error(error.message);
       }
-
-      return await response.json();
+      
+      return data;
     } catch (error: any) {
       console.error('Error querying sub-accounts:', error);
       toast.error(`Failed to query sub-accounts: ${error.message}`);
@@ -47,25 +35,15 @@ export const useMspaceAccounts = () => {
   const queryResellerClients = async () => {
     setIsLoading(true);
     try {
-      const credentials = await getApiCredentials();
-      
-      const response = await fetch('https://api.mspace.co.ke/smsapi/v2/resellerclients', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'apikey': credentials.api_key
-        },
-        body: JSON.stringify({
-          username: credentials.username
-        })
+      const { data, error } = await supabase.functions.invoke('mspace-accounts', {
+        body: { operation: 'resellerClients' }
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to query reseller clients');
+      
+      if (error) {
+        throw new Error(error.message);
       }
-
-      return await response.json();
+      
+      return data;
     } catch (error: any) {
       console.error('Error querying reseller clients:', error);
       toast.error(`Failed to query reseller clients: ${error.message}`);
@@ -78,23 +56,18 @@ export const useMspaceAccounts = () => {
   const topUpSubAccount = async (payload: SubAccountPayload) => {
     setIsLoading(true);
     try {
-      const credentials = await getApiCredentials();
-      
-      const response = await fetch('https://api.mspace.co.ke/smsapi/v2/subacctopup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'apikey': credentials.api_key
-        },
-        body: JSON.stringify(payload)
+      const { data, error } = await supabase.functions.invoke('mspace-accounts', {
+        body: {
+          operation: 'topUpSubAccount',
+          clientname: payload.clientname,
+          noOfSms: payload.noOfSms
+        }
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to top up sub-account');
+      
+      if (error) {
+        throw new Error(error.message);
       }
-
-      const data = await response.json();
+      
       toast.success('Sub-account topped up successfully');
       return data;
     } catch (error: any) {
@@ -109,23 +82,18 @@ export const useMspaceAccounts = () => {
   const topUpResellerClient = async (payload: SubAccountPayload) => {
     setIsLoading(true);
     try {
-      const credentials = await getApiCredentials();
-      
-      const response = await fetch('https://api.mspace.co.ke/smsapi/v2/resellerclienttopup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'apikey': credentials.api_key
-        },
-        body: JSON.stringify(payload)
+      const { data, error } = await supabase.functions.invoke('mspace-accounts', {
+        body: {
+          operation: 'topUpResellerClient',
+          clientname: payload.clientname,
+          noOfSms: payload.noOfSms
+        }
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to top up reseller client');
+      
+      if (error) {
+        throw new Error(error.message);
       }
-
-      const data = await response.json();
+      
       toast.success('Reseller client topped up successfully');
       return data;
     } catch (error: any) {

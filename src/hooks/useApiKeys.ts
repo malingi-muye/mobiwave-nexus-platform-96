@@ -38,7 +38,10 @@ export const useApiKeys = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map(item => ({
+        ...item,
+        permissions: Array.isArray(item.permissions) ? item.permissions as string[] : []
+      }));
     }
   });
 

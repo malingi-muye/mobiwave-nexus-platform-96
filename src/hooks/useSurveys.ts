@@ -40,7 +40,13 @@ export const useSurveys = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map(item => ({
+        ...item,
+        question_flow: Array.isArray(item.question_flow) ? item.question_flow : [],
+        target_audience: item.target_audience || {},
+        distribution_channels: Array.isArray(item.distribution_channels) ? item.distribution_channels : [],
+        status: item.status as 'draft' | 'active' | 'paused' | 'completed'
+      }));
     }
   });
 

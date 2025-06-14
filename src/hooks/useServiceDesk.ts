@@ -43,7 +43,11 @@ export const useServiceDesk = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map(item => ({
+        ...item,
+        priority: item.priority as 'low' | 'medium' | 'high' | 'urgent',
+        status: item.status as 'open' | 'in_progress' | 'pending' | 'resolved' | 'closed'
+      }));
     }
   });
 
@@ -54,7 +58,7 @@ export const useServiceDesk = () => {
 
       const { data, error } = await supabase
         .from('service_desk_tickets')
-        .insert({ ...ticketData, created_by: user.id })
+        .insert({ ...ticketData, created_by: user.id, ticket_number: '' })
         .select()
         .single();
 
@@ -116,7 +120,10 @@ export const useTicketActivities = (ticketId?: string) => {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map(item => ({
+        ...item,
+        activity_type: item.activity_type as 'comment' | 'status_change' | 'assignment' | 'priority_change'
+      }));
     },
     enabled: !!ticketId
   });

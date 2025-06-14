@@ -44,7 +44,11 @@ export const useRewards = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map(item => ({
+        ...item,
+        reward_type: item.reward_type as 'airtime' | 'data_bundle',
+        status: item.status as 'draft' | 'active' | 'paused' | 'completed'
+      }));
     }
   });
 
@@ -148,7 +152,10 @@ export const useRewardDistributions = (campaignId?: string) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map(item => ({
+        ...item,
+        status: item.status as 'pending' | 'processing' | 'completed' | 'failed'
+      }));
     },
     enabled: !!campaignId
   });

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,6 +28,7 @@ export function TicketDetails({ ticketId, onBack }: TicketDetailsProps) {
       await updateTicket({ id: ticketId, status: status as any });
       await addActivity({
         ticket_id: ticketId,
+        user_id: '', // This will be set by the hook
         activity_type: 'status_change',
         content: `Status changed to ${status}`,
         metadata: { old_status: ticket.status, new_status: status }
@@ -45,6 +45,7 @@ export function TicketDetails({ ticketId, onBack }: TicketDetailsProps) {
     try {
       await addActivity({
         ticket_id: ticketId,
+        user_id: '', // This will be set by the hook
         activity_type: 'comment',
         content: comment,
         metadata: {}

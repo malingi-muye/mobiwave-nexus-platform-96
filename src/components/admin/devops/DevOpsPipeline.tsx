@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ import {
   CheckCircle, 
   XCircle, 
   Clock,
-  Deploy,
+  Rocket,
   TestTube,
   Package,
   Monitor,
@@ -124,7 +123,7 @@ export function DevOpsPipeline() {
       case 'build': return <Package className="w-4 h-4" />;
       case 'test': return <TestTube className="w-4 h-4" />;
       case 'security scan': return <AlertTriangle className="w-4 h-4" />;
-      case 'deploy': return <Deploy className="w-4 h-4" />;
+      case 'deploy': return <Rocket className="w-4 h-4" />;
       default: return <Monitor className="w-4 h-4" />;
     }
   };
@@ -196,7 +195,7 @@ export function DevOpsPipeline() {
                     <p className="text-sm font-medium text-gray-600">Deployments Today</p>
                     <p className="text-3xl font-bold text-purple-600">12</p>
                   </div>
-                  <Deploy className="w-8 h-8 text-purple-600" />
+                  <Rocket className="w-8 h-8 text-purple-600" />
                 </div>
               </CardContent>
             </Card>
@@ -273,7 +272,7 @@ export function DevOpsPipeline() {
             </CardHeader>
             <CardContent>
               <div className="text-center py-12">
-                <Deploy className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                <Rocket className="w-16 h-16 mx-auto mb-4 text-gray-400" />
                 <h3 className="text-xl font-semibold mb-2">Deployment Tracking</h3>
                 <p className="text-gray-600">
                   Detailed deployment history and rollback capabilities will be available here.

@@ -73,10 +73,14 @@ export function WhatsAppManager() {
         </div>
 
         <Tabs defaultValue="templates" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="templates" className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
               Templates
+            </TabsTrigger>
+            <TabsTrigger value="approval" className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4" />
+              Approval
             </TabsTrigger>
             <TabsTrigger value="messages" className="flex items-center gap-2">
               <MessageSquare className="w-4 h-4" />
@@ -94,6 +98,10 @@ export function WhatsAppManager() {
 
           <TabsContent value="templates" className="space-y-6">
             <WhatsAppTemplateManager subscriptionId={selectedSubscription} />
+          </TabsContent>
+
+          <TabsContent value="approval" className="space-y-6">
+            <WhatsAppTemplateApproval />
           </TabsContent>
 
           <TabsContent value="messages" className="space-y-6">

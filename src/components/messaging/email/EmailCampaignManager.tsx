@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -109,12 +108,13 @@ export function EmailCampaignManager() {
     <div className="space-y-6">
       <div>
         <h2 className="text-3xl font-bold">Email Campaign Manager</h2>
-        <p className="text-gray-600">Create, manage, and track email campaigns</p>
+        <p className="text-gray-600">Create, manage, and track email campaigns with advanced automation</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="create">Create Campaign</TabsTrigger>
+          <TabsTrigger value="automation">Automation</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -192,6 +192,10 @@ export function EmailCampaignManager() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="automation" className="mt-6">
+          <EmailAutomationWorkflow />
         </TabsContent>
 
         <TabsContent value="templates" className="mt-6">

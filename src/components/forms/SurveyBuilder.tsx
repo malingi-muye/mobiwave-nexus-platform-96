@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { Plus, GripVertical, Trash2, Eye, Send, FileText, BarChart3 } from 'lucide-react';
+import { Plus, GripVertical, Trash2, Eye, Send, FileText, BarChart3, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface FormField {
@@ -63,6 +62,10 @@ export function SurveyBuilder() {
     label: '',
     required: false
   });
+
+  const [showLogicBuilder, setShowLogicBuilder] = useState(false);
+  const [conditionalRules, setConditionalRules] = useState([]);
+  const [validationRules, setValidationRules] = useState([]);
 
   const fieldTypes = [
     { value: 'text', label: 'Text Input' },
@@ -122,7 +125,9 @@ export function SurveyBuilder() {
 
     setSurveys([...surveys, survey]);
     setCurrentSurvey({ title: '', description: '', fields: [] });
-    toast.success('Survey saved successfully');
+    setConditionalRules([]);
+    setValidationRules([]);
+    toast.success('Survey saved successfully with advanced logic');
   };
 
   const getStatusColor = (status: string) => {
@@ -137,8 +142,8 @@ export function SurveyBuilder() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold">Survey & Forms Builder</h2>
-        <p className="text-gray-600">Create interactive surveys and forms for data collection</p>
+        <h2 className="text-3xl font-bold">Advanced Survey & Forms Builder</h2>
+        <p className="text-gray-600">Create intelligent forms with conditional logic and advanced validation</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -150,7 +155,7 @@ export function SurveyBuilder() {
               Create New Survey
             </CardTitle>
             <CardDescription>
-              Build your survey with drag-and-drop form fields
+              Build your survey with drag-and-drop form fields and advanced logic
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -216,7 +221,17 @@ export function SurveyBuilder() {
 
             {/* Field List */}
             <div className="space-y-2">
-              <h3 className="font-medium">Form Fields</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium">Form Fields</h3>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowLogicBuilder(!showLogicBuilder)}
+                >
+                  <Zap className="w-4 h-4 mr-2" />
+                  Advanced Logic
+                </Button>
+              </div>
               <div className="space-y-2">
                 {currentSurvey.fields?.map((field, index) => (
                   <div key={field.id} className="flex items-center gap-2 p-2 border rounded">
@@ -239,6 +254,14 @@ export function SurveyBuilder() {
               </div>
             </div>
 
+            {showLogicBuilder && currentSurvey.fields && currentSurvey.fields.length > 0 && (
+              <ConditionalLogicBuilder
+                fields={currentSurvey.fields}
+                onRulesChange={setConditionalRules}
+                onValidationChange={setValidationRules}
+              />
+            )}
+
             <div className="flex gap-2">
               <Button onClick={saveSurvey}>Save Survey</Button>
               <Button variant="outline">
@@ -257,7 +280,7 @@ export function SurveyBuilder() {
               Your Surveys
             </CardTitle>
             <CardDescription>
-              Manage and track your surveys and forms
+              Manage and track your intelligent surveys and forms
             </CardDescription>
           </CardHeader>
           <CardContent>

@@ -26,18 +26,23 @@ export function SecurityMonitor() {
   const { data: securityEvents, isLoading } = useQuery({
     queryKey: ['security-events'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('audit_logs')
-        .select('*')
-        .in('action', ['login_failed', 'suspicious_activity', 'unauthorized_access', 'password_reset'])
-        .order('created_at', { ascending: false })
-        .limit(50);
+      try {
+        const { data, error } = await supabase
+          .from('audit_logs')
+          .select('*')
+          .in('action', ['login_failed', 'suspicious_activity', 'unauthorized_access', 'password_reset'])
+          .order('created_at', { ascending: false })
+          .limit(50);
 
-      if (error) {
-        console.warn('Error fetching security events:', error);
+        if (error) {
+          console.warn('Error fetching security events:', error);
+          return [];
+        }
+        return data as SecurityEvent[];
+      } catch (error) {
+        console.error('Failed to fetch security events:', error);
         return [];
       }
-      return data as SecurityEvent[];
     },
     refetchInterval: refreshInterval
   });

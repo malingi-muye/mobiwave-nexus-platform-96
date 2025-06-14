@@ -29,30 +29,35 @@ export function AuditLogViewer() {
   const { data: auditLogs, isLoading } = useQuery({
     queryKey: ['audit-logs', searchTerm, actionFilter, resourceFilter],
     queryFn: async () => {
-      let query = supabase
-        .from('audit_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(100);
+      try {
+        let query = supabase
+          .from('audit_logs')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(100);
 
-      if (actionFilter !== 'all') {
-        query = query.ilike('action', `%${actionFilter}%`);
-      }
+        if (actionFilter !== 'all') {
+          query = query.ilike('action', `%${actionFilter}%`);
+        }
 
-      if (resourceFilter !== 'all') {
-        query = query.eq('resource_type', resourceFilter);
-      }
+        if (resourceFilter !== 'all') {
+          query = query.eq('resource_type', resourceFilter);
+        }
 
-      if (searchTerm) {
-        query = query.or(`action.ilike.%${searchTerm}%,resource_type.ilike.%${searchTerm}%`);
-      }
+        if (searchTerm) {
+          query = query.or(`action.ilike.%${searchTerm}%,resource_type.ilike.%${searchTerm}%`);
+        }
 
-      const { data, error } = await query;
-      if (error) {
-        console.warn('Error fetching audit logs:', error);
+        const { data, error } = await query;
+        if (error) {
+          console.warn('Error fetching audit logs:', error);
+          return [];
+        }
+        return data as AuditLog[];
+      } catch (error) {
+        console.error('Failed to fetch audit logs:', error);
         return [];
       }
-      return data as AuditLog[];
     }
   });
 

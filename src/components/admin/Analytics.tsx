@@ -14,13 +14,40 @@ export function Analytics() {
   const { data: campaignStats } = useQuery({
     queryKey: ['campaign-analytics', timeRange],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('campaigns')
-        .select('status, type, created_at, recipient_count, delivered_count, failed_count')
-        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+      try {
+        const { data, error } = await supabase
+          .from('campaigns')
+          .select('status, type, created_at, recipient_count, delivered_count, failed_count')
+          .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
 
-      if (error) {
-        console.warn('Error fetching campaigns:', error);
+        if (error) {
+          console.warn('Error fetching campaigns:', error);
+          return {
+            totalCampaigns: 0,
+            activeCampaigns: 0,
+            completedCampaigns: 0,
+            totalRecipients: 0,
+            totalDelivered: 0,
+            deliveryRate: 0
+          };
+        }
+
+        const totalCampaigns = data?.length || 0;
+        const activeCampaigns = data?.filter(c => c.status === 'sending').length || 0;
+        const completedCampaigns = data?.filter(c => c.status === 'sent').length || 0;
+        const totalRecipients = data?.reduce((sum, c) => sum + (c.recipient_count || 0), 0) || 0;
+        const totalDelivered = data?.reduce((sum, c) => sum + (c.delivered_count || 0), 0) || 0;
+
+        return {
+          totalCampaigns,
+          activeCampaigns,
+          completedCampaigns,
+          totalRecipients,
+          totalDelivered,
+          deliveryRate: totalRecipients > 0 ? (totalDelivered / totalRecipients) * 100 : 0
+        };
+      } catch (error) {
+        console.error('Failed to fetch campaign stats:', error);
         return {
           totalCampaigns: 0,
           activeCampaigns: 0,
@@ -30,60 +57,50 @@ export function Analytics() {
           deliveryRate: 0
         };
       }
-
-      const totalCampaigns = data?.length || 0;
-      const activeCampaigns = data?.filter(c => c.status === 'sending').length || 0;
-      const completedCampaigns = data?.filter(c => c.status === 'sent').length || 0;
-      const totalRecipients = data?.reduce((sum, c) => sum + (c.recipient_count || 0), 0) || 0;
-      const totalDelivered = data?.reduce((sum, c) => sum + (c.delivered_count || 0), 0) || 0;
-
-      return {
-        totalCampaigns,
-        activeCampaigns,
-        completedCampaigns,
-        totalRecipients,
-        totalDelivered,
-        deliveryRate: totalRecipients > 0 ? (totalDelivered / totalRecipients) * 100 : 0
-      };
     }
   });
 
   const { data: userGrowth } = useQuery({
     queryKey: ['user-growth', timeRange],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('created_at')
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-        .order('created_at');
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('created_at')
+          .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+          .order('created_at');
 
-      if (error) {
-        console.warn('Error fetching user growth:', error);
+        if (error) {
+          console.warn('Error fetching user growth:', error);
+          return [];
+        }
+
+        const last7Days = [];
+        for (let i = 6; i >= 0; i--) {
+          const date = new Date();
+          date.setDate(date.getDate() - i);
+          last7Days.push({
+            date: date.toISOString().split('T')[0],
+            count: 0
+          });
+        }
+
+        data?.forEach(user => {
+          const userDate = new Date(user.created_at || '').toISOString().split('T')[0];
+          const dayData = last7Days.find(d => d.date === userDate);
+          if (dayData) {
+            dayData.count++;
+          }
+        });
+
+        return last7Days.map(day => ({
+          date: new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          users: day.count
+        }));
+      } catch (error) {
+        console.error('Failed to fetch user growth:', error);
         return [];
       }
-
-      const last7Days = [];
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        last7Days.push({
-          date: date.toISOString().split('T')[0],
-          count: 0
-        });
-      }
-
-      data?.forEach(user => {
-        const userDate = new Date(user.created_at).toISOString().split('T')[0];
-        const dayData = last7Days.find(d => d.date === userDate);
-        if (dayData) {
-          dayData.count++;
-        }
-      });
-
-      return last7Days.map(day => ({
-        date: new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        users: day.count
-      }));
     }
   });
 

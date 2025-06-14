@@ -20,13 +20,18 @@ interface User {
 }
 
 const fetchUsers = async (): Promise<User[]> => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id, email, first_name, last_name')
-    .order('email');
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, email, first_name, last_name')
+      .order('email');
 
-  if (error) throw error;
-  return data || [];
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    return [];
+  }
 };
 
 export function ServicesManagement() {

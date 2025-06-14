@@ -16,6 +16,13 @@ interface ApiCredentials {
   sender_id: string;
 }
 
+interface MspaceDeliveryMessage {
+  messageId: string;
+  recipient: string;
+  status: number;
+  statusDescription: string;
+}
+
 export const useMspaceApi = () => {
   // Get API credentials from the database
   const { data: credentials } = useQuery({
@@ -114,10 +121,60 @@ export const useMspaceApi = () => {
     }
   });
 
+  const getDeliveryReport = useMutation({
+    mutationFn: async (messageId: string): Promise<MspaceDeliveryMessage | null> => {
+      if (!credentials?.api_key || !credentials?.username) {
+        throw new Error('Mspace API credentials not configured');
+      }
+
+      try {
+        const response = await fetch('https://api.mspace.co.ke/smsapi/v2/deliveryreport', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'apikey': credentials.api_key
+          },
+          body: JSON.stringify({
+            username: credentials.username,
+            messageId
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to get delivery report');
+        }
+
+        const data = await response.json();
+        
+        // Handle the documented response structure
+        if (data.message && Array.isArray(data.message) && data.message.length > 0) {
+          return data.message[0];
+        }
+        
+        return null;
+      } catch (error: any) {
+        throw new Error(`Delivery report failed: ${error.message}`);
+      }
+    },
+    onSuccess: (data) => {
+      if (data) {
+        const statusText = data.status === 3 ? 'Delivered' : data.statusDescription;
+        toast.success(`Message Status: ${statusText}`);
+      } else {
+        toast.info('No delivery report found for this message');
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.message);
+    }
+  });
+
   return {
     sendSMS,
     checkBalance,
-    isLoading: sendSMS.isPending || checkBalance.isPending,
+    getDeliveryReport,
+    isLoading: sendSMS.isPending || checkBalance.isPending || getDeliveryReport.isPending,
     hasCredentials: !!(credentials?.api_key && credentials?.username)
   };
 };

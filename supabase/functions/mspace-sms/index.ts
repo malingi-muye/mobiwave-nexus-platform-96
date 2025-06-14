@@ -14,11 +14,15 @@ interface SMSRequest {
   campaignId?: string;
 }
 
+interface MspaceMessage {
+  messageId: string;
+  recipient: string;
+  status: number;
+  statusDescription: string;
+}
+
 interface MspaceResponse {
-  messageId?: string;
-  status?: string;
-  message?: string;
-  error?: string;
+  message: MspaceMessage[];
 }
 
 serve(async (req) => {
@@ -121,7 +125,23 @@ serve(async (req) => {
         const responseData = await mspaceResponse.json() as MspaceResponse
         console.log('Mspace API response for', recipient + ':', responseData)
 
-        const isSuccess = mspaceResponse.ok && (responseData.messageId || responseData.status === 'success')
+        // Handle the documented response structure
+        let isSuccess = false
+        let messageId = null
+        let errorMessage = null
+
+        if (mspaceResponse.ok && responseData.message && Array.isArray(responseData.message)) {
+          // Check if any message in the response has success status (111)
+          const messageData = responseData.message.find(msg => msg.recipient === recipient.replace(/\D/g, ''))
+          if (messageData) {
+            isSuccess = messageData.status === 111
+            messageId = messageData.messageId
+            errorMessage = isSuccess ? null : messageData.statusDescription
+          }
+        } else {
+          errorMessage = 'Invalid response format from Mspace API'
+        }
+
         const cost = 0.05 // Cost per SMS
 
         if (isSuccess) {
@@ -138,11 +158,11 @@ serve(async (req) => {
           content: message,
           status: isSuccess ? 'sent' : 'failed',
           provider: 'mspace',
-          provider_message_id: responseData.messageId || null,
+          provider_message_id: messageId,
           cost: isSuccess ? cost : 0,
           sent_at: isSuccess ? new Date().toISOString() : null,
           failed_at: isSuccess ? null : new Date().toISOString(),
-          error_message: isSuccess ? null : responseData.error || responseData.message || 'Failed to send SMS',
+          error_message: errorMessage,
           metadata: { mspace_response: responseData }
         }
 
@@ -180,9 +200,9 @@ serve(async (req) => {
         results.push({
           recipient,
           success: isSuccess,
-          messageId: responseData.messageId,
-          message: responseData.message,
-          error: responseData.error
+          messageId,
+          message: isSuccess ? 'Message sent successfully' : errorMessage,
+          error: isSuccess ? null : errorMessage
         })
 
       } catch (error) {

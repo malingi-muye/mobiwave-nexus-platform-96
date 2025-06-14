@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -21,11 +20,15 @@ interface DeliveryReportPayload {
   messageId: string;
 }
 
-interface DeliveryReportResponse {
+interface MspaceDeliveryMessage {
   messageId: string;
-  status: string;
-  deliveryTime?: string;
-  recipient?: string;
+  recipient: string;
+  status: number;
+  statusDescription: string;
+}
+
+interface MspaceDeliveryResponse {
+  message: MspaceDeliveryMessage[];
 }
 
 interface SubAccountPayload {
@@ -64,9 +67,11 @@ export const useMspaceService = () => {
       const credentials = await getApiCredentials();
       
       const response = await supabase.functions.invoke('mspace-sms', {
-        body: payload,
-        headers: {
-          'x-api-key': credentials.api_key
+        body: {
+          recipients: [payload.recipient],
+          message: payload.message,
+          senderId: payload.senderId,
+          campaignId: payload.campaignId
         }
       });
 
@@ -106,7 +111,7 @@ export const useMspaceService = () => {
     }
   };
 
-  const getDeliveryReport = async (payload: DeliveryReportPayload): Promise<DeliveryReportResponse> => {
+  const getDeliveryReport = async (payload: DeliveryReportPayload): Promise<MspaceDeliveryMessage | null> => {
     setIsLoading(true);
     try {
       const credentials = await getApiCredentials();
@@ -125,8 +130,14 @@ export const useMspaceService = () => {
         throw new Error('Failed to get delivery report');
       }
 
-      const data = await response.json();
-      return data;
+      const data = await response.json() as MspaceDeliveryResponse;
+      
+      // Handle the documented response structure
+      if (data.message && Array.isArray(data.message) && data.message.length > 0) {
+        return data.message[0]; // Return the first (and likely only) message
+      }
+      
+      return null;
     } catch (error) {
       console.error('Error getting delivery report:', error);
       toast.error(`Failed to get delivery report: ${error.message}`);

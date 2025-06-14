@@ -155,7 +155,7 @@ function App() {
                 }
               />
               <Route
-                path="/services"
+                path="/user-services"
                 element={
                   <ProtectedRoute>
                     <UserServices />

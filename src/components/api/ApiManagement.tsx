@@ -6,15 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Key, Activity, Settings, Copy, Eye, EyeOff, Trash2 } from 'lucide-react';
+import { Plus, Key, Activity, Eye, EyeOff, Copy, Trash2 } from 'lucide-react';
 import { useApiKeys, useApiUsage } from '@/hooks/useApiKeys';
 import { toast } from 'sonner';
 
 export function ApiManagement() {
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [selectedApiKey, setSelectedApiKey] = useState<string | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [selectedKeyId, setSelectedKeyId] = useState<string>('');
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
   const [newKeyData, setNewKeyData] = useState({
     key_name: '',
@@ -23,21 +22,10 @@ export function ApiManagement() {
     expires_at: ''
   });
 
-  const { apiKeys, createApiKey, updateApiKey, deleteApiKey, isCreating } = useApiKeys();
-  const { usage, isLoading: usageLoading } = useApiUsage(selectedApiKey);
+  const { apiKeys, isLoading, createApiKey, updateApiKey, deleteApiKey } = useApiKeys();
+  const { usage } = useApiUsage(selectedKeyId);
 
-  const availablePermissions = [
-    'sms:send',
-    'whatsapp:send',
-    'ussd:create',
-    'mpesa:initiate',
-    'surveys:create',
-    'surveys:read',
-    'analytics:read',
-    'users:read'
-  ];
-
-  const handleCreateApiKey = async () => {
+  const handleCreateKey = async () => {
     if (!newKeyData.key_name) {
       toast.error('Please enter a key name');
       return;
@@ -51,8 +39,7 @@ export function ApiManagement() {
         is_active: true,
         expires_at: newKeyData.expires_at || undefined
       });
-      
-      setShowCreateDialog(false);
+      setShowCreateForm(false);
       setNewKeyData({
         key_name: '',
         permissions: [],
@@ -79,8 +66,18 @@ export function ApiManagement() {
     setVisibleKeys(newVisible);
   };
 
+  const handleDeleteKey = async (keyId: string) => {
+    if (confirm('Are you sure you want to delete this API key? This action cannot be undone.')) {
+      try {
+        await deleteApiKey(keyId);
+      } catch (error) {
+        console.error('Failed to delete API key:', error);
+      }
+    }
+  };
+
   const maskApiKey = (key: string) => {
-    return key.slice(0, 8) + '...' + key.slice(-4);
+    return key.substring(0, 8) + '...' + key.substring(key.length - 4);
   };
 
   return (
@@ -88,143 +85,102 @@ export function ApiManagement() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">API Management</h2>
-          <p className="text-gray-600">Manage API keys, rate limits, and usage analytics</p>
+          <p className="text-gray-600">Manage API keys and monitor usage</p>
         </div>
-        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Create API Key
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New API Key</DialogTitle>
-              <DialogDescription>
-                Generate a new API key with specific permissions and rate limits
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="key_name">Key Name</Label>
-                <Input
-                  id="key_name"
-                  value={newKeyData.key_name}
-                  onChange={(e) => setNewKeyData(prev => ({ ...prev, key_name: e.target.value }))}
-                  placeholder="My API Key"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Permissions</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  {availablePermissions.map((permission) => (
-                    <div key={permission} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id={permission}
-                        checked={newKeyData.permissions.includes(permission)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setNewKeyData(prev => ({
-                              ...prev,
-                              permissions: [...prev.permissions, permission]
-                            }));
-                          } else {
-                            setNewKeyData(prev => ({
-                              ...prev,
-                              permissions: prev.permissions.filter(p => p !== permission)
-                            }));
-                          }
-                        }}
-                      />
-                      <label htmlFor={permission} className="text-sm">{permission}</label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="rate_limit">Rate Limit (requests/hour)</Label>
-                <Select 
-                  value={newKeyData.rate_limit.toString()} 
-                  onValueChange={(value) => setNewKeyData(prev => ({ ...prev, rate_limit: parseInt(value) }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="100">100</SelectItem>
-                    <SelectItem value="500">500</SelectItem>
-                    <SelectItem value="1000">1,000</SelectItem>
-                    <SelectItem value="5000">5,000</SelectItem>
-                    <SelectItem value="10000">10,000</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="expires_at">Expiration Date (Optional)</Label>
-                <Input
-                  id="expires_at"
-                  type="date"
-                  value={newKeyData.expires_at}
-                  onChange={(e) => setNewKeyData(prev => ({ ...prev, expires_at: e.target.value }))}
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <Button onClick={handleCreateApiKey} disabled={isCreating}>
-                  {isCreating ? 'Creating...' : 'Create API Key'}
-                </Button>
-                <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={() => setShowCreateForm(true)}>
+          <Plus className="w-4 h-4 mr-2" />
+          Create API Key
+        </Button>
       </div>
 
       <Tabs defaultValue="keys" className="space-y-6">
         <TabsList>
           <TabsTrigger value="keys">API Keys</TabsTrigger>
           <TabsTrigger value="usage">Usage Analytics</TabsTrigger>
-          <TabsTrigger value="documentation">Documentation</TabsTrigger>
         </TabsList>
 
         <TabsContent value="keys" className="space-y-6">
+          {showCreateForm && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Create New API Key</CardTitle>
+                <CardDescription>Generate a new API key for external integrations</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="keyName">Key Name</Label>
+                    <Input
+                      id="keyName"
+                      placeholder="e.g., Production API Key"
+                      value={newKeyData.key_name}
+                      onChange={(e) => setNewKeyData(prev => ({ ...prev, key_name: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="rateLimit">Rate Limit (per hour)</Label>
+                    <Input
+                      id="rateLimit"
+                      type="number"
+                      value={newKeyData.rate_limit}
+                      onChange={(e) => setNewKeyData(prev => ({ ...prev, rate_limit: parseInt(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="expiresAt">Expiry Date (Optional)</Label>
+                  <Input
+                    id="expiresAt"
+                    type="datetime-local"
+                    value={newKeyData.expires_at}
+                    onChange={(e) => setNewKeyData(prev => ({ ...prev, expires_at: e.target.value }))}
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <Button onClick={handleCreateKey}>Create API Key</Button>
+                  <Button variant="outline" onClick={() => setShowCreateForm(false)}>Cancel</Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle>API Keys</CardTitle>
               <CardDescription>Manage your API keys and permissions</CardDescription>
             </CardHeader>
             <CardContent>
-              {apiKeys.length === 0 ? (
+              {isLoading ? (
+                <div className="flex items-center justify-center p-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : apiKeys.length === 0 ? (
                 <div className="text-center py-8">
-                  <Key className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <Key className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                   <p className="text-gray-500 mb-4">No API keys created yet</p>
-                  <Button onClick={() => setShowCreateDialog(true)}>
+                  <Button onClick={() => setShowCreateForm(true)}>
                     <Plus className="w-4 h-4 mr-2" />
-                    Create First API Key
+                    Create Your First API Key
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {apiKeys.map((apiKey) => (
-                    <div key={apiKey.id} className="border rounded-lg p-4">
+                  {apiKeys.map((key) => (
+                    <div key={key.id} className="border rounded-lg p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          <h3 className="font-medium">{apiKey.key_name}</h3>
-                          <Badge className={apiKey.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                            {apiKey.is_active ? 'Active' : 'Inactive'}
+                          <h3 className="font-medium">{key.key_name}</h3>
+                          <Badge variant={key.is_active ? 'default' : 'secondary'}>
+                            {key.is_active ? 'Active' : 'Inactive'}
                           </Badge>
                         </div>
                         <div className="flex items-center gap-2">
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => setSelectedApiKey(apiKey.id)}
+                            onClick={() => setSelectedKeyId(key.id)}
                           >
                             <Activity className="w-4 h-4 mr-1" />
                             Usage
@@ -232,52 +188,56 @@ export function ApiManagement() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => deleteApiKey(apiKey.id)}
+                            onClick={() => handleDeleteKey(key.id)}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
                       </div>
-
+                      
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium">API Key:</span>
-                          <code className="bg-gray-100 px-2 py-1 rounded text-sm">
-                            {visibleKeys.has(apiKey.id) ? apiKey.api_key : maskApiKey(apiKey.api_key)}
+                          <span className="text-sm text-gray-600">API Key:</span>
+                          <code className="text-sm bg-gray-100 px-2 py-1 rounded">
+                            {visibleKeys.has(key.id) ? key.api_key : maskApiKey(key.api_key)}
                           </code>
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => toggleKeyVisibility(apiKey.id)}
+                            onClick={() => toggleKeyVisibility(key.id)}
                           >
-                            {visibleKeys.has(apiKey.id) ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            {visibleKeys.has(key.id) ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                           </Button>
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => copyToClipboard(apiKey.api_key)}
+                            onClick={() => copyToClipboard(key.api_key)}
                           >
                             <Copy className="w-4 h-4" />
                           </Button>
                         </div>
-
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
-                          <span>Rate Limit: {apiKey.rate_limit}/hour</span>
-                          <span>Permissions: {apiKey.permissions.length}</span>
-                          {apiKey.last_used_at && (
-                            <span>Last Used: {new Date(apiKey.last_used_at).toLocaleDateString()}</span>
-                          )}
-                          {apiKey.expires_at && (
-                            <span>Expires: {new Date(apiKey.expires_at).toLocaleDateString()}</span>
-                          )}
-                        </div>
-
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {apiKey.permissions.map((permission) => (
-                            <Badge key={permission} variant="outline" className="text-xs">
-                              {permission}
-                            </Badge>
-                          ))}
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-600">Rate Limit:</span>
+                            <p className="font-medium">{key.rate_limit}/hour</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Created:</span>
+                            <p className="font-medium">{new Date(key.created_at).toLocaleDateString()}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Last Used:</span>
+                            <p className="font-medium">
+                              {key.last_used_at ? new Date(key.last_used_at).toLocaleDateString() : 'Never'}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Expires:</span>
+                            <p className="font-medium">
+                              {key.expires_at ? new Date(key.expires_at).toLocaleDateString() : 'Never'}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -292,133 +252,53 @@ export function ApiManagement() {
           <Card>
             <CardHeader>
               <CardTitle>API Usage Analytics</CardTitle>
-              <CardDescription>
-                {selectedApiKey ? 'Usage statistics for selected API key' : 'Select an API key to view usage statistics'}
-              </CardDescription>
+              <CardDescription>Monitor API key usage and performance</CardDescription>
             </CardHeader>
             <CardContent>
-              {!selectedApiKey ? (
-                <div className="text-center py-8">
-                  <Activity className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">Select an API key from the Keys tab to view usage analytics</p>
-                </div>
-              ) : usageLoading ? (
-                <div className="flex items-center justify-center p-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                </div>
-              ) : (
+              {selectedKeyId ? (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="p-4 border rounded-lg">
-                      <div className="text-2xl font-bold">{usage.length}</div>
-                      <div className="text-sm text-gray-600">Total Requests</div>
-                    </div>
-                    <div className="p-4 border rounded-lg">
-                      <div className="text-2xl font-bold">
-                        {usage.length > 0 ? Math.round(usage.reduce((sum, u) => sum + (u.response_time_ms || 0), 0) / usage.length) : 0}ms
-                      </div>
-                      <div className="text-sm text-gray-600">Avg Response Time</div>
-                    </div>
-                    <div className="p-4 border rounded-lg">
-                      <div className="text-2xl font-bold text-green-600">
-                        {usage.length > 0 ? Math.round((usage.filter(u => u.status_code < 400).length / usage.length) * 100) : 0}%
-                      </div>
-                      <div className="text-sm text-gray-600">Success Rate</div>
-                    </div>
+                  <div className="flex items-center gap-4">
+                    <Label>Select API Key:</Label>
+                    <Select value={selectedKeyId} onValueChange={setSelectedKeyId}>
+                      <SelectTrigger className="w-64">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {apiKeys.map((key) => (
+                          <SelectItem key={key.id} value={key.id}>
+                            {key.key_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-
-                  {usage.length > 0 && (
-                    <div className="space-y-2">
-                      <h4 className="font-medium">Recent Requests</h4>
-                      <div className="space-y-2 max-h-64 overflow-y-auto">
-                        {usage.slice(0, 20).map((request) => (
-                          <div key={request.id} className="flex items-center justify-between p-2 border rounded text-sm">
-                            <div className="flex items-center gap-3">
-                              <Badge variant={request.status_code < 400 ? "default" : "destructive"}>
-                                {request.method}
+                  
+                  {usage.length === 0 ? (
+                    <p className="text-gray-500 py-8 text-center">No usage data available for this API key</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {usage.slice(0, 10).map((record) => (
+                        <div key={record.id} className="border rounded p-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <Badge variant={record.status_code >= 200 && record.status_code < 300 ? 'default' : 'destructive'}>
+                                {record.status_code}
                               </Badge>
-                              <span>{request.endpoint}</span>
+                              <span className="font-mono text-sm">{record.method}</span>
+                              <span className="text-sm">{record.endpoint}</span>
                             </div>
-                            <div className="flex items-center gap-3 text-gray-500">
-                              <span>{request.status_code}</span>
-                              <span>{request.response_time_ms}ms</span>
-                              <span>{new Date(request.created_at).toLocaleString()}</span>
+                            <div className="text-sm text-gray-500">
+                              {record.response_time_ms}ms • {new Date(record.created_at).toLocaleString()}
                             </div>
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
+              ) : (
+                <p className="text-gray-500 py-8 text-center">Select an API key to view usage analytics</p>
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="documentation" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>API Documentation</CardTitle>
-              <CardDescription>Learn how to integrate with our APIs</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Authentication</h3>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm mb-2">Include your API key in the Authorization header:</p>
-                  <code className="block bg-gray-800 text-green-400 p-2 rounded text-sm">
-                    Authorization: Bearer YOUR_API_KEY
-                  </code>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Base URL</h3>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <code className="text-sm">https://api.mobiwave.com/v1</code>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Available Endpoints</h3>
-                <div className="space-y-3">
-                  <div className="border rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge>POST</Badge>
-                      <code className="text-sm">/sms/send</code>
-                    </div>
-                    <p className="text-sm text-gray-600">Send SMS messages</p>
-                  </div>
-                  
-                  <div className="border rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge>POST</Badge>
-                      <code className="text-sm">/whatsapp/send</code>
-                    </div>
-                    <p className="text-sm text-gray-600">Send WhatsApp messages</p>
-                  </div>
-                  
-                  <div className="border rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge>GET</Badge>
-                      <code className="text-sm">/analytics/campaigns</code>
-                    </div>
-                    <p className="text-sm text-gray-600">Get campaign analytics</p>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Rate Limits</h3>
-                <p className="text-sm text-gray-600 mb-2">
-                  Rate limits are enforced per API key. When you exceed your limit, you'll receive a 429 status code.
-                </p>
-                <div className="bg-yellow-50 p-4 rounded-lg">
-                  <p className="text-sm text-yellow-800">
-                    <strong>Tip:</strong> Use exponential backoff when handling rate limit errors.
-                  </p>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>

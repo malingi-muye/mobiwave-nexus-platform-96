@@ -6,257 +6,289 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Plus, GripVertical, Trash2, Eye, Send, FileText, BarChart3, Zap, Save } from 'lucide-react';
-import { toast } from 'sonner';
-import { ConditionalLogicBuilder } from './ConditionalLogicBuilder';
+import { ArrowLeft, Plus, Trash2, Save, Send, Eye } from 'lucide-react';
 import { useSurveys } from '@/hooks/useSurveys';
+import { toast } from 'sonner';
 
-interface FormField {
+interface Question {
   id: string;
-  type: 'text' | 'textarea' | 'select' | 'radio' | 'checkbox' | 'rating';
-  label: string;
-  required: boolean;
+  type: 'text' | 'choice' | 'rating' | 'yes_no';
+  text: string;
   options?: string[];
-  placeholder?: string;
+  required: boolean;
 }
 
-interface Survey {
-  id: string;
-  title: string;
-  description: string;
-  fields: FormField[];
-  status: 'draft' | 'active' | 'closed';
-  responses: number;
-  created_at: string;
+interface SurveyBuilderProps {
+  onBack?: () => void;
 }
 
-export function SurveyBuilder() {
-  const { surveys, createSurvey, isCreating } = useSurveys();
-  
-  const [currentSurvey, setCurrentSurvey] = useState<Partial<Survey>>({
+export function SurveyBuilder({ onBack }: SurveyBuilderProps) {
+  const [surveyData, setSurveyData] = useState({
     title: '',
     description: '',
-    fields: []
+    questions: [] as Question[]
   });
-
-  const [newField, setNewField] = useState<Partial<FormField>>({
+  
+  const [newQuestion, setNewQuestion] = useState<Partial<Question>>({
     type: 'text',
-    label: '',
+    text: '',
     required: false
   });
 
-  const [showLogicBuilder, setShowLogicBuilder] = useState(false);
-  const [conditionalRules, setConditionalRules] = useState([]);
-  const [validationRules, setValidationRules] = useState([]);
+  const [previewMode, setPreviewMode] = useState(false);
 
-  const fieldTypes = [
-    { value: 'text', label: 'Text Input' },
-    { value: 'textarea', label: 'Text Area' },
-    { value: 'select', label: 'Dropdown' },
-    { value: 'radio', label: 'Radio Buttons' },
-    { value: 'checkbox', label: 'Checkboxes' },
-    { value: 'rating', label: 'Rating Scale' }
-  ];
+  const { createSurvey, isCreating } = useSurveys();
 
-  const addField = () => {
-    if (!newField.label) {
-      toast.error('Please enter a field label');
+  const addQuestion = () => {
+    if (!newQuestion.text) {
+      toast.error('Please enter a question');
       return;
     }
 
-    const field: FormField = {
+    const question: Question = {
       id: Date.now().toString(),
-      type: newField.type as FormField['type'],
-      label: newField.label,
-      required: newField.required || false,
-      options: newField.options || [],
-      placeholder: newField.placeholder || ''
+      type: newQuestion.type as Question['type'],
+      text: newQuestion.text,
+      options: newQuestion.options || [],
+      required: newQuestion.required || false
     };
 
-    setCurrentSurvey({
-      ...currentSurvey,
-      fields: [...(currentSurvey.fields || []), field]
-    });
+    setSurveyData(prev => ({
+      ...prev,
+      questions: [...prev.questions, question]
+    }));
 
-    setNewField({ type: 'text', label: '', required: false });
-    toast.success('Field added successfully');
+    setNewQuestion({ type: 'text', text: '', required: false });
   };
 
-  const removeField = (fieldId: string) => {
-    setCurrentSurvey({
-      ...currentSurvey,
-      fields: currentSurvey.fields?.filter(f => f.id !== fieldId) || []
-    });
+  const removeQuestion = (questionId: string) => {
+    setSurveyData(prev => ({
+      ...prev,
+      questions: prev.questions.filter(q => q.id !== questionId)
+    }));
   };
 
-  const saveSurvey = async (status: 'draft' | 'active' = 'draft') => {
-    if (!currentSurvey.title) {
+  const saveDraft = async () => {
+    if (!surveyData.title) {
       toast.error('Please enter a survey title');
       return;
     }
 
     try {
       await createSurvey({
-        title: currentSurvey.title,
-        description: currentSurvey.description || '',
-        question_flow: currentSurvey.fields || [],
-        status,
+        title: surveyData.title,
+        description: surveyData.description,
+        question_flow: surveyData.questions,
+        status: 'draft',
         target_audience: {},
-        distribution_channels: status === 'active' ? ['sms'] : []
+        distribution_channels: []
       });
-
-      setCurrentSurvey({ title: '', description: '', fields: [] });
-      setConditionalRules([]);
-      setValidationRules([]);
-      toast.success(`Survey ${status === 'draft' ? 'saved' : 'published'} successfully`);
+      if (onBack) onBack();
     } catch (error) {
       console.error('Failed to save survey:', error);
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'draft': return 'bg-gray-100 text-gray-800';
-      case 'closed': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const publishSurvey = async () => {
+    if (!surveyData.title || surveyData.questions.length === 0) {
+      toast.error('Please add a title and at least one question');
+      return;
+    }
+
+    try {
+      await createSurvey({
+        title: surveyData.title,
+        description: surveyData.description,
+        question_flow: surveyData.questions,
+        status: 'active',
+        target_audience: {},
+        distribution_channels: ['sms']
+      });
+      
+      toast.success('Survey published successfully');
+      if (onBack) onBack();
+    } catch (error) {
+      console.error('Failed to publish survey:', error);
     }
   };
 
+  if (previewMode) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" onClick={() => setPreviewMode(false)}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Editor
+          </Button>
+          <h2 className="text-2xl font-bold">Survey Preview</h2>
+        </div>
+
+        <Card className="max-w-2xl">
+          <CardHeader>
+            <CardTitle>{surveyData.title || 'Untitled Survey'}</CardTitle>
+            {surveyData.description && (
+              <CardDescription>{surveyData.description}</CardDescription>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {surveyData.questions.map((question, index) => (
+              <div key={question.id} className="space-y-2">
+                <Label className="text-base font-medium">
+                  {index + 1}. {question.text}
+                  {question.required && <span className="text-red-500 ml-1">*</span>}
+                </Label>
+                
+                {question.type === 'text' && (
+                  <Input placeholder="Enter your answer..." disabled />
+                )}
+                
+                {question.type === 'choice' && question.options && (
+                  <div className="space-y-2">
+                    {question.options.map((option, idx) => (
+                      <div key={idx} className="flex items-center space-x-2">
+                        <input type="radio" disabled />
+                        <span className="text-sm">{option}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {question.type === 'rating' && (
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((rating) => (
+                      <button key={rating} className="w-8 h-8 border rounded" disabled>
+                        {rating}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                
+                {question.type === 'yes_no' && (
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <input type="radio" disabled />
+                      <span className="text-sm">Yes</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input type="radio" disabled />
+                      <span className="text-sm">No</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+            
+            {surveyData.questions.length === 0 && (
+              <p className="text-gray-500 text-center py-8">No questions added yet</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold">Advanced Survey & Forms Builder</h2>
-        <p className="text-gray-600">Create intelligent forms with conditional logic and advanced validation</p>
+      <div className="flex items-center gap-4">
+        {onBack && (
+          <Button variant="outline" onClick={onBack}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+        )}
+        <h2 className="text-2xl font-bold">Survey Builder</h2>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Form Builder */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              Create New Survey
-            </CardTitle>
-            <CardDescription>
-              Build your survey with drag-and-drop form fields and advanced logic
-            </CardDescription>
+            <CardTitle>Survey Details</CardTitle>
+            <CardDescription>Configure your survey settings</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Survey Title</Label>
-                <Input
-                  id="title"
-                  value={currentSurvey.title || ''}
-                  onChange={(e) => setCurrentSurvey({...currentSurvey, title: e.target.value})}
-                  placeholder="Enter survey title"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={currentSurvey.description || ''}
-                  onChange={(e) => setCurrentSurvey({...currentSurvey, description: e.target.value})}
-                  placeholder="Enter survey description"
-                  rows={3}
-                />
-              </div>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Survey Title</Label>
+              <Input
+                id="title"
+                value={surveyData.title}
+                onChange={(e) => setSurveyData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Enter survey title"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="description">Description (Optional)</Label>
+              <Textarea
+                id="description"
+                value={surveyData.description}
+                onChange={(e) => setSurveyData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Describe your survey"
+                rows={3}
+              />
             </div>
 
-            {/* Add Field */}
             <div className="border rounded-lg p-4 space-y-4">
-              <h3 className="font-medium">Add New Field</h3>
-              <div className="grid grid-cols-2 gap-4">
+              <h3 className="font-medium">Add Question</h3>
+              
+              <div className="space-y-3">
                 <div className="space-y-2">
-                  <Label>Field Type</Label>
+                  <Label>Question Type</Label>
                   <Select 
-                    value={newField.type} 
-                    onValueChange={(value) => setNewField({...newField, type: value as FormField['type']})}
+                    value={newQuestion.type} 
+                    onValueChange={(value) => setNewQuestion(prev => ({ ...prev, type: value as Question['type'] }))}
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {fieldTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="text">Text Response</SelectItem>
+                      <SelectItem value="choice">Multiple Choice</SelectItem>
+                      <SelectItem value="rating">Rating Scale</SelectItem>
+                      <SelectItem value="yes_no">Yes/No</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+                
                 <div className="space-y-2">
-                  <Label htmlFor="fieldLabel">Field Label</Label>
+                  <Label>Question Text</Label>
                   <Input
-                    id="fieldLabel"
-                    value={newField.label || ''}
-                    onChange={(e) => setNewField({...newField, label: e.target.value})}
-                    placeholder="Enter field label"
+                    value={newQuestion.text || ''}
+                    onChange={(e) => setNewQuestion(prev => ({ ...prev, text: e.target.value }))}
+                    placeholder="Enter your question"
                   />
                 </div>
+                
+                {newQuestion.type === 'choice' && (
+                  <div className="space-y-2">
+                    <Label>Options (one per line)</Label>
+                    <Textarea
+                      placeholder="Option 1&#10;Option 2&#10;Option 3"
+                      onChange={(e) => setNewQuestion(prev => ({ 
+                        ...prev, 
+                        options: e.target.value.split('\n').filter(o => o.trim()) 
+                      }))}
+                      rows={3}
+                    />
+                  </div>
+                )}
               </div>
-              <Button onClick={addField} size="sm">
+              
+              <Button onClick={addQuestion} size="sm">
                 <Plus className="w-4 h-4 mr-2" />
-                Add Field
+                Add Question
               </Button>
             </div>
 
-            {/* Field List */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h3 className="font-medium">Form Fields</h3>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setShowLogicBuilder(!showLogicBuilder)}
-                >
-                  <Zap className="w-4 h-4 mr-2" />
-                  Advanced Logic
-                </Button>
-              </div>
-              <div className="space-y-2">
-                {currentSurvey.fields?.map((field, index) => (
-                  <div key={field.id} className="flex items-center gap-2 p-2 border rounded">
-                    <GripVertical className="w-4 h-4 text-gray-400" />
-                    <div className="flex-1">
-                      <span className="text-sm font-medium">{field.label}</span>
-                      <Badge variant="outline" className="ml-2 text-xs">
-                        {field.type}
-                      </Badge>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => removeField(field.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {showLogicBuilder && currentSurvey.fields && currentSurvey.fields.length > 0 && (
-              <ConditionalLogicBuilder
-                fields={currentSurvey.fields}
-                onRulesChange={setConditionalRules}
-                onValidationChange={setValidationRules}
-              />
-            )}
-
-            <div className="flex gap-2">
-              <Button onClick={() => saveSurvey('draft')} disabled={isCreating}>
+            <div className="flex gap-2 pt-4">
+              <Button onClick={saveDraft} variant="outline" disabled={isCreating}>
                 <Save className="w-4 h-4 mr-2" />
                 Save Draft
               </Button>
-              <Button onClick={() => saveSurvey('active')} disabled={isCreating}>
+              <Button onClick={publishSurvey} disabled={isCreating}>
                 <Send className="w-4 h-4 mr-2" />
-                Publish
+                Publish Survey
               </Button>
-              <Button variant="outline">
+              <Button onClick={() => setPreviewMode(true)} variant="outline">
                 <Eye className="w-4 h-4 mr-2" />
                 Preview
               </Button>
@@ -264,51 +296,46 @@ export function SurveyBuilder() {
           </CardContent>
         </Card>
 
-        {/* Survey List */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5" />
-              Your Surveys
-            </CardTitle>
-            <CardDescription>
-              Manage and track your intelligent surveys and forms
-            </CardDescription>
+            <CardTitle>Question Preview</CardTitle>
+            <CardDescription>Review your survey questions</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {surveys.map((survey) => (
-                <div key={survey.id} className="border rounded-lg p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h3 className="font-medium">{survey.title}</h3>
-                      <p className="text-sm text-gray-600">{survey.description}</p>
+            {surveyData.questions.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">No questions added yet</p>
+            ) : (
+              <div className="space-y-4">
+                {surveyData.questions.map((question, index) => (
+                  <div key={question.id} className="border rounded-lg p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <p className="font-medium">Q{index + 1}. {question.text}</p>
+                        <p className="text-sm text-gray-500 capitalize">{question.type.replace('_', ' ')}</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => removeQuestion(question.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
-                    <Badge className={getStatusColor(survey.status)}>
-                      {survey.status}
-                    </Badge>
+                    
+                    {question.options && question.options.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-600 mb-1">Options:</p>
+                        <ul className="text-sm space-y-1">
+                          {question.options.map((option, idx) => (
+                            <li key={idx} className="text-gray-700">• {option}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
-                  
-                  <div className="flex items-center justify-between mt-4">
-                    <div className="text-sm text-gray-600">
-                      <span className="font-medium">{Math.floor(Math.random() * 100)}</span> responses • 
-                      Created {new Date(survey.created_at).toLocaleDateString()}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline">
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Send className="w-4 h-4" />
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <BarChart3 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

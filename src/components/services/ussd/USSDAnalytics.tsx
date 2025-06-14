@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Phone, Users, TrendingUp, Clock, BarChart3 } from 'lucide-react';
-import { AnalyticsData, USSDSession } from './types';
+import { AnalyticsData, USSDSession, MenuNode } from './types';
 
 interface USSDAnalyticsProps {
   applicationId?: string;
@@ -35,16 +34,26 @@ export function USSDAnalytics({ applicationId, timeRange = '7d' }: USSDAnalytics
       const { data: sessions, error } = await query;
       if (error) throw error;
 
-      const sessionData = sessions as USSDSession[] || [];
+      // Type cast the database response to our custom interface
+      const sessionData = (sessions || []).map(session => ({
+        ...session,
+        application: session.application ? {
+          service_code: session.application.service_code,
+          menu_structure: Array.isArray(session.application.menu_structure) 
+            ? session.application.menu_structure as MenuNode[]
+            : []
+        } : undefined
+      })) as USSDSession[];
+
       const totalSessions = sessionData.length;
       const uniqueUsers = new Set(sessionData.map(s => s.phone_number)).size;
       
       const avgSessionDuration = sessionData.reduce((acc, s) => acc + s.input_path.length, 0) / (totalSessions || 1);
 
       const completedSessions = sessionData.filter(s => {
-        const app = s.application as any;
+        const app = s.application;
         if (!app) return false;
-        const endNode = app.menu_structure?.find((node: any) => 
+        const endNode = app.menu_structure?.find((node: MenuNode) => 
           node.id === s.current_node_id && node.isEndNode
         );
         return !!endNode;

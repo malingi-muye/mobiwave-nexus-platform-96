@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Phone, Search, Clock, Users, TrendingUp } from 'lucide-react';
-import { USSDSession } from './types';
+import { USSDSession, MenuNode } from './types';
 
 interface USSDSessionManagerProps {
   applicationId?: string;
@@ -40,7 +39,17 @@ export function USSDSessionManager({ applicationId }: USSDSessionManagerProps) {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data || [];
+      
+      // Type cast the database response to our custom interface
+      return (data || []).map(session => ({
+        ...session,
+        application: session.application ? {
+          service_code: session.application.service_code,
+          menu_structure: Array.isArray(session.application.menu_structure) 
+            ? session.application.menu_structure as MenuNode[]
+            : []
+        } : undefined
+      })) as USSDSession[];
     }
   });
 
@@ -48,7 +57,7 @@ export function USSDSessionManager({ applicationId }: USSDSessionManagerProps) {
     const matchesSearch = !searchTerm || 
       session.phone_number.includes(searchTerm) ||
       session.session_id.includes(searchTerm) ||
-      (session.application as any)?.service_code?.includes(searchTerm);
+      session.application?.service_code?.includes(searchTerm);
 
     return matchesSearch;
   });
@@ -58,9 +67,9 @@ export function USSDSessionManager({ applicationId }: USSDSessionManagerProps) {
     uniqueUsers: new Set(sessions.map(s => s.phone_number)).size,
     avgSessionLength: sessions.reduce((acc, s) => acc + s.input_path.length, 0) / (sessions.length || 1),
     completionRate: sessions.filter(s => {
-      const app = s.application as any;
+      const app = s.application;
       if (!app) return false;
-      const endNode = app.menu_structure?.find((node: any) => 
+      const endNode = app.menu_structure?.find((node: MenuNode) => 
         node.id === s.current_node_id && node.isEndNode
       );
       return !!endNode;
@@ -68,8 +77,8 @@ export function USSDSessionManager({ applicationId }: USSDSessionManagerProps) {
   };
 
   const getNodeText = (session: USSDSession, nodeId: string) => {
-    const app = session.application as any;
-    const node = app?.menu_structure?.find((n: any) => n.id === nodeId);
+    const app = session.application;
+    const node = app?.menu_structure?.find((n: MenuNode) => n.id === nodeId);
     return node ? node.text : nodeId;
   };
 
@@ -208,7 +217,7 @@ export function USSDSessionManager({ applicationId }: USSDSessionManagerProps) {
                   <div className="space-y-2 flex-1">
                     <div className="flex items-center gap-2">
                       <Badge variant="outline">
-                        {(session.application as any)?.service_code || 'Unknown'}
+                        {session.application?.service_code || 'Unknown'}
                       </Badge>
                       <span className="text-sm text-gray-600">
                         {session.phone_number}
@@ -242,12 +251,12 @@ export function USSDSessionManager({ applicationId }: USSDSessionManagerProps) {
                   <div className="text-right">
                     <Badge 
                       variant={
-                        (session.application as any)?.menu_structure?.find((node: any) => 
+                        session.application?.menu_structure?.find((node: MenuNode) => 
                           node.id === session.current_node_id && node.isEndNode
                         ) ? 'default' : 'secondary'
                       }
                     >
-                      {(session.application as any)?.menu_structure?.find((node: any) => 
+                      {session.application?.menu_structure?.find((node: MenuNode) => 
                         node.id === session.current_node_id && node.isEndNode
                       ) ? 'Completed' : 'In Progress'}
                     </Badge>

@@ -43,7 +43,9 @@ const SecurityConfig = () => {
 
     try {
       environmentManager.setSecureApiKey(keyName, key);
-      await logSecurityEvent('current-user', 'api_key_updated', { keyName });
+      await logSecurityEvent('current-user', 'api_key_updated', { 
+        metadata: { keyName }
+      });
       toast.success(`${keyName} API key saved securely`);
       
       // Clear the input after saving
@@ -80,9 +82,11 @@ const SecurityConfig = () => {
         toast.error('TLS connection failed');
         await logSecurityEvent('current-user', 'tls_test_failed');
       }
-    } catch (error) {
+    } catch (error: any) {
       toast.error('TLS connection test failed');
-      await logSecurityEvent('current-user', 'tls_test_error', { error: error.message });
+      await logSecurityEvent('current-user', 'tls_test_error', { 
+        metadata: { error: error.message }
+      });
     }
   };
 

@@ -27,7 +27,6 @@ import BillingDashboard from './pages/BillingDashboard';
 import SurveyBuilder from './pages/SurveyBuilder';
 import Surveys from './pages/Surveys';
 import ServiceDesk from './pages/ServiceDesk';
-import Rewards from './pages/Rewards';
 import UserServices from './pages/UserServices';
 import USSDServices from './pages/USSDServices';
 import MpesaServices from './pages/MpesaServices';
@@ -143,14 +142,6 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ServiceDesk />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/rewards"
-                element={
-                  <ProtectedRoute>
-                    <Rewards />
                   </ProtectedRoute>
                 }
               />

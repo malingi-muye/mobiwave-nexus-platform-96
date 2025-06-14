@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,18 +50,15 @@ export function ServiceDeskDashboard() {
   }
 
   if (activeView === 'details' && selectedTicket) {
-    const ticket = tickets.find(t => t.id === selectedTicket);
-    if (ticket) {
-      return (
-        <TicketDetails 
-          ticket={ticket} 
-          onBack={() => {
-            setActiveView('dashboard');
-            setSelectedTicket(null);
-          }} 
-        />
-      );
-    }
+    return (
+      <TicketDetails 
+        ticketId={selectedTicket} 
+        onBack={() => {
+          setActiveView('dashboard');
+          setSelectedTicket(null);
+        }} 
+      />
+    );
   }
 
   return (

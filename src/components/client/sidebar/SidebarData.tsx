@@ -11,7 +11,6 @@ import {
   Smartphone,
   FileText,
   HelpCircle,
-  Gift,
   Headphones,
   Zap,
   DollarSign,
@@ -90,12 +89,6 @@ export const sidebarSections: SidebarSection[] = [
         label: 'Service Desk',
         href: '/service-desk',
         icon: <Headphones className="w-5 h-5" />
-      },
-      {
-        id: 'rewards',
-        label: 'Rewards System',
-        href: '/rewards',
-        icon: <Gift className="w-5 h-5" />
       },
       {
         id: 'ussd',

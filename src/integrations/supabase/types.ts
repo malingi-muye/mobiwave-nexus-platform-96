@@ -505,7 +505,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      sync_existing_users: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          synced_count: number
+          error_count: number
+        }[]
+      }
     }
     Enums: {
       user_role: "super_admin" | "admin" | "manager" | "user"

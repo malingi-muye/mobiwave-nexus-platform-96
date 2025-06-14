@@ -1,42 +1,49 @@
 
 import React, { useState } from 'react';
 import { LoadingWrapper } from '@/components/ui/loading-wrapper';
-import { useEnhancedUserManagement } from '@/hooks/useEnhancedUserManagement';
-import { EnhancedUserStats } from './user-management/EnhancedUserStats';
+import { useCompleteUserManagement } from '@/hooks/useCompleteUserManagement';
+import { CompleteUserStats } from './user-management/CompleteUserStats';
 import { EnhancedUserFilters } from './user-management/EnhancedUserFilters';
-import { EnhancedUserTable } from './user-management/EnhancedUserTable';
+import { CompleteUserTable } from './user-management/CompleteUserTable';
 import { MspaceUserManagement } from './mspace/MspaceUserManagement';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Globe } from 'lucide-react';
+import { Users, Globe, AlertTriangle } from 'lucide-react';
 
 export function UserManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [userTypeFilter, setUserTypeFilter] = useState('all');
 
-  const { users, isLoading, stats } = useEnhancedUserManagement(searchTerm, roleFilter, userTypeFilter);
+  const { users, isLoading, stats, refetch } = useCompleteUserManagement(searchTerm, roleFilter, userTypeFilter);
 
   const handleUserUpdated = () => {
-    // The useEnhancedUserManagement hook will automatically refetch data
-    window.location.reload(); // Simple refresh for now
+    refetch();
   };
 
   return (
     <div className="space-y-6">
       <div className="mb-8">
         <h2 className="text-4xl font-bold tracking-tight mb-3 bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700 bg-clip-text text-transparent">
-          Enhanced User Management
+          Complete User Management
         </h2>
-        <p className="text-lg text-gray-600 max-w-2xl">
-          Manage both database users and Mspace API clients with real-time synchronization and comprehensive filtering.
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-lg text-gray-600 max-w-2xl">
+            Comprehensive user management including auth users, profiles, and Mspace clients with automated profile creation.
+          </p>
+          {stats.without_profiles > 0 && (
+            <div className="flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-1 rounded-md text-sm">
+              <AlertTriangle className="w-4 h-4" />
+              {stats.without_profiles} users missing profiles
+            </div>
+          )}
+        </div>
       </div>
 
       <Tabs defaultValue="users" className="space-y-6">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
-            All Users
+            All Users ({stats.total})
           </TabsTrigger>
           <TabsTrigger value="mspace" className="flex items-center gap-2">
             <Globe className="w-4 h-4" />
@@ -45,7 +52,7 @@ export function UserManagement() {
         </TabsList>
 
         <TabsContent value="users" className="space-y-6">
-          <EnhancedUserStats stats={stats} />
+          <CompleteUserStats stats={stats} />
           
           <EnhancedUserFilters 
             searchTerm={searchTerm}
@@ -68,7 +75,7 @@ export function UserManagement() {
               </div>
             }
           >
-            <EnhancedUserTable 
+            <CompleteUserTable 
               users={users}
               isLoading={isLoading}
               onUserUpdated={handleUserUpdated}

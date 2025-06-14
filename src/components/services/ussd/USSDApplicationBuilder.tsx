@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,11 +38,11 @@ const fetchUSSDApplications = async (): Promise<USSDApplication[]> => {
 
   if (error) throw error;
   
-  // Convert the database records to our interface
+  // Convert the database records to our interface with proper type handling
   return (data || []).map((item: USSDApplicationFromDB) => ({
     id: item.id,
     service_code: item.service_code,
-    menu_structure: Array.isArray(item.menu_structure) ? item.menu_structure as MenuNode[] : [],
+    menu_structure: Array.isArray(item.menu_structure) ? item.menu_structure as unknown as MenuNode[] : [],
     callback_url: item.callback_url,
     status: item.status || 'pending'
   }));

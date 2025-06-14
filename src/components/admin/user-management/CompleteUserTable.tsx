@@ -42,7 +42,12 @@ export function CompleteUserTable({ users, isLoading, onUserUpdated }: CompleteU
           <Users className="w-5 h-5 text-gray-600" />
           Complete User Management
           {users.some(u => !u.has_profile) && (
-            <AlertTriangle className="w-4 h-4 text-amber-500" title="Some users are missing profiles" />
+            <div className="relative group">
+              <AlertTriangle className="w-4 h-4 text-amber-500" />
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                Some users are missing profiles
+              </div>
+            </div>
           )}
         </CardTitle>
       </CardHeader>

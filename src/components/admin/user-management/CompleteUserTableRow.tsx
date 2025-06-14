@@ -89,7 +89,12 @@ export function CompleteUserTableRow({ user, onUserUpdated }: CompleteUserTableR
                 : user.email.split('@')[0]
               }
               {!user.has_profile && (
-                <AlertTriangle className="w-4 h-4 text-amber-500" title="Missing profile" />
+                <div className="relative group">
+                  <AlertTriangle className="w-4 h-4 text-amber-500" />
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                    Missing profile
+                  </div>
+                </div>
               )}
             </div>
             <div className="text-sm text-gray-500">{user.email}</div>

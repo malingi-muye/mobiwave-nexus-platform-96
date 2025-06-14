@@ -7,18 +7,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RefreshCw, Download, Filter, Search, TrendingUp, DollarSign, Clock, Users } from 'lucide-react';
+import { RefreshCw, Download, Search, TrendingUp, DollarSign, Clock, Users } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-interface MpesaTransaction {
+interface CreditTransaction {
   id: string;
-  integration_id: string;
+  user_id: string;
   amount: number;
-  phone_number: string;
-  mpesa_receipt_number: string;
-  transaction_date: string;
-  status: 'pending' | 'completed' | 'failed';
-  reference: string;
+  transaction_type: string;
+  description: string;
+  reference_id: string;
   created_at: string;
 }
 
@@ -31,24 +29,24 @@ interface TransactionStats {
 
 export function MpesaTransactionMonitor() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
   const [dateRange, setDateRange] = useState('7d');
 
   const { data: transactions = [], isLoading, refetch } = useQuery({
-    queryKey: ['mpesa-transactions', dateRange, statusFilter],
-    queryFn: async (): Promise<MpesaTransaction[]> => {
+    queryKey: ['mpesa-credit-transactions', dateRange, typeFilter],
+    queryFn: async (): Promise<CreditTransaction[]> => {
       const now = new Date();
       const daysAgo = parseInt(dateRange.replace('d', ''));
       const startDate = new Date(now.getTime() - (daysAgo * 24 * 60 * 60 * 1000));
 
       let query = supabase
-        .from('mpesa_transactions')
+        .from('credit_transactions')
         .select('*')
         .gte('created_at', startDate.toISOString())
         .order('created_at', { ascending: false });
 
-      if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter);
+      if (typeFilter !== 'all') {
+        query = query.eq('transaction_type', typeFilter);
       }
 
       const { data, error } = await query;
@@ -59,26 +57,16 @@ export function MpesaTransactionMonitor() {
 
   const filteredTransactions = transactions.filter(transaction => {
     const matchesSearch = !searchTerm || 
-      transaction.phone_number.includes(searchTerm) ||
-      transaction.mpesa_receipt_number?.includes(searchTerm) ||
-      transaction.reference?.includes(searchTerm);
+      transaction.reference_id?.includes(searchTerm) ||
+      transaction.description?.includes(searchTerm);
     return matchesSearch;
   });
 
   const stats: TransactionStats = {
     totalAmount: filteredTransactions.reduce((sum, t) => sum + t.amount, 0),
     totalTransactions: filteredTransactions.length,
-    successfulTransactions: filteredTransactions.filter(t => t.status === 'completed').length,
-    pendingTransactions: filteredTransactions.filter(t => t.status === 'pending').length
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'failed': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+    successfulTransactions: filteredTransactions.filter(t => t.transaction_type === 'purchase').length,
+    pendingTransactions: filteredTransactions.filter(t => t.transaction_type === 'pending').length
   };
 
   const formatCurrency = (amount: number) => {
@@ -102,7 +90,7 @@ export function MpesaTransactionMonitor() {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-2xl font-bold tracking-tight">Transaction Monitor</h3>
-          <p className="text-gray-600">Monitor M-Pesa transactions in real-time</p>
+          <p className="text-gray-600">Monitor M-Pesa credit transactions</p>
         </div>
         <Button onClick={() => refetch()} variant="outline">
           <RefreshCw className="w-4 h-4 mr-2" />
@@ -169,22 +157,22 @@ export function MpesaTransactionMonitor() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
-                  placeholder="Search by phone, receipt number, or reference..."
+                  placeholder="Search by reference or description..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
                 />
               </div>
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by status" />
+                <SelectValue placeholder="Filter by type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="failed">Failed</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="purchase">Purchase</SelectItem>
+                <SelectItem value="refund">Refund</SelectItem>
+                <SelectItem value="bonus">Bonus</SelectItem>
               </SelectContent>
             </Select>
             <Select value={dateRange} onValueChange={setDateRange}>
@@ -216,17 +204,16 @@ export function MpesaTransactionMonitor() {
             <TableHeader>
               <TableRow>
                 <TableHead>Date</TableHead>
-                <TableHead>Phone Number</TableHead>
                 <TableHead>Amount</TableHead>
-                <TableHead>Receipt</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Reference</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Description</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredTransactions.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={5} className="text-center py-8 text-gray-500">
                     No transactions found matching your criteria
                   </TableCell>
                 </TableRow>
@@ -234,21 +221,20 @@ export function MpesaTransactionMonitor() {
                 filteredTransactions.map((transaction) => (
                   <TableRow key={transaction.id}>
                     <TableCell>
-                      {new Date(transaction.transaction_date || transaction.created_at).toLocaleString()}
+                      {new Date(transaction.created_at).toLocaleString()}
                     </TableCell>
-                    <TableCell className="font-mono">{transaction.phone_number}</TableCell>
                     <TableCell className="font-semibold">
                       {formatCurrency(transaction.amount)}
                     </TableCell>
-                    <TableCell className="font-mono text-sm">
-                      {transaction.mpesa_receipt_number || '-'}
-                    </TableCell>
-                    <TableCell className="text-sm">{transaction.reference || '-'}</TableCell>
                     <TableCell>
-                      <Badge className={`text-xs ${getStatusColor(transaction.status)}`}>
-                        {transaction.status}
+                      <Badge variant="outline">
+                        {transaction.transaction_type}
                       </Badge>
                     </TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {transaction.reference_id || '-'}
+                    </TableCell>
+                    <TableCell className="text-sm">{transaction.description || '-'}</TableCell>
                   </TableRow>
                 ))
               )}

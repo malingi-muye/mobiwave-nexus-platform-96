@@ -1,16 +1,16 @@
 
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, TrendingUp, Wallet } from 'lucide-react';
+import { Plus, TrendingUp } from 'lucide-react';
 import { MpesaIntegrationForm } from './MpesaIntegrationForm';
-import { MpesaIntegrationCard } from './MpesaIntegrationCard';
+import { MpesaIntegrationList } from './MpesaIntegrationList';
 import { MpesaTransactionMonitor } from './MpesaTransactionMonitor';
 import { MpesaIntegrationSettings } from './MpesaIntegrationSettings';
+import { useMpesaIntegrations } from '@/hooks/useMpesaIntegrations';
 
 interface MpesaIntegration {
   id: string;
@@ -23,16 +23,6 @@ interface MpesaIntegration {
   callback_response_type: string;
 }
 
-const fetchMpesaIntegrations = async (): Promise<MpesaIntegration[]> => {
-  const { data, error } = await supabase
-    .from('mspace_pesa_integrations')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return data || [];
-};
-
 export function MpesaIntegrationManager() {
   const [isCreating, setIsCreating] = useState(false);
   const [selectedIntegration, setSelectedIntegration] = useState<MpesaIntegration | null>(null);
@@ -41,62 +31,7 @@ export function MpesaIntegrationManager() {
   const [callbackUrl, setCallbackUrl] = useState('');
 
   const queryClient = useQueryClient();
-
-  const { data: integrations = [], isLoading } = useQuery({
-    queryKey: ['mpesa-integrations'],
-    queryFn: fetchMpesaIntegrations
-  });
-
-  const createIntegration = useMutation({
-    mutationFn: async (integrationData: {
-      paybill_number: string;
-      till_number?: string;
-      callback_url: string;
-    }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      const { data: subscription } = await supabase
-        .from('user_service_subscriptions')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('service_id', (await supabase
-          .from('services_catalog')
-          .select('id')
-          .eq('service_type', 'mpesa')
-          .single()).data?.id)
-        .eq('status', 'active')
-        .single();
-
-      if (!subscription) {
-        throw new Error('You need an active M-Pesa service subscription to create integrations');
-      }
-
-      const { data, error } = await supabase
-        .from('mspace_pesa_integrations')
-        .insert({
-          subscription_id: subscription.id,
-          paybill_number: integrationData.paybill_number,
-          till_number: integrationData.till_number || null,
-          callback_url: integrationData.callback_url,
-          status: 'pending'
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['mpesa-integrations'] });
-      toast.success('M-Pesa integration created successfully');
-      setIsCreating(false);
-      resetForm();
-    },
-    onError: (error: any) => {
-      toast.error(`Failed to create integration: ${error.message}`);
-    }
-  });
+  const { integrations, isLoading, createIntegration, isCreating: isSubmitting } = useMpesaIntegrations();
 
   const resetForm = () => {
     setPaybillNumber('');
@@ -104,17 +39,23 @@ export function MpesaIntegrationManager() {
     setCallbackUrl('');
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!paybillNumber || !callbackUrl) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    createIntegration.mutate({
-      paybill_number: paybillNumber,
-      till_number: tillNumber || undefined,
-      callback_url: callbackUrl
-    });
+    try {
+      await createIntegration({
+        paybill_number: paybillNumber,
+        till_number: tillNumber || undefined,
+        callback_url: callbackUrl
+      });
+      setIsCreating(false);
+      resetForm();
+    } catch (error) {
+      // Error is handled by the hook
+    }
   };
 
   if (isLoading) {
@@ -150,7 +91,7 @@ export function MpesaIntegrationManager() {
           setCallbackUrl={setCallbackUrl}
           onSubmit={handleSubmit}
           onCancel={() => setIsCreating(false)}
-          isLoading={createIntegration.isPending}
+          isLoading={isSubmitting}
         />
       )}
 
@@ -163,31 +104,11 @@ export function MpesaIntegrationManager() {
         </TabsList>
 
         <TabsContent value="integrations" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {integrations.map((integration) => (
-              <MpesaIntegrationCard 
-                key={integration.id} 
-                integration={integration}
-                onSelect={() => setSelectedIntegration(integration)}
-              />
-            ))}
-          </div>
-
-          {integrations.length === 0 && !isCreating && (
-            <Card>
-              <CardContent className="text-center py-8">
-                <Wallet className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-lg font-semibold mb-2">No M-Pesa Integrations</h3>
-                <p className="text-gray-600 mb-4">
-                  Set up your first M-Pesa integration to start accepting payments.
-                </p>
-                <Button onClick={() => setIsCreating(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create First Integration
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+          <MpesaIntegrationList
+            integrations={integrations}
+            onCreateNew={() => setIsCreating(true)}
+            onSelectIntegration={setSelectedIntegration}
+          />
         </TabsContent>
 
         <TabsContent value="transactions">

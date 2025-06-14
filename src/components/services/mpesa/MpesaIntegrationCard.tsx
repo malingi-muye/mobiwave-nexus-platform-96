@@ -17,9 +17,10 @@ interface MpesaIntegration {
 
 interface MpesaIntegrationCardProps {
   integration: MpesaIntegration;
+  onSelect?: () => void;
 }
 
-export function MpesaIntegrationCard({ integration }: MpesaIntegrationCardProps) {
+export function MpesaIntegrationCard({ integration, onSelect }: MpesaIntegrationCardProps) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-KE', {
       style: 'currency',
@@ -68,7 +69,7 @@ export function MpesaIntegrationCard({ integration }: MpesaIntegrationCardProps)
           </div>
 
           <div className="flex gap-2 pt-2">
-            <Button size="sm" variant="outline" className="flex-1">
+            <Button size="sm" variant="outline" className="flex-1" onClick={onSelect}>
               <Settings className="w-4 h-4 mr-2" />
               Configure
             </Button>

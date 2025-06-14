@@ -1,64 +1,40 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
-import { Crown, LucideIcon } from 'lucide-react';
-
-interface MenuItemData {
-  id: string;
-  name: string;
-  icon: string;
-  route: string;
-  is_premium: boolean;
-  color: string;
-}
+import { Badge } from "@/components/ui/badge";
+import { SidebarItem } from './SidebarData';
 
 interface MenuItemProps {
-  item: MenuItemData;
+  item: SidebarItem;
   isActive: boolean;
-  IconComponent: LucideIcon;
 }
 
-export function MenuItem({ item, isActive, IconComponent }: MenuItemProps) {
+export function MenuItem({ item, isActive }: MenuItemProps) {
+  const Icon = item.icon;
+
   return (
-    <SidebarMenuItem>
-      <SidebarMenuButton 
-        asChild 
-        isActive={isActive}
-        className="w-full group hover:bg-white/80 hover:shadow-sm transition-all duration-200"
-      >
-        <Link to={item.route} className="flex items-center space-x-3 p-3 rounded-xl">
-          <div className={`w-8 h-8 ${item.color} rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow`}>
-            <IconComponent className="w-4 h-4 text-white" />
-          </div>
-          <span className="font-medium">{item.name}</span>
-          {item.is_premium && <Crown className="w-3 h-3 text-yellow-600" />}
-        </Link>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  );
-}
-
-interface MenuListProps {
-  items: MenuItemData[];
-  isActive: (path: string) => boolean;
-  getIcon: (iconName: string) => LucideIcon;
-}
-
-export function MenuList({ items, isActive, getIcon }: MenuListProps) {
-  return (
-    <SidebarMenu className="space-y-2">
-      {items.map((item) => {
-        const IconComponent = getIcon(item.icon);
-        return (
-          <MenuItem 
-            key={item.id}
-            item={item}
-            isActive={isActive(item.route)}
-            IconComponent={IconComponent}
-          />
-        );
-      })}
-    </SidebarMenu>
+    <Link
+      to={item.href}
+      className={`
+        group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200
+        ${isActive 
+          ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' 
+          : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+        }
+      `}
+    >
+      <div className="flex items-center gap-3">
+        <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
+        <span className="truncate">{item.label}</span>
+      </div>
+      {item.badge && (
+        <Badge 
+          variant={isActive ? "default" : "secondary"} 
+          className={`text-xs ${isActive ? 'bg-blue-600' : 'bg-gray-200 text-gray-600'}`}
+        >
+          {item.badge}
+        </Badge>
+      )}
+    </Link>
   );
 }

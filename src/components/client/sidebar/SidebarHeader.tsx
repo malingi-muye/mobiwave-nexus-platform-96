@@ -1,22 +1,28 @@
 
 import React from 'react';
-import { SidebarHeader } from "@/components/ui/sidebar";
-import { MessageSquare } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Send, Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-export function ClientSidebarHeader() {
+export function SidebarHeader() {
   return (
-    <SidebarHeader className="p-6 border-b bg-gradient-to-r from-blue-50 to-indigo-50 backdrop-blur-sm">
-      <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-xl flex items-center justify-center shadow-lg">
-          <MessageSquare className="w-5 h-5 text-white" />
+    <div className="p-4 border-b border-gray-200">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+          <Send className="w-4 h-4 text-white" />
         </div>
         <div>
-          <h2 className="font-bold text-xl bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 bg-clip-text text-transparent">
-            Communications Hub
-          </h2>
-          <p className="text-sm text-muted-foreground font-medium">Client Portal</p>
+          <h2 className="font-semibold text-gray-900">MobiWave</h2>
+          <p className="text-xs text-gray-500">Communication Hub</p>
         </div>
       </div>
-    </SidebarHeader>
+      
+      <Link to="/bulk-sms?tab=compose">
+        <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
+          <Plus className="w-4 h-4 mr-2" />
+          Quick SMS
+        </Button>
+      </Link>
+    </div>
   );
 }

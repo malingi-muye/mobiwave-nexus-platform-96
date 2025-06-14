@@ -1,123 +1,125 @@
 
-import { LucideIcon, LayoutDashboard, MessageSquare, Mail, Phone, Hash, FileText, CreditCard, Target, Receipt, Settings, Users, BarChart3 } from 'lucide-react';
+import React from 'react';
+import { 
+  BarChart3, 
+  MessageSquare, 
+  Mail, 
+  MessageCircle, 
+  Users, 
+  CreditCard, 
+  Settings, 
+  User,
+  Home,
+  Send,
+  TrendingUp,
+  Phone
+} from 'lucide-react';
 
-export interface Service {
+export interface SidebarItem {
   id: string;
-  name: string;
-  description: string;
-  icon: string;
-  route: string;
-  is_active: boolean;
-  is_premium: boolean;
-  color?: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  href: string;
+  badge?: string | number;
+  isActive?: boolean;
 }
 
-export const iconMap: Record<string, LucideIcon> = {
-  'LayoutDashboard': LayoutDashboard,
-  'MessageSquare': MessageSquare,
-  'Mail': Mail,
-  'Phone': Phone,
-  'Hash': Hash,
-  'FileText': FileText,
-  'CreditCard': CreditCard,
-  'Target': Target,
-  'Receipt': Receipt,
-  'Settings': Settings,
-  'Users': Users,
-  'BarChart3': BarChart3
-};
+export interface SidebarSection {
+  id: string;
+  title: string;
+  items: SidebarItem[];
+}
 
-export const mockUserServices: Service[] = [
+export const sidebarSections: SidebarSection[] = [
   {
-    id: '1',
-    name: 'Dashboard',
-    description: 'Main dashboard',
-    icon: 'LayoutDashboard',
-    route: '/dashboard',
-    is_active: true,
-    is_premium: false,
-    color: 'bg-blue-500'
+    id: 'overview',
+    title: 'Overview',
+    items: [
+      {
+        id: 'dashboard',
+        label: 'Dashboard',
+        icon: Home,
+        href: '/dashboard'
+      }
+    ]
   },
   {
-    id: '2',
-    name: 'Bulk SMS',
-    description: 'Send bulk SMS',
-    icon: 'MessageSquare',
-    route: '/bulk-sms',
-    is_active: true,
-    is_premium: false,
-    color: 'bg-green-500'
+    id: 'messaging',
+    title: 'Messaging',
+    items: [
+      {
+        id: 'sms',
+        label: 'SMS Campaigns',
+        icon: MessageSquare,
+        href: '/bulk-sms',
+        badge: 'Hot'
+      },
+      {
+        id: 'email',
+        label: 'Email Campaigns',
+        icon: Mail,
+        href: '/email-campaigns'
+      },
+      {
+        id: 'whatsapp',
+        label: 'WhatsApp',
+        icon: MessageCircle,
+        href: '/whatsapp-campaigns'
+      },
+      {
+        id: 'voice',
+        label: 'Voice Calls',
+        icon: Phone,
+        href: '/voice-campaigns'
+      }
+    ]
   },
   {
-    id: '3',
-    name: 'Bulk Email',
-    description: 'Send bulk emails',
-    icon: 'Mail',
-    route: '/email-campaigns',
-    is_active: true,
-    is_premium: false,
-    color: 'bg-blue-500'
+    id: 'management',
+    title: 'Management',
+    items: [
+      {
+        id: 'contacts',
+        label: 'Contacts',
+        icon: Users,
+        href: '/contacts'
+      },
+      {
+        id: 'analytics',
+        label: 'Analytics',
+        icon: TrendingUp,
+        href: '/analytics'
+      },
+      {
+        id: 'surveys',
+        label: 'Surveys',
+        icon: BarChart3,
+        href: '/survey-builder'
+      }
+    ]
   },
   {
-    id: '4',
-    name: 'WhatsApp',
-    description: 'WhatsApp messaging',
-    icon: 'Phone',
-    route: '/whatsapp-campaigns',
-    is_active: true,
-    is_premium: true,
-    color: 'bg-green-500'
-  },
-  {
-    id: '5',
-    name: 'Surveys',
-    description: 'Create surveys',
-    icon: 'FileText',
-    route: '/surveys',
-    is_active: true,
-    is_premium: false,
-    color: 'bg-purple-500'
-  },
-  {
-    id: '6',
-    name: 'M-Pesa',
-    description: 'Payment integration',
-    icon: 'CreditCard',
-    route: '/billing',
-    is_active: true,
-    is_premium: true,
-    color: 'bg-emerald-500'
-  },
-  {
-    id: '7',
-    name: 'Account Settings',
-    description: 'Account configuration',
-    icon: 'Settings',
-    route: '/settings',
-    is_active: true,
-    is_premium: false,
-    color: 'bg-gray-500'
+    id: 'account',
+    title: 'Account',
+    items: [
+      {
+        id: 'billing',
+        label: 'Billing & Credits',
+        icon: CreditCard,
+        href: '/billing'
+      },
+      {
+        id: 'profile',
+        label: 'Profile',
+        icon: User,
+        href: '/profile-settings'
+      },
+      {
+        id: 'settings',
+        label: 'Settings',
+        icon: Settings,
+        href: '/settings'
+      }
+    ]
   }
 ];
-
-export function getIcon(iconName: string): LucideIcon {
-  return iconMap[iconName] || MessageSquare;
-}
-
-export function getServicesByCategory(services: Service[]) {
-  return {
-    dashboard: services.find(service => service.name === 'Dashboard'),
-    messaging: services.filter(service => 
-      ['Bulk SMS', 'Bulk Email', 'WhatsApp', 'USSD', 'Short Codes'].includes(service.name)
-    ),
-    campaigns: services.filter(service => 
-      ['Surveys', 'Campaigns'].includes(service.name)
-    ),
-    billing: services.filter(service => 
-      ['M-Pesa', 'Billing'].includes(service.name)
-    ),
-    settings: services.filter(service => 
-      ['Account Settings'].includes(service.name)
-    )
-  };
-}

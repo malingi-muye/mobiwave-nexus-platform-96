@@ -33,8 +33,6 @@ class Logger {
   }
 
   private initializeLogger(): void {
-    const config = this.environmentManager.getConfig();
-    
     // Set up global error handling
     window.addEventListener('error', (event) => {
       this.error('Global error caught', {
@@ -52,7 +50,7 @@ class Logger {
       });
     });
 
-    this.info('Logger initialized', { config: config.logging });
+    this.info('Logger initialized');
   }
 
   private log(level: LogLevel, message: string, data?: any, source?: string): void {

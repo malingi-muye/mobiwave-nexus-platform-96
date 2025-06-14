@@ -11,6 +11,11 @@ interface EnvironmentConfig {
     auditLogging: boolean;
     rateLimit: boolean;
   };
+  logging: {
+    level: 'debug' | 'info' | 'warn' | 'error';
+    enableConsole: boolean;
+    enableRemote: boolean;
+  };
 }
 
 export class EnvironmentManager {
@@ -28,6 +33,11 @@ export class EnvironmentManager {
         encryption: true,
         auditLogging: true,
         rateLimit: true
+      },
+      logging: {
+        level: window.location.hostname === 'localhost' ? 'debug' : 'info',
+        enableConsole: true,
+        enableRemote: window.location.hostname !== 'localhost'
       }
     };
   }

@@ -10,7 +10,6 @@ import { LoginForm } from "./LoginForm";
 import { SignupForm } from "./SignupForm";
 
 export const AuthPage = () => {
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { user, userRole, isLoading: authLoading } = useAuth();
 
@@ -59,11 +58,11 @@ export const AuthPage = () => {
             </TabsList>
             
             <TabsContent value="login" className="space-y-4">
-              <LoginForm isLoading={isLoading} setIsLoading={setIsLoading} />
+              <LoginForm />
             </TabsContent>
             
             <TabsContent value="signup" className="space-y-4">
-              <SignupForm isLoading={isLoading} setIsLoading={setIsLoading} />
+              <SignupForm />
             </TabsContent>
           </Tabs>
 

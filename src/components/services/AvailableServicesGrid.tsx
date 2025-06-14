@@ -1,10 +1,9 @@
-
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ServiceRequestCard } from './ServiceRequestCard';
-import { useServiceActivation } from '@/hooks/useServiceActivation';
+import { useMyActivatedServices } from '@/hooks/useMyActivatedServices';
 
 interface ServiceCatalog {
   id: string;
@@ -18,7 +17,7 @@ interface ServiceCatalog {
 }
 
 export function AvailableServicesGrid() {
-  const { myActivatedServices } = useServiceActivation();
+  const { data: myActivatedServices = [] } = useMyActivatedServices();
 
   const { data: services = [], isLoading } = useQuery({
     queryKey: ['services-catalog-available'],

@@ -1,24 +1,19 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Users, Shield } from 'lucide-react';
-import { useServiceActivation } from '@/hooks/useServiceActivation';
+import { Shield } from 'lucide-react';
+import { useUserServiceActivations } from '@/hooks/useUserServiceActivations';
+import { useServiceActivationMutations } from '@/hooks/useServiceActivationMutations';
 
 export function UserServiceActivations() {
-  const { 
-    userActivations, 
-    isLoading, 
-    deactivateUserService,
-    isDeactivating
-  } = useServiceActivation();
+  const { data: userActivations = [], isLoading } = useUserServiceActivations();
+  const { deactivateUserService } = useServiceActivationMutations();
 
   const handleDeactivate = async (userId: string, serviceId: string) => {
     if (confirm('Are you sure you want to deactivate this service for the user?')) {
       try {
-        await deactivateUserService({ userId, serviceId });
+        await deactivateUserService.mutateAsync({ userId, serviceId });
       } catch (error) {
         console.error('Failed to deactivate service:', error);
       }
@@ -101,7 +96,6 @@ export function UserServiceActivations() {
                       size="sm"
                       variant="destructive"
                       onClick={() => handleDeactivate(activation.user_id, activation.service_id)}
-                      disabled={isDeactivating}
                     >
                       Deactivate
                     </Button>

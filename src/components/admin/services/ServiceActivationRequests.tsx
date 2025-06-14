@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,17 +6,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle, XCircle, Clock, User } from 'lucide-react';
-import { useServiceActivation } from '@/hooks/useServiceActivation';
+import { useServiceActivationRequests } from '@/hooks/useServiceActivationRequests';
+import { useServiceActivationMutations } from '@/hooks/useServiceActivationMutations';
 
 export function ServiceActivationRequests() {
+  const { data: activationRequests = [], isLoading } = useServiceActivationRequests();
   const { 
-    activationRequests, 
-    isLoading, 
     approveServiceRequest, 
     rejectServiceRequest,
     isApproving,
     isRejecting
-  } = useServiceActivation();
+  } = useServiceActivationMutations();
 
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
@@ -43,7 +42,7 @@ export function ServiceActivationRequests() {
 
   const handleApprove = async (requestId: string) => {
     try {
-      await approveServiceRequest(requestId);
+      await approveServiceRequest.mutateAsync(requestId);
     } catch (error) {
       console.error('Failed to approve request:', error);
     }
@@ -53,7 +52,7 @@ export function ServiceActivationRequests() {
     if (!selectedRequestId) return;
     
     try {
-      await rejectServiceRequest({ 
+      await rejectServiceRequest.mutateAsync({ 
         requestId: selectedRequestId, 
         reason: rejectReason || undefined 
       });

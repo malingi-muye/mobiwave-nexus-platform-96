@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +11,7 @@ import { Tables } from '@/integrations/supabase/types';
 import { USSDMenuBuilder } from './USSDMenuBuilder';
 import { USSDApplicationCard } from './USSDApplicationCard';
 import { USSDTestSimulator } from './USSDTestSimulator';
+import { USSDSessionManager } from './USSDSessionManager';
 
 interface MenuNode {
   id: string;
@@ -61,6 +61,7 @@ export function USSDApplicationBuilder() {
       isEndNode: false
     }
   ]);
+  const [activeTab, setActiveTab] = useState<'applications' | 'sessions'>('applications');
 
   const queryClient = useQueryClient();
 
@@ -210,102 +211,124 @@ export function USSDApplicationBuilder() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">USSD Applications</h2>
+          <h2 className="text-3xl font-bold tracking-tight">USSD Services</h2>
           <p className="text-gray-600">
             Create and manage your USSD applications with visual menu builders.
           </p>
         </div>
-        <Button onClick={() => setIsCreating(true)} className="flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          New Application
-        </Button>
-      </div>
-
-      {isCreating && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Phone className="w-5 h-5" />
-              {editingApp ? 'Edit USSD Application' : 'Create USSD Application'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="serviceCode">Service Code *</Label>
-                <Input
-                  id="serviceCode"
-                  placeholder="e.g., *123#"
-                  value={serviceCode}
-                  onChange={(e) => setServiceCode(e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="callbackUrl">Callback URL *</Label>
-                <Input
-                  id="callbackUrl"
-                  placeholder="https://your-app.com/ussd/callback"
-                  value={callbackUrl}
-                  onChange={(e) => setCallbackUrl(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <USSDMenuBuilder 
-              menuStructure={menuStructure} 
-              onUpdateMenu={handleMenuUpdate}
-            />
-
-            <div className="flex gap-3">
-              <Button 
-                onClick={handleSubmit} 
-                disabled={createApplication.isPending || updateApplication.isPending}
-              >
-                {createApplication.isPending || updateApplication.isPending 
-                  ? (editingApp ? 'Updating...' : 'Creating...') 
-                  : (editingApp ? 'Update Application' : 'Create Application')
-                }
-              </Button>
-              <Button variant="outline" onClick={handleCancelEdit}>
-                Cancel
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {testingApp && (
-        <USSDTestSimulator 
-          application={testingApp}
-          onClose={() => setTestingApp(null)}
-        />
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {applications.map((app) => (
-          <USSDApplicationCard 
-            key={app.id} 
-            application={app}
-            onEdit={handleEdit}
-            onTest={handleTest}
-          />
-        ))}
-      </div>
-
-      {applications.length === 0 && !isCreating && (
-        <Card>
-          <CardContent className="text-center py-8">
-            <Phone className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-            <h3 className="text-lg font-semibold mb-2">No USSD Applications</h3>
-            <p className="text-gray-600 mb-4">
-              Create your first USSD application to start building interactive menus.
-            </p>
-            <Button onClick={() => setIsCreating(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Create First Application
+        <div className="flex gap-2">
+          <Button 
+            variant={activeTab === 'applications' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('applications')}
+          >
+            Applications
+          </Button>
+          <Button 
+            variant={activeTab === 'sessions' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('sessions')}
+          >
+            Sessions
+          </Button>
+          {activeTab === 'applications' && (
+            <Button onClick={() => setIsCreating(true)} className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              New Application
             </Button>
-          </CardContent>
-        </Card>
+          )}
+        </div>
+      </div>
+
+      {activeTab === 'sessions' ? (
+        <USSDSessionManager />
+      ) : (
+        <>
+          {isCreating && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Phone className="w-5 h-5" />
+                  {editingApp ? 'Edit USSD Application' : 'Create USSD Application'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="serviceCode">Service Code *</Label>
+                    <Input
+                      id="serviceCode"
+                      placeholder="e.g., *123#"
+                      value={serviceCode}
+                      onChange={(e) => setServiceCode(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="callbackUrl">Callback URL *</Label>
+                    <Input
+                      id="callbackUrl"
+                      placeholder="https://your-app.com/ussd/callback"
+                      value={callbackUrl}
+                      onChange={(e) => setCallbackUrl(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <USSDMenuBuilder 
+                  menuStructure={menuStructure} 
+                  onUpdateMenu={handleMenuUpdate}
+                />
+
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={handleSubmit} 
+                    disabled={createApplication.isPending || updateApplication.isPending}
+                  >
+                    {createApplication.isPending || updateApplication.isPending 
+                      ? (editingApp ? 'Updating...' : 'Creating...') 
+                      : (editingApp ? 'Update Application' : 'Create Application')
+                    }
+                  </Button>
+                  <Button variant="outline" onClick={handleCancelEdit}>
+                    Cancel
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {testingApp && (
+            <USSDTestSimulator 
+              application={testingApp}
+              onClose={() => setTestingApp(null)}
+            />
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {applications.map((app) => (
+              <USSDApplicationCard 
+                key={app.id} 
+                application={app}
+                onEdit={handleEdit}
+                onTest={handleTest}
+              />
+            ))}
+          </div>
+
+          {applications.length === 0 && !isCreating && (
+            <Card>
+              <CardContent className="text-center py-8">
+                <Phone className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                <h3 className="text-lg font-semibold mb-2">No USSD Applications</h3>
+                <p className="text-gray-600 mb-4">
+                  Create your first USSD application to start building interactive menus.
+                </p>
+                <Button onClick={() => setIsCreating(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create First Application
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
     </div>
   );

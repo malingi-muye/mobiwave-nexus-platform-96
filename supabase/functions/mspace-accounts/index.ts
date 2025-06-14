@@ -175,6 +175,23 @@ serve(async (req) => {
         } catch {
           responseData = { message: responseText, status: 'success' };
         }
+      } else if (operation === 'topUpResellerClient') {
+        // Try GET method for reseller client top-up with correct parameter format
+        const getUrl = `${endpoint}/apikey=${apiKey}/username=${mspaceUsername}/clientname=${clientname}/noofsms=${noOfSms}`;
+        const getResponse = await fetch(getUrl);
+
+        if (!getResponse.ok) {
+          throw new Error(`Both POST and GET requests failed. Last error: ${getResponse.status} ${getResponse.statusText}`);
+        }
+
+        const responseText = await getResponse.text();
+        console.log('GET response:', responseText);
+        
+        try {
+          responseData = JSON.parse(responseText);
+        } catch {
+          responseData = { message: responseText, status: 'success' };
+        }
       } else {
         throw postError;
       }

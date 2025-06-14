@@ -26,6 +26,8 @@ serve(async (req) => {
       throw new Error('Operation type is required')
     }
 
+    console.log('Mspace accounts operation:', operation)
+
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
       throw new Error('Authorization required')
@@ -43,8 +45,11 @@ serve(async (req) => {
     )
     
     if (authError || !user) {
+      console.error('Authentication failed:', authError)
       throw new Error('Invalid authorization')
     }
+
+    console.log('User authenticated:', user.id)
 
     // Get API credentials
     const { data: credentials, error: credError } = await supabase
@@ -56,7 +61,8 @@ serve(async (req) => {
       .single()
 
     if (credError || !credentials) {
-      throw new Error('Mspace API credentials not configured')
+      console.error('Credentials error:', credError)
+      throw new Error('Mspace API credentials not configured. Please configure them in Settings.')
     }
 
     const config = credentials.additional_config as any
@@ -64,8 +70,10 @@ serve(async (req) => {
     const mspaceUsername = config?.username
 
     if (!apiKey || !mspaceUsername) {
-      throw new Error('Incomplete Mspace API credentials')
+      throw new Error('Incomplete Mspace API credentials. API key and username are required.')
     }
+
+    console.log('Processing operation:', operation, 'for user:', mspaceUsername)
 
     let endpoint = '';
     let payload: any = { username: mspaceUsername };
@@ -80,7 +88,7 @@ serve(async (req) => {
         break;
       case 'topUpSubAccount':
         if (!clientname || !noOfSms) {
-          throw new Error('Client name and SMS quantity required');
+          throw new Error('Client name and SMS quantity required for top-up');
         }
         endpoint = 'https://api.mspace.co.ke/smsapi/v2/subacctopup';
         payload = {
@@ -91,7 +99,7 @@ serve(async (req) => {
         break;
       case 'topUpResellerClient':
         if (!clientname || !noOfSms) {
-          throw new Error('Client name and SMS quantity required');
+          throw new Error('Client name and SMS quantity required for top-up');
         }
         endpoint = 'https://api.mspace.co.ke/smsapi/v2/resellerclienttopup';
         payload = {
@@ -101,28 +109,62 @@ serve(async (req) => {
         };
         break;
       default:
-        throw new Error('Invalid operation');
+        throw new Error(`Invalid operation: ${operation}`);
     }
 
-    // Call Mspace API
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'apikey': apiKey
-      },
-      body: JSON.stringify(payload)
-    });
+    // Try POST method first (more reliable according to docs)
+    let responseData;
+    try {
+      const postResponse = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'apikey': apiKey
+        },
+        body: JSON.stringify(payload)
+      });
 
-    if (!response.ok) {
-      throw new Error(`Mspace API error: ${response.statusText}`);
+      if (postResponse.ok) {
+        const responseText = await postResponse.text();
+        console.log('POST response:', responseText);
+        
+        try {
+          responseData = JSON.parse(responseText);
+        } catch {
+          // If not JSON, treat as plain text response
+          responseData = { message: responseText, status: 'success' };
+        }
+      } else {
+        throw new Error(`POST request failed: ${postResponse.status} ${postResponse.statusText}`);
+      }
+    } catch (postError) {
+      console.log('POST method failed, trying GET method for query operations:', postError);
+      
+      // Fallback to GET method for query operations only
+      if (operation === 'subAccounts' || operation === 'resellerClients') {
+        const getUrl = `${endpoint}/apikey=${apiKey}/username=${mspaceUsername}`;
+        const getResponse = await fetch(getUrl);
+
+        if (!getResponse.ok) {
+          throw new Error(`Both POST and GET requests failed. Last error: ${getResponse.status} ${getResponse.statusText}`);
+        }
+
+        const responseText = await getResponse.text();
+        console.log('GET response:', responseText);
+        
+        try {
+          responseData = JSON.parse(responseText);
+        } catch {
+          responseData = { message: responseText, status: 'success' };
+        }
+      } else {
+        throw postError;
+      }
     }
 
-    const data = await response.json();
-    console.log('Mspace accounts operation response:', data);
-
-    return new Response(JSON.stringify(data), { 
+    console.log('Final response data:', responseData);
+    return new Response(JSON.stringify(responseData), { 
       status: 200, 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
@@ -130,7 +172,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in mspace-accounts function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        timestamp: new Date().toISOString()
+      }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

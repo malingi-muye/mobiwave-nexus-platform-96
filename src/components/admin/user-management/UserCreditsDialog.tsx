@@ -8,65 +8,60 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CompleteUser } from '@/hooks/useCompleteUserManagement';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { CreditCard, Plus, Minus } from 'lucide-react';
 
 interface UserCreditsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user: CompleteUser;
-  onUserUpdated: () => void;
+  onCreditsUpdated: () => void;
 }
 
-export function UserCreditsDialog({ open, onOpenChange, user, onUserUpdated }: UserCreditsDialogProps) {
+export function UserCreditsDialog({ 
+  open, 
+  onOpenChange, 
+  user, 
+  onCreditsUpdated
+}: UserCreditsDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [operation, setOperation] = useState<'add' | 'subtract' | 'set'>('add');
-  const [amount, setAmount] = useState('');
-  const [description, setDescription] = useState('');
+  const [amount, setAmount] = useState<string>('');
+  const [reason, setReason] = useState<string>('');
 
   const handleSubmit = async () => {
-    const creditAmount = parseFloat(amount);
-    if (!creditAmount || creditAmount <= 0) {
+    if (!user || !amount || isNaN(parseFloat(amount))) {
       toast.error('Please enter a valid amount');
       return;
     }
-
+    
+    const numAmount = parseFloat(amount);
+    let newCredits = user.credits_remaining || 0;
+    
+    switch (operation) {
+      case 'add':
+        newCredits += numAmount;
+        break;
+      case 'subtract':
+        newCredits = Math.max(0, newCredits - numAmount);
+        break;
+      case 'set':
+        newCredits = numAmount;
+        break;
+    }
+    
     setIsLoading(true);
     try {
-      // Get current credits
-      const { data: currentCredits, error: fetchError } = await supabase
+      // Update user credits
+      const { error: creditsError } = await supabase
         .from('user_credits')
-        .select('credits_remaining, credits_purchased')
-        .eq('user_id', user.id)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      let newCreditsRemaining = currentCredits.credits_remaining;
-      let newCreditsPurchased = currentCredits.credits_purchased;
-
-      switch (operation) {
-        case 'add':
-          newCreditsRemaining += creditAmount;
-          newCreditsPurchased += creditAmount;
-          break;
-        case 'subtract':
-          newCreditsRemaining = Math.max(0, newCreditsRemaining - creditAmount);
-          break;
-        case 'set':
-          newCreditsRemaining = creditAmount;
-          break;
-      }
-
-      // Update credits
-      const { error: updateError } = await supabase
-        .from('user_credits')
-        .update({
-          credits_remaining: newCreditsRemaining,
-          credits_purchased: operation === 'add' ? newCreditsPurchased : currentCredits.credits_purchased,
+        .upsert({
+          user_id: user.id,
+          credits_remaining: newCredits,
+          credits_purchased: operation === 'add' ? (user.credits_purchased || 0) + numAmount : user.credits_purchased || 0,
           updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
+        });
 
-      if (updateError) throw updateError;
+      if (creditsError) throw creditsError;
 
       // Log the transaction
       const { error: transactionError } = await supabase
@@ -74,18 +69,20 @@ export function UserCreditsDialog({ open, onOpenChange, user, onUserUpdated }: U
         .insert({
           user_id: user.id,
           transaction_type: operation,
-          amount: creditAmount,
-          description: description || `Credits ${operation} by admin`,
-          created_at: new Date().toISOString()
+          amount: numAmount,
+          description: reason || `Credits ${operation} by admin`,
+          reference_id: `admin-${Date.now()}`
         });
 
-      if (transactionError) throw transactionError;
+      if (transactionError) {
+        console.warn('Failed to log transaction:', transactionError);
+      }
 
-      toast.success('Credits updated successfully');
-      onUserUpdated();
+      toast.success(`Credits ${operation === 'set' ? 'updated' : operation === 'add' ? 'added' : 'deducted'} successfully`);
+      onCreditsUpdated();
       onOpenChange(false);
       setAmount('');
-      setDescription('');
+      setReason('');
     } catch (error) {
       console.error('Error updating credits:', error);
       toast.error('Failed to update credits');
@@ -94,21 +91,31 @@ export function UserCreditsDialog({ open, onOpenChange, user, onUserUpdated }: U
     }
   };
 
+  if (!user) {
+    return null;
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Manage Credits</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <CreditCard className="w-5 h-5 text-green-600" />
+            Manage Credits
+          </DialogTitle>
           <DialogDescription>
-            Update credits for {user.first_name} {user.last_name} ({user.email})
+            Update user credits for {user.first_name} {user.last_name} ({user.email})
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="bg-gray-50 p-3 rounded-md">
-            <div className="text-sm text-gray-600">Current Credits</div>
-            <div className="text-lg font-semibold">{user.credits_remaining?.toFixed(2) || '0.00'}</div>
+        
+        <div className="bg-gray-50 border rounded-lg p-4 mb-4">
+          <div className="text-sm text-gray-600 mb-1">Current Balance</div>
+          <div className="text-2xl font-bold text-green-600">
+            ${(user.credits_remaining || 0).toFixed(2)}
           </div>
-          
+        </div>
+
+        <div className="space-y-4">
           <div>
             <Label htmlFor="operation">Operation</Label>
             <Select value={operation} onValueChange={(value: 'add' | 'subtract' | 'set') => setOperation(value)}>
@@ -116,15 +123,30 @@ export function UserCreditsDialog({ open, onOpenChange, user, onUserUpdated }: U
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="add">Add Credits</SelectItem>
-                <SelectItem value="subtract">Subtract Credits</SelectItem>
-                <SelectItem value="set">Set Credits</SelectItem>
+                <SelectItem value="add">
+                  <div className="flex items-center gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Credits
+                  </div>
+                </SelectItem>
+                <SelectItem value="subtract">
+                  <div className="flex items-center gap-2">
+                    <Minus className="w-4 h-4" />
+                    Subtract Credits
+                  </div>
+                </SelectItem>
+                <SelectItem value="set">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="w-4 h-4" />
+                    Set Balance
+                  </div>
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
-          
+
           <div>
-            <Label htmlFor="amount">Amount</Label>
+            <Label htmlFor="amount">Amount ($)</Label>
             <Input
               id="amount"
               type="number"
@@ -135,23 +157,24 @@ export function UserCreditsDialog({ open, onOpenChange, user, onUserUpdated }: U
               placeholder="0.00"
             />
           </div>
-          
+
           <div>
-            <Label htmlFor="description">Description (Optional)</Label>
+            <Label htmlFor="reason">Reason (Optional)</Label>
             <Input
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Reason for credit adjustment"
+              id="reason"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Credit adjustment reason..."
             />
           </div>
         </div>
+
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isLoading}>
-            {isLoading ? 'Updating...' : 'Update Credits'}
+          <Button onClick={handleSubmit} disabled={isLoading || !amount}>
+            {isLoading ? 'Processing...' : 'Update Credits'}
           </Button>
         </DialogFooter>
       </DialogContent>

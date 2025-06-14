@@ -1,14 +1,14 @@
 
 import React from 'react';
 import { AdminDashboardLayout } from '../../components/admin/AdminDashboardLayout';
-import { SecurityConfiguration } from '../../components/admin/SecurityConfiguration';
+import SecurityConfig from '../../components/admin/SecurityConfig';
 
-const SecurityConfig = () => {
+const SecurityConfigPage = () => {
   return (
     <AdminDashboardLayout>
-      <SecurityConfiguration />
+      <SecurityConfig />
     </AdminDashboardLayout>
   );
 };
 
-export default SecurityConfig;
+export default SecurityConfigPage;

@@ -1,11 +1,17 @@
 
-import { AuditLog } from '@/types/audit';
+import { supabase } from '@/integrations/supabase/client';
+
+export interface AuditAction {
+  userId: string;
+  action: string;
+  resourceType?: string;
+  resourceId?: string;
+  metadata?: Record<string, any>;
+  severity?: 'low' | 'medium' | 'high' | 'critical';
+}
 
 class AuditLogger {
   private static instance: AuditLogger;
-  private logs: AuditLog[] = [];
-
-  private constructor() {}
 
   static getInstance(): AuditLogger {
     if (!AuditLogger.instance) {
@@ -17,109 +23,82 @@ class AuditLogger {
   async logAction(
     userId: string,
     action: string,
-    options: {
+    details: {
       resourceType?: string;
       resourceId?: string;
       metadata?: Record<string, any>;
       severity?: 'low' | 'medium' | 'high' | 'critical';
-      ipAddress?: string;
-      userAgent?: string;
     } = {}
   ): Promise<void> {
-    const auditLog: AuditLog = {
-      id: this.generateId(),
-      timestamp: new Date().toISOString(),
-      user_id: userId,
-      action,
-      resource_type: options.resourceType || null,
-      resource_id: options.resourceId || null,
-      ip_address: options.ipAddress || this.getClientIP(),
-      user_agent: options.userAgent || navigator.userAgent,
-      details: options.metadata,
-      severity: options.severity || 'low',
-      status: 'success'
-    };
-
-    this.logs.push(auditLog);
-    
-    // Send to backend/database
-    await this.persistLog(auditLog);
-    
-    // Send to monitoring if critical
-    if (auditLog.severity === 'critical') {
-      await this.sendAlert(auditLog);
-    }
-
-    console.log('Audit Log:', auditLog);
-  }
-
-  private async persistLog(log: AuditLog): Promise<void> {
     try {
-      // In a real implementation, this would send to your backend
-      const response = await fetch('/api/audit-logs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(log)
-      });
-      
-      if (!response.ok) {
-        console.error('Failed to persist audit log:', response.statusText);
+      const { error } = await supabase
+        .from('audit_logs')
+        .insert({
+          user_id: userId,
+          action,
+          resource_type: details.resourceType,
+          resource_id: details.resourceId,
+          metadata: details.metadata || {},
+          severity: details.severity || 'low',
+          ip_address: await this.getClientIP(),
+          user_agent: navigator.userAgent,
+          session_id: this.getSessionId()
+        });
+
+      if (error) {
+        console.error('Failed to log audit action:', error);
       }
     } catch (error) {
-      console.error('Error persisting audit log:', error);
-      // Store locally as fallback
-      localStorage.setItem(`audit_log_${log.id}`, JSON.stringify(log));
+      console.error('Audit logging error:', error);
     }
   }
 
-  private async sendAlert(log: AuditLog): Promise<void> {
-    // Send critical alerts to monitoring system
-    console.warn('CRITICAL AUDIT EVENT:', log);
-    
-    // In production, integrate with alerting systems like PagerDuty, Slack, etc.
+  async logSecurityEvent(
+    eventType: string,
+    severity: 'low' | 'medium' | 'high' | 'critical' = 'medium',
+    details: Record<string, any> = {}
+  ): Promise<void> {
     try {
-      await fetch('/api/alerts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: 'security_alert',
-          severity: log.severity,
-          message: `Critical action: ${log.action} by user ${log.user_id}`,
-          details: log
+      const { error } = await supabase.rpc('log_security_event', {
+        p_event_type: eventType,
+        p_severity: severity,
+        p_details: JSON.stringify({
+          ...details,
+          ip_address: await this.getClientIP(),
+          user_agent: navigator.userAgent,
+          timestamp: new Date().toISOString()
         })
       });
+
+      if (error) {
+        console.error('Failed to log security event:', error);
+      }
     } catch (error) {
-      console.error('Failed to send alert:', error);
+      console.error('Security event logging error:', error);
     }
   }
 
-  private generateId(): string {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  private async getClientIP(): Promise<string> {
+    try {
+      const response = await fetch('https://api.ipify.org?format=json');
+      const data = await response.json();
+      return data.ip;
+    } catch (error) {
+      return 'unknown';
+    }
   }
 
-  private getClientIP(): string {
-    // In a real implementation, this would be handled by the backend
-    return 'client-side-unknown';
+  private getSessionId(): string {
+    let sessionId = sessionStorage.getItem('audit_session_id');
+    if (!sessionId) {
+      sessionId = this.generateSessionId();
+      sessionStorage.setItem('audit_session_id', sessionId);
+    }
+    return sessionId;
   }
 
-  getLogs(): AuditLog[] {
-    return [...this.logs];
-  }
-
-  getLogsByUser(userId: string): AuditLog[] {
-    return this.logs.filter(log => log.user_id === userId);
-  }
-
-  getLogsByAction(action: string): AuditLog[] {
-    return this.logs.filter(log => log.action === action);
-  }
-
-  getLogsBySeverity(severity: string): AuditLog[] {
-    return this.logs.filter(log => log.severity === severity);
+  private generateSessionId(): string {
+    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 }
 

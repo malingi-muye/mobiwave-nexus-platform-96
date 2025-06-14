@@ -36,13 +36,17 @@ export function LoginForm() {
     setError('');
     setIsLoading(true);
 
+    let profile = null;
+
     try {
       // Check if account is locked first
-      const { data: profile, error: profileError } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('failed_login_attempts, locked_until')
         .eq('email', email)
         .single();
+
+      profile = profileData;
 
       if (profile?.locked_until && new Date(profile.locked_until) > new Date()) {
         setAccountLocked(true);

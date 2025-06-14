@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { useUserCredits } from '@/hooks/useUserCredits';
-import { useMspaceApi } from '@/hooks/useMspaceApi';
+import { useMspaceService } from '@/hooks/useMspaceService';
 import { toast } from 'sonner';
 import { CampaignForm } from './CampaignForm';
 import { CampaignStatus } from './CampaignStatus';
@@ -22,7 +22,7 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
 
   const { createCampaign } = useCampaigns();
   const { data: credits } = useUserCredits();
-  const { sendSMS, checkBalance } = useMspaceApi();
+  const { sendSMS, checkBalance } = useMspaceService();
   const [estimatedCost, setEstimatedCost] = useState(0);
 
   const characterCount = campaignData.content.length;
@@ -61,7 +61,7 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
       });
 
       if (status === 'active' && campaignData.recipients.length > 0) {
-        await sendSMS.mutateAsync({
+        await sendSMS({
           recipients: campaignData.recipients,
           message: campaignData.content,
           senderId: 'MOBIWAVE',
@@ -95,7 +95,7 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
         campaignData={campaignData}
         setCampaignData={setCampaignData}
         onSubmit={handleSubmit}
-        isLoading={createCampaign.isPending || sendSMS.isPending}
+        isLoading={false}
         estimatedCost={estimatedCost}
         characterCount={characterCount}
         smsCount={smsCount}

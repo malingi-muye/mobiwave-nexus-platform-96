@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -79,7 +78,7 @@ const mockUserServices: Service[] = [
     name: 'Bulk SMS',
     description: 'Send bulk SMS',
     icon: 'MessageSquare',
-    route: '/sms',
+    route: '/bulk-sms',
     is_active: true,
     is_premium: false
   },
@@ -106,7 +105,7 @@ const mockUserServices: Service[] = [
     name: 'Surveys',
     description: 'Create surveys',
     icon: 'FileText',
-    route: '/survey-builder',
+    route: '/surveys',
     is_active: true,
     is_premium: false
   },

@@ -1,6 +1,10 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useMspaceBalance } from './mspace/useMspaceBalance';
+import { useMspaceDelivery } from './mspace/useMspaceDelivery';
+import { useMspaceAccounts } from './mspace/useMspaceAccounts';
 
 interface SMSPayload {
   username: string;
@@ -10,62 +14,15 @@ interface SMSPayload {
   campaignId?: string;
 }
 
-interface BalanceResponse {
-  balance: number;
-  status: string;
-}
-
-interface DeliveryReportPayload {
-  username: string;
-  messageId: string;
-}
-
-interface MspaceDeliveryMessage {
-  messageId: string;
-  recipient: string;
-  status: number;
-  statusDescription: string;
-}
-
-interface MspaceDeliveryResponse {
-  message: MspaceDeliveryMessage[];
-}
-
-interface SubAccountPayload {
-  username: string;
-  clientname: string;
-  noOfSms: number;
-}
-
 export const useMspaceService = () => {
   const [isLoading, setIsLoading] = useState(false);
-
-  const getApiCredentials = async () => {
-    const { data: credentials, error } = await supabase
-      .from('api_credentials')
-      .select('*')
-      .eq('service_name', 'mspace')
-      .eq('is_active', true)
-      .single();
-
-    if (error || !credentials) {
-      throw new Error('No active Mspace API credentials found. Please configure your API settings.');
-    }
-
-    // Extract credentials from additional_config
-    const config = credentials.additional_config as any;
-    return {
-      api_key: config?.api_key || credentials.api_key_encrypted || '',
-      username: config?.username || '',
-      sender_id: config?.sender_id || ''
-    };
-  };
+  const balance = useMspaceBalance();
+  const delivery = useMspaceDelivery();
+  const accounts = useMspaceAccounts();
 
   const sendSMS = async (payload: SMSPayload) => {
     setIsLoading(true);
     try {
-      const credentials = await getApiCredentials();
-      
       const response = await supabase.functions.invoke('mspace-sms', {
         body: {
           recipients: [payload.recipient],
@@ -80,7 +37,7 @@ export const useMspaceService = () => {
       }
 
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending SMS:', error);
       toast.error(`Failed to send SMS: ${error.message}`);
       throw error;
@@ -89,198 +46,14 @@ export const useMspaceService = () => {
     }
   };
 
-  const checkBalance = async (): Promise<BalanceResponse> => {
-    setIsLoading(true);
-    try {
-      const credentials = await getApiCredentials();
-      
-      const response = await fetch(`https://api.mspace.co.ke/smsapi/v2/balance/apikey=${credentials.api_key}/username=${credentials.username}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to check balance');
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('Error checking balance:', error);
-      toast.error(`Failed to check balance: ${error.message}`);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const getDeliveryReport = async (payload: DeliveryReportPayload): Promise<MspaceDeliveryMessage | null> => {
-    setIsLoading(true);
-    try {
-      const credentials = await getApiCredentials();
-      
-      const response = await fetch('https://api.mspace.co.ke/smsapi/v2/deliveryreport', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'apikey': credentials.api_key
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get delivery report');
-      }
-
-      const data = await response.json() as MspaceDeliveryResponse;
-      
-      // Handle the documented response structure
-      if (data.message && Array.isArray(data.message) && data.message.length > 0) {
-        return data.message[0]; // Return the first (and likely only) message
-      }
-      
-      return null;
-    } catch (error) {
-      console.error('Error getting delivery report:', error);
-      toast.error(`Failed to get delivery report: ${error.message}`);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const querySubAccounts = async () => {
-    setIsLoading(true);
-    try {
-      const credentials = await getApiCredentials();
-      
-      const response = await fetch('https://api.mspace.co.ke/smsapi/v2/subusers', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'apikey': credentials.api_key
-        },
-        body: JSON.stringify({
-          username: credentials.username
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to query sub-accounts');
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('Error querying sub-accounts:', error);
-      toast.error(`Failed to query sub-accounts: ${error.message}`);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const queryResellerClients = async () => {
-    setIsLoading(true);
-    try {
-      const credentials = await getApiCredentials();
-      
-      const response = await fetch('https://api.mspace.co.ke/smsapi/v2/resellerclients', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'apikey': credentials.api_key
-        },
-        body: JSON.stringify({
-          username: credentials.username
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to query reseller clients');
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('Error querying reseller clients:', error);
-      toast.error(`Failed to query reseller clients: ${error.message}`);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const topUpSubAccount = async (payload: SubAccountPayload) => {
-    setIsLoading(true);
-    try {
-      const credentials = await getApiCredentials();
-      
-      const response = await fetch('https://api.mspace.co.ke/smsapi/v2/subacctopup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'apikey': credentials.api_key
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to top up sub-account');
-      }
-
-      const data = await response.json();
-      toast.success('Sub-account topped up successfully');
-      return data;
-    } catch (error) {
-      console.error('Error topping up sub-account:', error);
-      toast.error(`Failed to top up sub-account: ${error.message}`);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const topUpResellerClient = async (payload: SubAccountPayload) => {
-    setIsLoading(true);
-    try {
-      const credentials = await getApiCredentials();
-      
-      const response = await fetch('https://api.mspace.co.ke/smsapi/v2/resellerclienttopup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'apikey': credentials.api_key
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to top up reseller client');
-      }
-
-      const data = await response.json();
-      toast.success('Reseller client topped up successfully');
-      return data;
-    } catch (error) {
-      console.error('Error topping up reseller client:', error);
-      toast.error(`Failed to top up reseller client: ${error.message}`);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return {
     sendSMS,
-    checkBalance,
-    getDeliveryReport,
-    querySubAccounts,
-    queryResellerClients,
-    topUpSubAccount,
-    topUpResellerClient,
-    isLoading
+    checkBalance: balance.checkBalance,
+    getDeliveryReport: delivery.getDeliveryReport,
+    querySubAccounts: accounts.querySubAccounts,
+    queryResellerClients: accounts.queryResellerClients,
+    topUpSubAccount: accounts.topUpSubAccount,
+    topUpResellerClient: accounts.topUpResellerClient,
+    isLoading: isLoading || balance.isLoading || delivery.isLoading || accounts.isLoading
   };
 };

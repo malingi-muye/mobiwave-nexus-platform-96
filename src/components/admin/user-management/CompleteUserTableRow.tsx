@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -17,16 +16,24 @@ interface CompleteUserTableRowProps {
   onUserUpdated: () => void;
 }
 
+type UserRole = 'user' | 'manager' | 'admin' | 'super_admin';
+
 export function CompleteUserTableRow({ user, onUserUpdated }: CompleteUserTableRowProps) {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [creditsDialogOpen, setCreditsDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Helper function to ensure valid role
+  const getValidRole = (role?: string): UserRole => {
+    const validRoles: UserRole[] = ['user', 'manager', 'admin', 'super_admin'];
+    return validRoles.includes(role as UserRole) ? (role as UserRole) : 'user';
+  };
+
   const [editForm, setEditForm] = useState({
     first_name: user.first_name || '',
     last_name: user.last_name || '',
-    role: user.role || 'user',
+    role: getValidRole(user.role),
     user_type: user.user_type || 'demo'
   });
 
@@ -383,7 +390,7 @@ export function CompleteUserTableRow({ user, onUserUpdated }: CompleteUserTableR
             </div>
             <div>
               <Label htmlFor="role">Role</Label>
-              <Select value={editForm.role} onValueChange={(value) => setEditForm({...editForm, role: value})}>
+              <Select value={editForm.role} onValueChange={(value: UserRole) => setEditForm({...editForm, role: value})}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

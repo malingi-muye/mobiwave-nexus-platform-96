@@ -10,8 +10,6 @@ interface MenuItemProps {
 }
 
 export function MenuItem({ item, isActive }: MenuItemProps) {
-  const Icon = item.icon;
-
   return (
     <Link
       to={item.href}
@@ -24,7 +22,9 @@ export function MenuItem({ item, isActive }: MenuItemProps) {
       `}
     >
       <div className="flex items-center gap-3">
-        <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
+        <div className={`${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'}`}>
+          {item.icon}
+        </div>
         <span className="truncate">{item.label}</span>
       </div>
       {item.badge && (

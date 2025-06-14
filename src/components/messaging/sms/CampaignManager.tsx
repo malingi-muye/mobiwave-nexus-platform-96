@@ -4,7 +4,7 @@ import { useCampaigns } from '@/hooks/useCampaigns';
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { useMspaceService } from '@/hooks/useMspaceService';
 import { toast } from 'sonner';
-import { CampaignForm } from './CampaignForm';
+import { QuickSMSForm } from './QuickSMSForm';
 import { CampaignStatus } from './CampaignStatus';
 
 interface CampaignManagerProps {
@@ -14,7 +14,7 @@ interface CampaignManagerProps {
 export function CampaignManager({ onSuccess }: CampaignManagerProps) {
   const [campaignData, setCampaignData] = useState({
     name: '',
-    type: 'sms' as 'sms' | 'email' | 'whatsapp',
+    type: 'sms' as const,
     content: '',
     subject: '',
     recipients: [] as string[]
@@ -68,7 +68,7 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
           campaignId: campaign.id
         });
         
-        toast.success('Campaign sent successfully! Check the Live Tracking tab for real-time updates.');
+        toast.success('SMS campaign sent successfully! Check the Live Tracking tab for real-time updates.');
       } else {
         toast.success(`Campaign ${status === 'draft' ? 'saved as draft' : 'created'} successfully`);
       }
@@ -91,7 +91,7 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
 
   return (
     <div className="space-y-6">
-      <CampaignForm
+      <QuickSMSForm
         campaignData={campaignData}
         setCampaignData={setCampaignData}
         onSubmit={handleSubmit}

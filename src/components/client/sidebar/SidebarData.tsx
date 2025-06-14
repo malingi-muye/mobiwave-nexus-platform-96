@@ -75,6 +75,20 @@ export const sidebarSections: SidebarSection[] = [
         label: "My Subscriptions",
         icon: <CheckSquare className="w-5 h-5" />,
         href: "/my-subscriptions"
+      },
+      {
+        id: 'ussd-apps',
+        title: "USSD Applications",
+        label: "USSD Apps",
+        icon: <Phone className="w-5 h-5" />,
+        href: "/ussd-services"
+      },
+      {
+        id: 'mpesa-integration',
+        title: "M-Pesa Integration",
+        label: "M-Pesa",
+        icon: <CreditCard className="w-5 h-5" />,
+        href: "/mpesa-services"
       }
     ]
   },

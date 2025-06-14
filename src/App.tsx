@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -29,6 +28,8 @@ import BillingDashboard from '@/pages/BillingDashboard';
 import ProfileSettings from '@/pages/ProfileSettings';
 import Settings from '@/pages/Settings';
 import SurveyBuilder from '@/pages/SurveyBuilder';
+import USSDServices from '@/pages/USSDServices';
+import MpesaServices from '@/pages/MpesaServices';
 
 // Admin pages
 import AdminDashboard from '@/pages/AdminDashboard';
@@ -117,6 +118,26 @@ function App() {
               <Route path="/surveys" element={
                 <ProtectedRoute>
                   <SurveyBuilder />
+                </ProtectedRoute>
+              } />
+              <Route path="/services" element={
+                <ProtectedRoute>
+                  <UserServices />
+                </ProtectedRoute>
+              } />
+              <Route path="/my-subscriptions" element={
+                <ProtectedRoute>
+                  <MySubscriptions />
+                </ProtectedRoute>
+              } />
+              <Route path="/ussd-services" element={
+                <ProtectedRoute>
+                  <USSDServices />
+                </ProtectedRoute>
+              } />
+              <Route path="/mpesa-services" element={
+                <ProtectedRoute>
+                  <MpesaServices />
                 </ProtectedRoute>
               } />
 

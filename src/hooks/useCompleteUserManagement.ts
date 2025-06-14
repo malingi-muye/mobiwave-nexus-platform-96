@@ -50,23 +50,36 @@ export const useCompleteUserManagement = (searchTerm: string, roleFilter: string
       console.log('Fetching complete user data...');
       
       try {
-        // Check if we have admin access by attempting to list users
-        console.log('Checking admin access...');
+        // Check if we have admin access by attempting to fetch auth users via Edge Function
+        console.log('Checking admin access via Edge Function...');
         let authUsers: any[] = [];
         let hasAdminAccess = false;
         
         try {
-          const { data: authUsersResponse, error: authError } = await supabase.auth.admin.listUsers();
+          // Get current session for authorization
+          const { data: { session } } = await supabase.auth.getSession();
           
-          if (!authError && authUsersResponse?.users) {
-            authUsers = authUsersResponse.users;
-            hasAdminAccess = true;
-            console.log('Admin access confirmed. Fetched auth users:', authUsers.length);
-          } else {
-            console.log('Admin access denied:', authError?.message || 'Unknown error');
+          if (session) {
+            const response = await fetch('/functions/v1/admin-users', {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${session.access_token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+
+            if (response.ok) {
+              const result = await response.json();
+              authUsers = result.users || [];
+              hasAdminAccess = true;
+              console.log('Admin access confirmed via Edge Function. Fetched auth users:', authUsers.length);
+            } else {
+              const errorData = await response.json();
+              console.log('Admin access denied via Edge Function:', errorData.error);
+            }
           }
         } catch (adminError) {
-          console.log('Admin API not accessible:', adminError);
+          console.log('Edge Function not accessible:', adminError);
         }
 
         // Always fetch profiles and credits

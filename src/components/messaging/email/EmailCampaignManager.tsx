@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Mail, Send, Calendar, Users, Eye, Edit } from 'lucide-react';
 import { toast } from 'sonner';
+import { EmailAutomationWorkflow } from './EmailAutomationWorkflow';
 
 interface EmailTemplate {
   id: string;

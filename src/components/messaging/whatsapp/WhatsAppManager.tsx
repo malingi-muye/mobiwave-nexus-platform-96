@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,8 @@ import { WhatsAppSubscriptionForm } from './WhatsAppSubscriptionForm';
 import { WhatsAppSubscriptionCard } from './WhatsAppSubscriptionCard';
 import { WhatsAppTemplateManager } from './WhatsAppTemplateManager';
 import { WhatsAppMessageList } from './WhatsAppMessageList';
-import { MessageSquare, Plus, Settings, FileText, BarChart } from 'lucide-react';
+import { WhatsAppTemplateApproval } from './WhatsAppTemplateApproval';
+import { MessageSquare, Plus, Settings, FileText, BarChart, CheckCircle } from 'lucide-react';
 
 export function WhatsAppManager() {
   const { subscriptions, isLoading } = useWhatsAppSubscriptions();

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { Plus, GripVertical, Trash2, Eye, Send, FileText, BarChart3, Zap } from 'lucide-react';
 import { toast } from 'sonner';
+import { ConditionalLogicBuilder } from './ConditionalLogicBuilder';
 
 interface FormField {
   id: string;

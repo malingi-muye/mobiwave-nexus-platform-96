@@ -13,9 +13,11 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Balance check request started')
+    
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
-      throw new Error('Authorization required')
+      throw new Error('Authorization header required')
     }
 
     // Create Supabase client
@@ -30,8 +32,11 @@ serve(async (req) => {
     )
     
     if (authError || !user) {
+      console.error('Authentication failed:', authError)
       throw new Error('Invalid authorization')
     }
+
+    console.log('User authenticated:', user.id)
 
     // Get API credentials
     const { data: credentials, error: credError } = await supabase
@@ -43,7 +48,8 @@ serve(async (req) => {
       .single()
 
     if (credError || !credentials) {
-      throw new Error('Mspace API credentials not configured')
+      console.error('Credentials error:', credError)
+      throw new Error('Mspace API credentials not configured. Please configure them in Settings.')
     }
 
     const config = credentials.additional_config as any
@@ -51,20 +57,78 @@ serve(async (req) => {
     const username = config?.username
 
     if (!apiKey || !username) {
-      throw new Error('Incomplete Mspace API credentials')
+      throw new Error('Incomplete Mspace API credentials. API key and username are required.')
     }
 
-    // Check balance with Mspace API
-    const response = await fetch(
-      `https://api.mspace.co.ke/smsapi/v2/balance/apikey=${apiKey}/username=${username}`
-    )
+    console.log('Checking balance for user:', username)
 
-    if (!response.ok) {
-      throw new Error(`Failed to check balance: ${response.statusText}`)
+    // Try POST method first (more reliable according to docs)
+    let balanceData;
+    try {
+      const postResponse = await fetch('https://api.mspace.co.ke/smsapi/v2/balance', {
+        method: 'POST',
+        headers: {
+          'apikey': apiKey,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ username })
+      })
+
+      if (postResponse.ok) {
+        const responseText = await postResponse.text()
+        console.log('POST Balance response:', responseText)
+        
+        // Parse response - it might be just a number or JSON
+        try {
+          balanceData = JSON.parse(responseText)
+        } catch {
+          // If not JSON, treat as plain number
+          const balance = parseInt(responseText.trim())
+          if (isNaN(balance)) {
+            throw new Error('Invalid balance response format')
+          }
+          balanceData = { balance, status: 'success' }
+        }
+      } else {
+        throw new Error(`POST request failed: ${postResponse.statusText}`)
+      }
+    } catch (postError) {
+      console.log('POST method failed, trying GET method:', postError)
+      
+      // Fallback to GET method
+      const getResponse = await fetch(
+        `https://api.mspace.co.ke/smsapi/v2/balance/apikey=${apiKey}/username=${username}`
+      )
+
+      if (!getResponse.ok) {
+        throw new Error(`Both POST and GET requests failed. Last error: ${getResponse.statusText}`)
+      }
+
+      const responseText = await getResponse.text()
+      console.log('GET Balance response:', responseText)
+      
+      try {
+        balanceData = JSON.parse(responseText)
+      } catch {
+        const balance = parseInt(responseText.trim())
+        if (isNaN(balance)) {
+          throw new Error('Invalid balance response format')
+        }
+        balanceData = { balance, status: 'success' }
+      }
     }
 
-    const balanceData = await response.json()
-    console.log('Balance response:', balanceData)
+    // Ensure we have a valid balance
+    if (typeof balanceData.balance === 'undefined' && typeof balanceData === 'number') {
+      balanceData = { balance: balanceData, status: 'success' }
+    }
+
+    if (typeof balanceData.balance === 'undefined') {
+      throw new Error('Balance not found in API response')
+    }
+
+    console.log('Final balance data:', balanceData)
 
     return new Response(JSON.stringify(balanceData), { 
       status: 200, 
@@ -74,7 +138,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in mspace-balance function:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        timestamp: new Date().toISOString()
+      }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

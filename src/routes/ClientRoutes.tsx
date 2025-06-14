@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Route } from 'react-router-dom';
 import { ProtectedRoute } from '../components/auth/ProtectedRoute';
@@ -17,6 +16,7 @@ import UserServices from '../pages/UserServices';
 import USSDServices from '../pages/USSDServices';
 import MpesaServices from '../pages/MpesaServices';
 import MySubscriptions from '../pages/MySubscriptions';
+import ServiceRequests from '../pages/ServiceRequests';
 
 export const clientRoutes = [
   <Route
@@ -151,6 +151,15 @@ export const clientRoutes = [
     element={
       <ProtectedRoute>
         <ProfileSettings />
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="service-requests"
+    path="/service-requests"
+    element={
+      <ProtectedRoute>
+        <ServiceRequests />
       </ProtectedRoute>
     }
   />

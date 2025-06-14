@@ -582,6 +582,45 @@ export type Database = {
         }
         Relationships: []
       }
+      service_activation_requests: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          id: string
+          rejection_reason: string | null
+          requested_at: string
+          service_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          rejection_reason?: string | null
+          requested_at?: string
+          service_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          rejection_reason?: string | null
+          requested_at?: string
+          service_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       service_desk_subscriptions: {
         Row: {
           created_at: string | null
@@ -1082,6 +1121,42 @@ export type Database = {
           },
         ]
       }
+      user_service_activations: {
+        Row: {
+          activated_at: string
+          activated_by: string | null
+          created_at: string
+          deactivated_at: string | null
+          id: string
+          is_active: boolean
+          service_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activated_at?: string
+          activated_by?: string | null
+          created_at?: string
+          deactivated_at?: string | null
+          id?: string
+          is_active?: boolean
+          service_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activated_at?: string
+          activated_by?: string | null
+          created_at?: string
+          deactivated_at?: string | null
+          id?: string
+          is_active?: boolean
+          service_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_service_subscriptions: {
         Row: {
           activated_at: string | null
@@ -1424,6 +1499,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_service_request: {
+        Args: { request_id: string; admin_user_id?: string }
+        Returns: boolean
+      }
       generate_ticket_number: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1454,6 +1533,14 @@ export type Database = {
       log_security_event: {
         Args: { p_event_type: string; p_severity?: string; p_details?: Json }
         Returns: string
+      }
+      reject_service_request: {
+        Args: {
+          request_id: string
+          rejection_reason?: string
+          admin_user_id?: string
+        }
+        Returns: boolean
       }
       sync_existing_users: {
         Args: Record<PropertyKey, never>

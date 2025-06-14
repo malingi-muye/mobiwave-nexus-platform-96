@@ -3,123 +3,91 @@ import React from 'react';
 import { 
   BarChart3, 
   MessageSquare, 
-  Mail, 
-  MessageCircle, 
   Users, 
   CreditCard, 
   Settings, 
-  User,
-  Home,
-  Send,
-  TrendingUp,
-  Phone
+  Phone,
+  Mail,
+  FileText,
+  Headphones,
+  Gift,
+  ShoppingCart,
+  CheckSquare
 } from 'lucide-react';
 
 export interface SidebarItem {
-  id: string;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  href: string;
-  badge?: string | number;
-  isActive?: boolean;
-}
-
-export interface SidebarSection {
-  id: string;
   title: string;
-  items: SidebarItem[];
+  icon: React.ReactNode;
+  href?: string;
+  submenu?: SidebarItem[];
 }
 
-export const sidebarSections: SidebarSection[] = [
+export const sidebarData: SidebarItem[] = [
   {
-    id: 'overview',
-    title: 'Overview',
-    items: [
+    title: "Messaging",
+    icon: <MessageSquare className="w-5 h-5" />,
+    submenu: [
       {
-        id: 'dashboard',
-        label: 'Dashboard',
-        icon: Home,
-        href: '/dashboard'
+        title: "Bulk SMS",
+        icon: <Phone className="w-4 h-4" />,
+        href: "/bulk-sms"
+      },
+      {
+        title: "Email Campaigns", 
+        icon: <Mail className="w-4 h-4" />,
+        href: "/email-campaigns"
+      },
+      {
+        title: "WhatsApp",
+        icon: <MessageSquare className="w-4 h-4" />,
+        href: "/whatsapp-campaigns"
       }
     ]
   },
   {
-    id: 'messaging',
-    title: 'Messaging',
-    items: [
+    title: "Services",
+    icon: <ShoppingCart className="w-5 h-5" />,
+    submenu: [
       {
-        id: 'sms',
-        label: 'SMS Campaigns',
-        icon: MessageSquare,
-        href: '/bulk-sms',
-        badge: 'Hot'
+        title: "Browse Services",
+        icon: <ShoppingCart className="w-4 h-4" />,
+        href: "/services"
       },
       {
-        id: 'email',
-        label: 'Email Campaigns',
-        icon: Mail,
-        href: '/email-campaigns'
-      },
-      {
-        id: 'whatsapp',
-        label: 'WhatsApp',
-        icon: MessageCircle,
-        href: '/whatsapp-campaigns'
-      },
-      {
-        id: 'voice',
-        label: 'Voice Calls',
-        icon: Phone,
-        href: '/voice-campaigns'
+        title: "My Subscriptions",
+        icon: <CheckSquare className="w-4 h-4" />,
+        href: "/my-subscriptions"
       }
     ]
   },
   {
-    id: 'management',
-    title: 'Management',
-    items: [
-      {
-        id: 'contacts',
-        label: 'Contacts',
-        icon: Users,
-        href: '/contacts'
-      },
-      {
-        id: 'analytics',
-        label: 'Analytics',
-        icon: TrendingUp,
-        href: '/analytics'
-      },
-      {
-        id: 'surveys',
-        label: 'Surveys',
-        icon: BarChart3,
-        href: '/survey-builder'
-      }
-    ]
+    title: "Contacts",
+    icon: <Users className="w-5 h-5" />,
+    href: "/contacts"
   },
   {
-    id: 'account',
-    title: 'Account',
-    items: [
-      {
-        id: 'billing',
-        label: 'Billing & Credits',
-        icon: CreditCard,
-        href: '/billing'
-      },
-      {
-        id: 'profile',
-        label: 'Profile',
-        icon: User,
-        href: '/profile-settings'
-      },
-      {
-        id: 'settings',
-        label: 'Settings',
-        icon: Settings,
-        href: '/settings'
-      }
-    ]
+    title: "Analytics",
+    icon: <BarChart3 className="w-5 h-5" />,
+    href: "/analytics"
+  },
+  {
+    title: "Surveys",
+    icon: <FileText className="w-5 h-5" />,
+    href: "/surveys"
+  },
+  {
+    title: "Billing",
+    icon: <CreditCard className="w-5 h-5" />,
+    href: "/billing"
+  },
+  {
+    title: "Support",
+    icon: <Headphones className="w-5 h-5" />,
+    href: "/support"
+  },
+  {
+    title: "Settings",
+    icon: <Settings className="w-5 h-5" />,
+    href: "/settings"
   }
 ];

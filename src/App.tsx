@@ -21,6 +21,8 @@ import Dashboard from '@/pages/Dashboard';
 import { BulkSMS } from '@/components/messaging/BulkSMS';
 import EmailCampaigns from '@/pages/EmailCampaigns';
 import WhatsAppCampaigns from '@/pages/WhatsAppCampaigns';
+import UserServices from '@/pages/UserServices';
+import MySubscriptions from '@/pages/MySubscriptions';
 import Contacts from '@/pages/Contacts';
 import CampaignAnalytics from '@/pages/CampaignAnalytics';
 import BillingDashboard from '@/pages/BillingDashboard';

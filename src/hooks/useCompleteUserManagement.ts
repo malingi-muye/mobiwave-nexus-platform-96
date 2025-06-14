@@ -60,11 +60,15 @@ export const useCompleteUserManagement = (searchTerm: string, roleFilter: string
           const { data: { session } } = await supabase.auth.getSession();
           
           if (session) {
-            const response = await fetch('/functions/v1/admin-users', {
+            // Use the correct Edge Function URL format
+            const functionUrl = `https://xfwtjndfclckgvpvgiaj.supabase.co/functions/v1/admin-users`;
+            
+            const response = await fetch(functionUrl, {
               method: 'GET',
               headers: {
                 'Authorization': `Bearer ${session.access_token}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhmd3RqbmRmY2xja2d2cHZnaWFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NDUyNDIsImV4cCI6MjA2NTEyMTI0Mn0.8ZUZVBHkq9vLuMJJmIECXx6-q40lAJ40C5T8IL3yrNc'
               }
             });
 
@@ -74,9 +78,11 @@ export const useCompleteUserManagement = (searchTerm: string, roleFilter: string
               hasAdminAccess = true;
               console.log('Admin access confirmed via Edge Function. Fetched auth users:', authUsers.length);
             } else {
-              const errorData = await response.json();
-              console.log('Admin access denied via Edge Function:', errorData.error);
+              const errorText = await response.text();
+              console.log('Admin access denied via Edge Function:', response.status, errorText);
             }
+          } else {
+            console.log('No active session found');
           }
         } catch (adminError) {
           console.log('Edge Function not accessible:', adminError);
@@ -103,6 +109,7 @@ export const useCompleteUserManagement = (searchTerm: string, roleFilter: string
 
         if (hasAdminAccess && authUsers.length > 0) {
           // If we have admin access, combine auth users with profiles
+          console.log('Using auth + profiles mode');
           combinedUsers = authUsers.map(authUser => {
             const profile = profileMap.get(authUser.id);
             const userCredits = creditsMap.get(authUser.id);

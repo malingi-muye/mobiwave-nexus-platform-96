@@ -86,6 +86,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
         
+        // Handle session expiry gracefully
+        if (event === 'SIGNED_OUT' || !session) {
+          setSession(null);
+          setUser(null);
+          setUserRole(null);
+          setIsLoading(false);
+          return;
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -112,7 +121,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         if (error) {
           console.error('Error getting session:', error);
-        } else if (session?.user) {
+          setIsLoading(false);
+          return;
+        }
+        
+        if (session?.user) {
           console.log('Existing session found:', !!session);
           setSession(session);
           setUser(session.user);

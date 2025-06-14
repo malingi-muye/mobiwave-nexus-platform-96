@@ -25,9 +25,9 @@ function App() {
         <Router>
           <div className="min-h-screen bg-gray-50">
             <Routes>
-              <PublicRoutes />
-              <ClientRoutes />
-              <AdminRoutes />
+              {PublicRoutes()}
+              {ClientRoutes()}
+              {AdminRoutes()}
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />

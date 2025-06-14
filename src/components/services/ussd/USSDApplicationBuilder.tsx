@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Edit, Phone, ArrowRight } from 'lucide-react';
+import { Tables } from '@/integrations/supabase/types';
 
 interface MenuNode {
   id: string;
@@ -18,6 +19,9 @@ interface MenuNode {
   isEndNode: boolean;
   response?: string;
 }
+
+// Use the database type directly
+type USSDApplicationFromDB = Tables<'mspace_ussd_applications'>;
 
 interface USSDApplication {
   id: string;
@@ -34,7 +38,15 @@ const fetchUSSDApplications = async (): Promise<USSDApplication[]> => {
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return data || [];
+  
+  // Convert the database records to our interface
+  return (data || []).map((item: USSDApplicationFromDB) => ({
+    id: item.id,
+    service_code: item.service_code,
+    menu_structure: Array.isArray(item.menu_structure) ? item.menu_structure as MenuNode[] : [],
+    callback_url: item.callback_url,
+    status: item.status || 'pending'
+  }));
 };
 
 export function USSDApplicationBuilder() {
@@ -62,7 +74,7 @@ export function USSDApplicationBuilder() {
   });
 
   const createApplication = useMutation({
-    mutationFn: async (appData: Partial<USSDApplication>) => {
+    mutationFn: async (appData: { service_code: string; menu_structure: MenuNode[]; callback_url: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
@@ -88,7 +100,7 @@ export function USSDApplicationBuilder() {
         .insert({
           subscription_id: subscription.id,
           service_code: appData.service_code,
-          menu_structure: appData.menu_structure,
+          menu_structure: appData.menu_structure as any, // Cast to Json type
           callback_url: appData.callback_url,
           status: 'pending'
         })
@@ -352,7 +364,7 @@ export function USSDApplicationBuilder() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Menu Nodes:</p>
-                  <p className="text-sm">{Array.isArray(app.menu_structure) ? app.menu_structure.length : 0} menus configured</p>
+                  <p className="text-sm">{app.menu_structure.length} menus configured</p>
                 </div>
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" className="flex-1">

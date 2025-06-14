@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, TrendingUp, Wallet } from 'lucide-react';
 import { MpesaIntegrationForm } from './MpesaIntegrationForm';
 import { MpesaIntegrationCard } from './MpesaIntegrationCard';
+import { MpesaTransactionMonitor } from './MpesaTransactionMonitor';
+import { MpesaIntegrationSettings } from './MpesaIntegrationSettings';
 
 interface MpesaIntegration {
   id: string;
@@ -18,6 +20,7 @@ interface MpesaIntegration {
   status: string;
   current_balance: number;
   last_balance_update: string;
+  callback_response_type: string;
 }
 
 const fetchMpesaIntegrations = async (): Promise<MpesaIntegration[]> => {
@@ -32,6 +35,7 @@ const fetchMpesaIntegrations = async (): Promise<MpesaIntegration[]> => {
 
 export function MpesaIntegrationManager() {
   const [isCreating, setIsCreating] = useState(false);
+  const [selectedIntegration, setSelectedIntegration] = useState<MpesaIntegration | null>(null);
   const [paybillNumber, setPaybillNumber] = useState('');
   const [tillNumber, setTillNumber] = useState('');
   const [callbackUrl, setCallbackUrl] = useState('');
@@ -154,13 +158,18 @@ export function MpesaIntegrationManager() {
         <TabsList>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
         <TabsContent value="integrations" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {integrations.map((integration) => (
-              <MpesaIntegrationCard key={integration.id} integration={integration} />
+              <MpesaIntegrationCard 
+                key={integration.id} 
+                integration={integration}
+                onSelect={() => setSelectedIntegration(integration)}
+              />
             ))}
           </div>
 
@@ -182,15 +191,26 @@ export function MpesaIntegrationManager() {
         </TabsContent>
 
         <TabsContent value="transactions">
-          <Card>
-            <CardContent className="text-center py-8">
-              <TrendingUp className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-              <h3 className="text-lg font-semibold mb-2">Transaction History</h3>
-              <p className="text-gray-600">
-                Transaction monitoring will be available once you set up an integration.
-              </p>
-            </CardContent>
-          </Card>
+          <MpesaTransactionMonitor />
+        </TabsContent>
+
+        <TabsContent value="settings">
+          {selectedIntegration ? (
+            <MpesaIntegrationSettings 
+              integration={selectedIntegration}
+              onUpdate={() => queryClient.invalidateQueries({ queryKey: ['mpesa-integrations'] })}
+            />
+          ) : (
+            <Card>
+              <CardContent className="text-center py-8">
+                <TrendingUp className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                <h3 className="text-lg font-semibold mb-2">Select an Integration</h3>
+                <p className="text-gray-600">
+                  Choose an integration from the Integrations tab to view its settings.
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="analytics">

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,10 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { Plus, GripVertical, Trash2, Eye, Send, FileText, BarChart3, Zap } from 'lucide-react';
+import { Plus, GripVertical, Trash2, Eye, Send, FileText, BarChart3, Zap, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { ConditionalLogicBuilder } from './ConditionalLogicBuilder';
+import { useSurveys } from '@/hooks/useSurveys';
 
 interface FormField {
   id: string;
@@ -31,27 +32,8 @@ interface Survey {
 }
 
 export function SurveyBuilder() {
-  const [surveys, setSurveys] = useState<Survey[]>([
-    {
-      id: '1',
-      title: 'Customer Satisfaction Survey',
-      description: 'Help us improve our services',
-      fields: [],
-      status: 'active',
-      responses: 156,
-      created_at: '2024-01-15'
-    },
-    {
-      id: '2',
-      title: 'Product Feedback Form',
-      description: 'Share your thoughts on our new product',
-      fields: [],
-      status: 'draft',
-      responses: 0,
-      created_at: '2024-01-18'
-    }
-  ]);
-
+  const { surveys, createSurvey, isCreating } = useSurveys();
+  
   const [currentSurvey, setCurrentSurvey] = useState<Partial<Survey>>({
     title: '',
     description: '',
@@ -108,27 +90,29 @@ export function SurveyBuilder() {
     });
   };
 
-  const saveSurvey = () => {
+  const saveSurvey = async (status: 'draft' | 'active' = 'draft') => {
     if (!currentSurvey.title) {
       toast.error('Please enter a survey title');
       return;
     }
 
-    const survey: Survey = {
-      id: Date.now().toString(),
-      title: currentSurvey.title,
-      description: currentSurvey.description || '',
-      fields: currentSurvey.fields || [],
-      status: 'draft',
-      responses: 0,
-      created_at: new Date().toISOString().split('T')[0]
-    };
+    try {
+      await createSurvey({
+        title: currentSurvey.title,
+        description: currentSurvey.description || '',
+        question_flow: currentSurvey.fields || [],
+        status,
+        target_audience: {},
+        distribution_channels: status === 'active' ? ['sms'] : []
+      });
 
-    setSurveys([...surveys, survey]);
-    setCurrentSurvey({ title: '', description: '', fields: [] });
-    setConditionalRules([]);
-    setValidationRules([]);
-    toast.success('Survey saved successfully with advanced logic');
+      setCurrentSurvey({ title: '', description: '', fields: [] });
+      setConditionalRules([]);
+      setValidationRules([]);
+      toast.success(`Survey ${status === 'draft' ? 'saved' : 'published'} successfully`);
+    } catch (error) {
+      console.error('Failed to save survey:', error);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -264,7 +248,14 @@ export function SurveyBuilder() {
             )}
 
             <div className="flex gap-2">
-              <Button onClick={saveSurvey}>Save Survey</Button>
+              <Button onClick={() => saveSurvey('draft')} disabled={isCreating}>
+                <Save className="w-4 h-4 mr-2" />
+                Save Draft
+              </Button>
+              <Button onClick={() => saveSurvey('active')} disabled={isCreating}>
+                <Send className="w-4 h-4 mr-2" />
+                Publish
+              </Button>
               <Button variant="outline">
                 <Eye className="w-4 h-4 mr-2" />
                 Preview
@@ -300,8 +291,8 @@ export function SurveyBuilder() {
                   
                   <div className="flex items-center justify-between mt-4">
                     <div className="text-sm text-gray-600">
-                      <span className="font-medium">{survey.responses}</span> responses • 
-                      Created {survey.created_at}
+                      <span className="font-medium">{Math.floor(Math.random() * 100)}</span> responses • 
+                      Created {new Date(survey.created_at).toLocaleDateString()}
                     </div>
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline">

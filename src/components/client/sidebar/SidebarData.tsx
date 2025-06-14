@@ -1,152 +1,114 @@
-import React from 'react';
+
 import { 
-  BarChart3, 
+  LayoutDashboard, 
   MessageSquare, 
   Users, 
-  CreditCard, 
+  BarChart3, 
   Settings, 
-  Phone,
+  CreditCard,
+  MessageCircle,
   Mail,
+  Smartphone,
   FileText,
-  Headphones,
+  HelpCircle,
   Gift,
-  ShoppingCart,
-  CheckSquare
+  Headphones,
+  Zap,
+  DollarSign,
+  Grid3X3
 } from 'lucide-react';
 
-export interface SidebarItem {
-  id: string;
-  title: string;
-  label: string;
-  icon: React.ReactNode;
-  href: string;
-  badge?: string;
-  submenu?: SidebarItem[];
-}
-
-export interface SidebarSection {
-  id: string;
-  title: string;
-  items: SidebarItem[];
-}
-
-export const sidebarSections: SidebarSection[] = [
+export const sidebarData = [
   {
-    id: 'messaging',
-    title: 'Communication',
-    items: [
+    title: 'Dashboard',
+    path: '/dashboard',
+    icon: LayoutDashboard,
+    group: 'main'
+  },
+  {
+    title: 'Messaging',
+    icon: MessageSquare,
+    group: 'messaging',
+    submenu: [
       {
-        id: 'bulk-sms',
-        title: "Bulk SMS",
-        label: "Bulk SMS",
-        icon: <Phone className="w-5 h-5" />,
-        href: "/bulk-sms"
+        title: 'SMS Campaigns',
+        path: '/bulk-sms',
+        icon: Smartphone
       },
       {
-        id: 'email-campaigns',
-        title: "Email Campaigns", 
-        label: "Email Campaigns",
-        icon: <Mail className="w-5 h-5" />,
-        href: "/email-campaigns"
+        title: 'WhatsApp',
+        path: '/whatsapp',
+        icon: MessageCircle
       },
       {
-        id: 'whatsapp',
-        title: "WhatsApp",
-        label: "WhatsApp",
-        icon: <MessageSquare className="w-5 h-5" />,
-        href: "/whatsapp-campaigns"
+        title: 'Email Campaigns',
+        path: '/email',
+        icon: Mail
       }
     ]
   },
   {
-    id: 'services',
+    title: 'Surveys & Forms',
+    path: '/surveys',
+    icon: FileText,
+    group: 'services'
+  },
+  {
+    title: 'Service Desk',
+    path: '/service-desk',
+    icon: Headphones,
+    group: 'services'
+  },
+  {
+    title: 'Rewards System',
+    path: '/rewards',
+    icon: Gift,
+    group: 'services'
+  },
+  {
     title: 'Services',
-    items: [
+    icon: Grid3X3,
+    group: 'services',
+    submenu: [
       {
-        id: 'browse-services',
-        title: "Browse Services",
-        label: "Browse Services",
-        icon: <ShoppingCart className="w-5 h-5" />,
-        href: "/services"
+        title: 'USSD Services',
+        path: '/ussd',
+        icon: Smartphone
       },
       {
-        id: 'my-subscriptions',
-        title: "My Subscriptions",
-        label: "My Subscriptions",
-        icon: <CheckSquare className="w-5 h-5" />,
-        href: "/my-subscriptions"
+        title: 'M-Pesa Integration',
+        path: '/mpesa',
+        icon: DollarSign
       },
       {
-        id: 'ussd-apps',
-        title: "USSD Applications",
-        label: "USSD Apps",
-        icon: <Phone className="w-5 h-5" />,
-        href: "/ussd-services"
-      },
-      {
-        id: 'mpesa-integration',
-        title: "M-Pesa Integration",
-        label: "M-Pesa",
-        icon: <CreditCard className="w-5 h-5" />,
-        href: "/mpesa-services"
+        title: 'My Subscriptions',
+        path: '/subscriptions',
+        icon: Zap
       }
     ]
   },
   {
-    id: 'management',
-    title: 'Management',
-    items: [
-      {
-        id: 'contacts',
-        title: "Contacts",
-        label: "Contacts",
-        icon: <Users className="w-5 h-5" />,
-        href: "/contacts"
-      },
-      {
-        id: 'analytics',
-        title: "Analytics",
-        label: "Analytics",
-        icon: <BarChart3 className="w-5 h-5" />,
-        href: "/analytics"
-      },
-      {
-        id: 'surveys',
-        title: "Surveys",
-        label: "Surveys",
-        icon: <FileText className="w-5 h-5" />,
-        href: "/surveys"
-      }
-    ]
+    title: 'Contacts',
+    path: '/contacts',
+    icon: Users,
+    group: 'management'
   },
   {
-    id: 'account',
-    title: 'Account',
-    items: [
-      {
-        id: 'billing',
-        title: "Billing",
-        label: "Billing",
-        icon: <CreditCard className="w-5 h-5" />,
-        href: "/billing"
-      },
-      {
-        id: 'support',
-        title: "Support",
-        label: "Support",
-        icon: <Headphones className="w-5 h-5" />,
-        href: "/support"
-      },
-      {
-        id: 'settings',
-        title: "Settings",
-        label: "Settings",
-        icon: <Settings className="w-5 h-5" />,
-        href: "/settings"
-      }
-    ]
+    title: 'Analytics',
+    path: '/analytics',
+    icon: BarChart3,
+    group: 'analytics'
+  },
+  {
+    title: 'Billing',
+    path: '/billing',
+    icon: CreditCard,
+    group: 'account'
+  },
+  {
+    title: 'Settings',
+    path: '/profile',
+    icon: Settings,
+    group: 'account'
   }
 ];
-
-// Keep legacy export for backward compatibility
-export const sidebarData = sidebarSections.flatMap(section => section.items);

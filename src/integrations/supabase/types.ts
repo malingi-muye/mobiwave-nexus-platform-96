@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          revenue: number | null
+          service_type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          revenue?: number | null
+          service_type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          revenue?: number | null
+          service_type?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       api_credentials: {
         Row: {
           additional_config: Json | null
@@ -44,6 +74,83 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      api_keys: {
+        Row: {
+          api_key: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          key_name: string
+          last_used_at: string | null
+          permissions: Json
+          rate_limit: number
+          user_id: string
+        }
+        Insert: {
+          api_key: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          key_name: string
+          last_used_at?: string | null
+          permissions?: Json
+          rate_limit?: number
+          user_id: string
+        }
+        Update: {
+          api_key?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          key_name?: string
+          last_used_at?: string | null
+          permissions?: Json
+          rate_limit?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      api_usage: {
+        Row: {
+          api_key_id: string
+          created_at: string
+          endpoint: string
+          id: string
+          method: string
+          response_time_ms: number | null
+          status_code: number
+        }
+        Insert: {
+          api_key_id: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          method: string
+          response_time_ms?: number | null
+          status_code: number
+        }
+        Update: {
+          api_key_id?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          method?: string
+          response_time_ms?: number | null
+          status_code?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_usage_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       audit_logs: {
         Row: {
@@ -406,6 +513,101 @@ export type Database = {
         }
         Relationships: []
       }
+      reward_campaigns: {
+        Row: {
+          amount: number
+          budget: number
+          created_at: string
+          criteria: Json
+          id: string
+          name: string
+          reward_type: string
+          spent: number
+          status: string
+          successful_distributions: number
+          total_recipients: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          budget: number
+          created_at?: string
+          criteria?: Json
+          id?: string
+          name: string
+          reward_type: string
+          spent?: number
+          status?: string
+          successful_distributions?: number
+          total_recipients?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          budget?: number
+          created_at?: string
+          criteria?: Json
+          id?: string
+          name?: string
+          reward_type?: string
+          spent?: number
+          status?: string
+          successful_distributions?: number
+          total_recipients?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reward_distributions: {
+        Row: {
+          amount: number
+          campaign_id: string
+          created_at: string
+          distributed_at: string | null
+          error_message: string | null
+          id: string
+          provider_reference: string | null
+          recipient_phone: string
+          reward_type: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          campaign_id: string
+          created_at?: string
+          distributed_at?: string | null
+          error_message?: string | null
+          id?: string
+          provider_reference?: string | null
+          recipient_phone: string
+          reward_type: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          campaign_id?: string
+          created_at?: string
+          distributed_at?: string | null
+          error_message?: string | null
+          id?: string
+          provider_reference?: string | null
+          recipient_phone?: string
+          reward_type?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reward_distributions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "reward_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       roles: {
         Row: {
           created_at: string | null
@@ -509,6 +711,68 @@ export type Database = {
             columns: ["subscription_id"]
             isOneToOne: false
             referencedRelation: "user_service_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_desk_tickets: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          created_by: string
+          customer_email: string | null
+          customer_phone: string | null
+          description: string
+          id: string
+          priority: string
+          resolved_at: string | null
+          sla_due_at: string | null
+          status: string
+          subscription_id: string
+          ticket_number: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by: string
+          customer_email?: string | null
+          customer_phone?: string | null
+          description: string
+          id?: string
+          priority?: string
+          resolved_at?: string | null
+          sla_due_at?: string | null
+          status?: string
+          subscription_id: string
+          ticket_number: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string
+          customer_email?: string | null
+          customer_phone?: string | null
+          description?: string
+          id?: string
+          priority?: string
+          resolved_at?: string | null
+          sla_due_at?: string | null
+          status?: string
+          subscription_id?: string
+          ticket_number?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_desk_tickets_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "service_desk_subscriptions"
             referencedColumns: ["id"]
           },
         ]
@@ -688,6 +952,95 @@ export type Database = {
           },
         ]
       }
+      survey_responses: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          id: string
+          ip_address: unknown | null
+          respondent_phone: string
+          responses: Json
+          started_at: string
+          survey_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          respondent_phone: string
+          responses?: Json
+          started_at?: string
+          survey_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          respondent_phone?: string
+          responses?: Json
+          started_at?: string
+          survey_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_responses_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      surveys: {
+        Row: {
+          created_at: string
+          description: string | null
+          distribution_channels: Json | null
+          expires_at: string | null
+          id: string
+          published_at: string | null
+          question_flow: Json
+          status: string
+          target_audience: Json | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          distribution_channels?: Json | null
+          expires_at?: string | null
+          id?: string
+          published_at?: string | null
+          question_flow?: Json
+          status?: string
+          target_audience?: Json | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          distribution_channels?: Json | null
+          expires_at?: string | null
+          id?: string
+          published_at?: string | null
+          question_flow?: Json
+          status?: string
+          target_audience?: Json | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       system_audit_logs: {
         Row: {
           action: string
@@ -726,6 +1079,44 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      ticket_activities: {
+        Row: {
+          activity_type: string
+          content: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          ticket_id: string
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          ticket_id: string
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          ticket_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_activities_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "service_desk_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_credits: {
         Row: {
@@ -1128,8 +1519,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_ticket_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      log_analytics_event: {
+        Args: {
+          p_event_type: string
+          p_service_type?: string
+          p_metadata?: Json
+          p_revenue?: number
+        }
         Returns: string
       }
       log_audit_event: {

@@ -6,6 +6,7 @@ import { TabNavigation } from './sms/TabNavigation';
 import { EnhancedRecipientManager } from './sms/EnhancedRecipientManager';
 import { CampaignScheduler } from './sms/CampaignScheduler';
 import { DeliveryTracker } from './sms/DeliveryTracker';
+import { DeliveryTrackerEnhanced } from './sms/DeliveryTrackerEnhanced';
 import { CampaignHistory } from './sms/CampaignHistory';
 import { CampaignManager } from './sms/CampaignManager';
 import { RealTimeTracker } from './sms/RealTimeTracker';
@@ -120,8 +121,12 @@ export function BulkSMS() {
           <TabsContent value="tracking" className="mt-6">
             <div className="space-y-6">
               <RealTimeTracker />
-              <DeliveryTracker campaigns={[currentCampaign].filter(Boolean)} />
+              <DeliveryTrackerEnhanced />
             </div>
+          </TabsContent>
+
+          <TabsContent value="legacy-tracking" className="mt-6">
+            <DeliveryTracker campaigns={[currentCampaign].filter(Boolean)} />
           </TabsContent>
 
           <TabsContent value="analytics" className="mt-6">

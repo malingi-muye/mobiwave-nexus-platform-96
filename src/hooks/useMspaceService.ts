@@ -46,13 +46,23 @@ export const useMspaceService = () => {
   };
 
   return {
+    // SMS Sending
     sendSMS,
+    
+    // Balance checking
     checkBalance: balance.checkBalance,
+    
+    // Delivery reporting
     getDeliveryReport: delivery.getDeliveryReport,
+    getBatchDeliveryReports: delivery.getBatchDeliveryReports,
+    
+    // Account management
     querySubAccounts: accounts.querySubAccounts,
     queryResellerClients: accounts.queryResellerClients,
     topUpSubAccount: accounts.topUpSubAccount,
     topUpResellerClient: accounts.topUpResellerClient,
+    
+    // Loading state
     isLoading: isLoading || balance.isLoading || delivery.isLoading || accounts.isLoading
   };
 };

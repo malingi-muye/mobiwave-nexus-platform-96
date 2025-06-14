@@ -13,9 +13,12 @@ serve(async (req) => {
   }
 
   try {
-    const { messageId } = await req.json()
-    if (!messageId) {
-      throw new Error('Message ID is required')
+    const requestBody = await req.json()
+    const { messageId, messageIds, batchMode } = requestBody
+    
+    // Either messageId (single) or messageIds (batch) must be provided
+    if (!messageId && (!messageIds || !Array.isArray(messageIds) || messageIds.length === 0)) {
+      throw new Error('Either messageId or messageIds array is required')
     }
 
     const authHeader = req.headers.get('Authorization')
@@ -59,25 +62,30 @@ serve(async (req) => {
       throw new Error('Incomplete Mspace API credentials')
     }
 
-    // Get delivery report from Mspace API
-    const response = await fetch('https://api.mspace.co.ke/smsapi/v2/deliveryreport', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'apikey': apiKey
-      },
-      body: JSON.stringify({
-        username,
-        messageId
+    // Handle batch mode
+    if (batchMode && messageIds) {
+      const results = []
+      
+      for (const id of messageIds) {
+        try {
+          const response = await fetchDeliveryReport(id, username, apiKey)
+          if (response && response.message && response.message.length > 0) {
+            results.push(response.message[0])
+          }
+        } catch (error) {
+          console.error(`Error getting delivery report for messageId ${id}:`, error)
+          // Continue with next message ID even if one fails
+        }
+      }
+      
+      return new Response(JSON.stringify(results), { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
-    })
-
-    if (!response.ok) {
-      throw new Error(`Failed to get delivery report: ${response.statusText}`)
     }
-
-    const reportData = await response.json()
+    
+    // Handle single mode
+    const reportData = await fetchDeliveryReport(messageId, username, apiKey)
     console.log('Delivery report response:', reportData)
 
     return new Response(JSON.stringify(reportData), { 
@@ -96,3 +104,25 @@ serve(async (req) => {
     )
   }
 })
+
+async function fetchDeliveryReport(messageId: string, username: string, apiKey: string) {
+  // Get delivery report from Mspace API
+  const response = await fetch('https://api.mspace.co.ke/smsapi/v2/deliveryreport', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'apikey': apiKey
+    },
+    body: JSON.stringify({
+      username,
+      messageId
+    })
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to get delivery report: ${response.statusText}`)
+  }
+
+  return await response.json()
+}

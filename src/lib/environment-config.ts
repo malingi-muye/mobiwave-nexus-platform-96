@@ -20,6 +20,11 @@ interface EnvironmentConfig {
       requireSpecialChars: boolean;
     };
   };
+  logging: {
+    level: 'debug' | 'info' | 'warn' | 'error';
+    enableConsole: boolean;
+    enableRemote: boolean;
+  };
 }
 
 class EnvironmentManager {
@@ -47,6 +52,11 @@ class EnvironmentManager {
           requireNumbers: true,
           requireSpecialChars: true
         }
+      },
+      logging: {
+        level: 'info',
+        enableConsole: true,
+        enableRemote: false
       }
     };
   }

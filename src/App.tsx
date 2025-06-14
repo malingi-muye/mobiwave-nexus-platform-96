@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -34,10 +35,12 @@ import MpesaServices from '@/pages/MpesaServices';
 // Admin pages
 import AdminDashboard from '@/pages/AdminDashboard';
 import UserManagement from '@/pages/admin/UserManagement';
+import EnhancedUserManagement from '@/pages/admin/EnhancedUserManagement';
 import UserCreation from '@/pages/admin/UserCreation';
 import ServicesManagement from '@/pages/admin/ServicesManagement';
 import SystemSettings from '@/pages/admin/SystemSettings';
 import Analytics from '@/pages/admin/Analytics';
+import EnhancedAnalytics from '@/pages/admin/EnhancedAnalytics';
 import SystemLogs from '@/pages/admin/SystemLogs';
 import SecurityConfig from '@/pages/admin/SecurityConfig';
 import Monitoring from '@/pages/admin/Monitoring';

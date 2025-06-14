@@ -7,21 +7,41 @@ export function useUserServiceActivations() {
   return useQuery({
     queryKey: ['user-service-activations'],
     queryFn: async (): Promise<UserServiceActivation[]> => {
-      const { data, error } = await supabase
+      const { data: activations, error: activationsError } = await supabase
         .from('user_service_activations')
-        .select(`
-          *,
-          services_catalog!user_service_activations_service_id_fkey(service_name, service_type)
-        `)
+        .select('*')
         .eq('is_active', true)
         .order('activated_at', { ascending: false });
 
-      if (error) throw error;
+      if (activationsError) throw activationsError;
       
-      return (data || []).map(item => ({
-        ...item,
-        service: item.services_catalog
-      })) as UserServiceActivation[];
+      if (!activations || activations.length === 0) {
+        return [];
+      }
+
+      // Get service details for each activation
+      const serviceIds = activations.map(activation => activation.service_id);
+      const { data: services, error: servicesError } = await supabase
+        .from('services_catalog')
+        .select('id, service_name, service_type')
+        .in('id', serviceIds);
+
+      if (servicesError) throw servicesError;
+
+      // Combine the data
+      return activations.map(activation => {
+        const service = services?.find(s => s.id === activation.service_id);
+        return {
+          ...activation,
+          service: service ? {
+            service_name: service.service_name,
+            service_type: service.service_type
+          } : {
+            service_name: 'Unknown Service',
+            service_type: 'unknown'
+          }
+        };
+      }) as UserServiceActivation[];
     }
   });
 }

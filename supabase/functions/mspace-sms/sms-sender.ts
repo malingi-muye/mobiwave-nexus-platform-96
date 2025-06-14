@@ -1,5 +1,6 @@
 
 import { MspaceResponse, SendResult } from './types.ts'
+import { MspaceErrorHandler } from './enhanced-error-handler.ts'
 
 export async function sendSMSToRecipient(
   recipient: string,
@@ -8,57 +9,93 @@ export async function sendSMSToRecipient(
   username: string,
   senderId: string
 ): Promise<SendResult> {
-  try {
-    console.log('Sending SMS to:', recipient.substring(0, 5) + '...')
+  const maxRetries = 3;
+  let lastError: any;
 
-    const mspaceResponse = await fetch('https://api.mspace.co.ke/smsapi/v2/sendtext', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'apikey': apiKey
-      },
-      body: JSON.stringify({
-        username,
-        senderId,
-        recipient: recipient.replace(/\D/g, ''),
-        message
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      console.log(`Attempt ${attempt + 1}/${maxRetries} for recipient:`, recipient.substring(0, 5) + '...')
+
+      const response = await fetch('https://api.mspace.co.ke/smsapi/v2/sendtext', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'apikey': apiKey
+        },
+        body: JSON.stringify({
+          username,
+          senderId,
+          recipient: recipient.replace(/\D/g, ''),
+          message
+        })
       })
-    })
 
-    const responseData = await mspaceResponse.json() as MspaceResponse
-    console.log('Mspace API response for', recipient + ':', responseData)
+      const responseData = await response.json() as MspaceResponse
+      console.log(`Mspace API response for ${recipient}:`, responseData)
 
-    let isSuccess = false
-    let messageId = null
-    let errorMessage = null
-
-    if (mspaceResponse.ok && responseData.message && Array.isArray(responseData.message)) {
-      const messageData = responseData.message.find(msg => msg.recipient === recipient.replace(/\D/g, ''))
-      if (messageData) {
-        isSuccess = messageData.status === 111
-        messageId = messageData.messageId
-        errorMessage = isSuccess ? null : messageData.statusDescription
+      // Handle successful response
+      if (response.ok && responseData.message && Array.isArray(responseData.message)) {
+        const messageData = responseData.message.find(msg => msg.recipient === recipient.replace(/\D/g, ''))
+        if (messageData) {
+          const isSuccess = messageData.status === 111
+          return {
+            recipient,
+            success: isSuccess,
+            messageId: messageData.messageId,
+            message: isSuccess ? 'Message sent successfully' : messageData.statusDescription,
+            error: isSuccess ? undefined : messageData.statusDescription
+          }
+        }
       }
-    } else {
-      errorMessage = 'Invalid response format from Mspace API'
-    }
 
-    return {
-      recipient,
-      success: isSuccess,
-      messageId,
-      message: isSuccess ? 'Message sent successfully' : errorMessage || 'Failed to send',
-      error: isSuccess ? undefined : errorMessage
-    }
+      // Handle error response
+      const enhancedError = MspaceErrorHandler.handleApiError(
+        { status: response.status, message: responseData },
+        `SMS to ${recipient}`
+      );
 
-  } catch (error) {
-    console.error('Error sending SMS to', recipient + ':', error)
-    return {
-      recipient,
-      success: false,
-      message: 'Failed to send',
-      error: error.message
+      if (!MspaceErrorHandler.shouldRetry(enhancedError, attempt, maxRetries)) {
+        return {
+          recipient,
+          success: false,
+          message: enhancedError.message,
+          error: enhancedError.message
+        }
+      }
+
+      lastError = enhancedError;
+      const delay = MspaceErrorHandler.getRetryDelay(enhancedError, attempt);
+      console.log(`Retrying in ${delay}ms due to:`, enhancedError.message);
+      await new Promise(resolve => setTimeout(resolve, delay));
+
+    } catch (error) {
+      console.error(`Attempt ${attempt + 1} failed for ${recipient}:`, error)
+      
+      const enhancedError = MspaceErrorHandler.handleApiError(error, `SMS to ${recipient}`);
+      
+      if (!MspaceErrorHandler.shouldRetry(enhancedError, attempt, maxRetries)) {
+        return {
+          recipient,
+          success: false,
+          message: enhancedError.message,
+          error: enhancedError.message
+        }
+      }
+
+      lastError = enhancedError;
+      if (attempt < maxRetries - 1) {
+        const delay = MspaceErrorHandler.getRetryDelay(enhancedError, attempt);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
     }
+  }
+
+  // All retries exhausted
+  return {
+    recipient,
+    success: false,
+    message: 'All retry attempts failed',
+    error: lastError?.message || 'Maximum retries exceeded'
   }
 }

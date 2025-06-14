@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Route, Navigate } from 'react-router-dom';
 import { RoleBasedRoute } from '../components/auth/RoleBasedRoute';
 import AdminDashboard from '../pages/AdminDashboard';
 import UserManagement from '../pages/admin/UserManagement';
@@ -18,7 +18,15 @@ import ApiManagement from '../pages/ApiManagement';
 
 export function AdminRoutes() {
   return (
-    <Routes>
+    <>
+      <Route
+        path="/admin"
+        element={
+          <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
+            <Navigate to="/admin/dashboard" replace />
+          </RoleBasedRoute>
+        }
+      />
       <Route
         path="/admin/dashboard"
         element={
@@ -123,6 +131,6 @@ export function AdminRoutes() {
           </RoleBasedRoute>
         }
       />
-    </Routes>
+    </>
   );
 }

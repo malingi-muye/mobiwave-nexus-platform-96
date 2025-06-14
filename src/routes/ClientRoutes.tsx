@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Route } from 'react-router-dom';
 import { ProtectedRoute } from '../components/auth/ProtectedRoute';
 import Dashboard from '../pages/Dashboard';
 import BulkSMS from '../pages/BulkSMS';
@@ -20,7 +20,7 @@ import MySubscriptions from '../pages/MySubscriptions';
 
 export function ClientRoutes() {
   return (
-    <Routes>
+    <>
       <Route
         path="/dashboard"
         element={
@@ -94,7 +94,7 @@ export function ClientRoutes() {
         }
       />
       <Route
-        path="/services"
+        path="/user-services"
         element={
           <ProtectedRoute>
             <UserServices />
@@ -141,6 +141,6 @@ export function ClientRoutes() {
           </ProtectedRoute>
         }
       />
-    </Routes>
+    </>
   );
 }

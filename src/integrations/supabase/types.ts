@@ -815,6 +815,50 @@ export type Database = {
         }
         Relationships: []
       }
+      ussd_sessions: {
+        Row: {
+          application_id: string | null
+          created_at: string | null
+          current_node_id: string
+          id: string
+          input_path: string[] | null
+          navigation_path: string[] | null
+          phone_number: string
+          session_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          application_id?: string | null
+          created_at?: string | null
+          current_node_id: string
+          id?: string
+          input_path?: string[] | null
+          navigation_path?: string[] | null
+          phone_number: string
+          session_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          application_id?: string | null
+          created_at?: string | null
+          current_node_id?: string
+          id?: string
+          input_path?: string[] | null
+          navigation_path?: string[] | null
+          phone_number?: string
+          session_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ussd_sessions_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "mspace_ussd_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       whatsapp_subscriptions: {
         Row: {
           access_token_encrypted: string

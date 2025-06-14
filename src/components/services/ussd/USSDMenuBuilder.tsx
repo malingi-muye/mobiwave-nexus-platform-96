@@ -2,18 +2,10 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, Settings, Menu, AlertCircle, CheckCircle } from 'lucide-react';
-
-interface MenuNode {
-  id: string;
-  text: string;
-  options: string[];
-  isEndNode: boolean;
-}
+import { Plus, Menu, AlertCircle, CheckCircle } from 'lucide-react';
+import { MenuNode } from './types';
+import { MenuNodeEditor } from './components/MenuNodeEditor';
 
 interface USSDMenuBuilderProps {
   menuStructure: MenuNode[];
@@ -26,19 +18,16 @@ export function USSDMenuBuilder({ menuStructure, onUpdateMenu }: USSDMenuBuilder
   const validateMenuStructure = () => {
     const issues = [];
     
-    // Check if there's a root node
     const hasRoot = menuStructure.some(node => node.id === 'root');
     if (!hasRoot && menuStructure.length > 0) {
       issues.push('No root menu found. Consider setting the first menu as root.');
     }
     
-    // Check for empty menus
     const emptyMenus = menuStructure.filter(node => !node.text.trim());
     if (emptyMenus.length > 0) {
       issues.push(`${emptyMenus.length} menu(s) have empty text.`);
     }
     
-    // Check for menus with no options (and not end nodes)
     const menusWithoutOptions = menuStructure.filter(node => !node.isEndNode && node.options.length === 0);
     if (menusWithoutOptions.length > 0) {
       issues.push(`${menusWithoutOptions.length} menu(s) have no options but are not end nodes.`);
@@ -68,7 +57,7 @@ export function USSDMenuBuilder({ menuStructure, onUpdateMenu }: USSDMenuBuilder
   };
 
   const deleteMenuNode = (nodeId: string) => {
-    if (menuStructure.length <= 1) return; // Don't delete the last menu
+    if (menuStructure.length <= 1) return;
     
     const updatedMenu = menuStructure.filter(node => node.id !== nodeId);
     onUpdateMenu(updatedMenu);
@@ -80,7 +69,7 @@ export function USSDMenuBuilder({ menuStructure, onUpdateMenu }: USSDMenuBuilder
 
   const addOption = (nodeId: string) => {
     const node = menuStructure.find(n => n.id === nodeId);
-    if (node && node.options.length < 9) { // USSD typically supports 1-9 options
+    if (node && node.options.length < 9) {
       const newOptions = [...node.options, `Option ${node.options.length + 1}`];
       updateMenuNode(nodeId, { options: newOptions });
     }
@@ -170,140 +159,20 @@ export function USSDMenuBuilder({ menuStructure, onUpdateMenu }: USSDMenuBuilder
           </div>
         ) : (
           menuStructure.map((node, index) => (
-            <Card key={node.id} className={`border-l-4 ${node.id === 'root' ? 'border-l-blue-500' : 'border-l-gray-300'}`}>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Badge variant="outline">
-                      {node.id === 'root' ? 'Root Menu' : `Menu ${index + 1}`}
-                    </Badge>
-                    <Badge variant={node.isEndNode ? 'destructive' : 'default'}>
-                      {node.isEndNode ? 'End Node' : 'Menu Node'}
-                    </Badge>
-                    {!node.text.trim() && (
-                      <Badge variant="outline" className="text-orange-600 border-orange-600">
-                        Empty Text
-                      </Badge>
-                    )}
-                    {!node.isEndNode && node.options.length === 0 && (
-                      <Badge variant="outline" className="text-orange-600 border-orange-600">
-                        No Options
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    {node.id !== 'root' && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setAsRootNode(node.id)}
-                        title="Set as root menu"
-                      >
-                        Root
-                      </Button>
-                    )}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setEditingNode(editingNode === node.id ? null : node.id)}
-                    >
-                      <Settings className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => deleteMenuNode(node.id)}
-                      disabled={menuStructure.length <= 1}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor={`text-${node.id}`}>Menu Text *</Label>
-                  <Textarea
-                    id={`text-${node.id}`}
-                    value={node.text}
-                    onChange={(e) => updateMenuNode(node.id, { text: e.target.value })}
-                    placeholder="Enter the text that will be displayed to users (e.g., Welcome to our service. Please select an option:)"
-                    rows={3}
-                    className={!node.text.trim() ? 'border-orange-300 focus:border-orange-500' : ''}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Characters: {node.text.length}/160 (USSD messages are typically under 160 characters)
-                  </p>
-                </div>
-
-                {!node.isEndNode && (
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <Label>Menu Options *</Label>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => addOption(node.id)}
-                        disabled={node.options.length >= 9}
-                      >
-                        <Plus className="w-4 h-4 mr-1" />
-                        Add Option ({node.options.length}/9)
-                      </Button>
-                    </div>
-                    <div className="space-y-2">
-                      {node.options.map((option, optionIndex) => (
-                        <div key={optionIndex} className="flex gap-2">
-                          <div className="w-8 h-9 bg-gray-100 rounded flex items-center justify-center text-sm font-medium">
-                            {optionIndex + 1}
-                          </div>
-                          <Input
-                            value={option}
-                            onChange={(e) => updateOption(node.id, optionIndex, e.target.value)}
-                            placeholder={`Option ${optionIndex + 1}`}
-                          />
-                          {node.options.length > 1 && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => removeOption(node.id, optionIndex)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                      {node.options.length === 0 && (
-                        <p className="text-sm text-orange-600">
-                          This menu has no options. Add at least one option or mark it as an end node.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {editingNode === node.id && (
-                  <div className="border-t pt-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-4">
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={node.isEndNode}
-                            onChange={(e) => updateMenuNode(node.id, { isEndNode: e.target.checked })}
-                          />
-                          <span className="text-sm">End Node (terminates session)</span>
-                        </label>
-                      </div>
-                      {node.isEndNode && (
-                        <p className="text-sm text-gray-600 bg-blue-50 p-2 rounded">
-                          End nodes terminate the USSD session. Users will see this message and the session will end.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <MenuNodeEditor
+              key={node.id}
+              node={node}
+              index={index}
+              isRoot={node.id === 'root'}
+              isEditing={editingNode === node.id}
+              onUpdate={(updates) => updateMenuNode(node.id, updates)}
+              onDelete={() => deleteMenuNode(node.id)}
+              onSetAsRoot={() => setAsRootNode(node.id)}
+              onToggleEdit={() => setEditingNode(editingNode === node.id ? null : node.id)}
+              onAddOption={() => addOption(node.id)}
+              onUpdateOption={(optionIndex, value) => updateOption(node.id, optionIndex, value)}
+              onRemoveOption={(optionIndex) => removeOption(node.id, optionIndex)}
+            />
           ))
         )}
 
@@ -311,10 +180,10 @@ export function USSDMenuBuilder({ menuStructure, onUpdateMenu }: USSDMenuBuilder
           <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
             <strong>Tips:</strong>
             <ul className="mt-1 space-y-1">
-              <li>• The root menu is the first menu users will see when they dial your USSD code</li>
-              <li>• Keep menu text under 160 characters for better compatibility</li>
-              <li>• USSD supports up to 9 options per menu (numbered 1-9)</li>
-              <li>• End nodes terminate the session - use them for final messages or confirmations</li>
+              <li>• The root menu is the first menu users will see</li>
+              <li>• Keep menu text under 160 characters</li>
+              <li>• USSD supports up to 9 options per menu</li>
+              <li>• End nodes terminate the session</li>
             </ul>
           </div>
         )}

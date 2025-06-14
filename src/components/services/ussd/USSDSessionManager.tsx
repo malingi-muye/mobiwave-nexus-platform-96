@@ -7,22 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Phone, Search, Clock, Users, TrendingUp, Filter } from 'lucide-react';
-
-interface USSDSession {
-  id: string;
-  session_id: string;
-  application_id: string;
-  phone_number: string;
-  current_node_id: string;
-  input_path: string[];
-  navigation_path: string[];
-  created_at: string;
-  application?: {
-    service_code: string;
-    menu_structure: any[];
-  };
-}
+import { Phone, Search, Clock, Users, TrendingUp } from 'lucide-react';
+import { USSDSession } from './types';
 
 interface USSDSessionManagerProps {
   applicationId?: string;
@@ -30,7 +16,6 @@ interface USSDSessionManagerProps {
 
 export function USSDSessionManager({ applicationId }: USSDSessionManagerProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
   const [dateRange, setDateRange] = useState('7d');
 
   const { data: sessions = [], isLoading, refetch } = useQuery({
@@ -48,7 +33,6 @@ export function USSDSessionManager({ applicationId }: USSDSessionManagerProps) {
         query = query.eq('application_id', applicationId);
       }
 
-      // Apply date filter
       const now = new Date();
       const daysAgo = parseInt(dateRange.replace('d', ''));
       const startDate = new Date(now.getTime() - (daysAgo * 24 * 60 * 60 * 1000));
@@ -64,7 +48,7 @@ export function USSDSessionManager({ applicationId }: USSDSessionManagerProps) {
     const matchesSearch = !searchTerm || 
       session.phone_number.includes(searchTerm) ||
       session.session_id.includes(searchTerm) ||
-      session.application?.service_code.includes(searchTerm);
+      (session.application as any)?.service_code?.includes(searchTerm);
 
     return matchesSearch;
   });
@@ -74,9 +58,9 @@ export function USSDSessionManager({ applicationId }: USSDSessionManagerProps) {
     uniqueUsers: new Set(sessions.map(s => s.phone_number)).size,
     avgSessionLength: sessions.reduce((acc, s) => acc + s.input_path.length, 0) / (sessions.length || 1),
     completionRate: sessions.filter(s => {
-      const app = s.application;
+      const app = s.application as any;
       if (!app) return false;
-      const endNode = app.menu_structure.find((node: any) => 
+      const endNode = app.menu_structure?.find((node: any) => 
         node.id === s.current_node_id && node.isEndNode
       );
       return !!endNode;
@@ -84,7 +68,8 @@ export function USSDSessionManager({ applicationId }: USSDSessionManagerProps) {
   };
 
   const getNodeText = (session: USSDSession, nodeId: string) => {
-    const node = session.application?.menu_structure.find((n: any) => n.id === nodeId);
+    const app = session.application as any;
+    const node = app?.menu_structure?.find((n: any) => n.id === nodeId);
     return node ? node.text : nodeId;
   };
 
@@ -223,7 +208,7 @@ export function USSDSessionManager({ applicationId }: USSDSessionManagerProps) {
                   <div className="space-y-2 flex-1">
                     <div className="flex items-center gap-2">
                       <Badge variant="outline">
-                        {session.application?.service_code || 'Unknown'}
+                        {(session.application as any)?.service_code || 'Unknown'}
                       </Badge>
                       <span className="text-sm text-gray-600">
                         {session.phone_number}
@@ -257,12 +242,12 @@ export function USSDSessionManager({ applicationId }: USSDSessionManagerProps) {
                   <div className="text-right">
                     <Badge 
                       variant={
-                        session.application?.menu_structure.find((node: any) => 
+                        (session.application as any)?.menu_structure?.find((node: any) => 
                           node.id === session.current_node_id && node.isEndNode
                         ) ? 'default' : 'secondary'
                       }
                     >
-                      {session.application?.menu_structure.find((node: any) => 
+                      {(session.application as any)?.menu_structure?.find((node: any) => 
                         node.id === session.current_node_id && node.isEndNode
                       ) ? 'Completed' : 'In Progress'}
                     </Badge>

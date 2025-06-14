@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,23 +13,9 @@ import { USSDMenuBuilder } from './USSDMenuBuilder';
 import { USSDApplicationCard } from './USSDApplicationCard';
 import { USSDTestSimulator } from './USSDTestSimulator';
 import { USSDSessionManager } from './USSDSessionManager';
-
-interface MenuNode {
-  id: string;
-  text: string;
-  options: string[];
-  isEndNode: boolean;
-}
+import { MenuNode, USSDApplication } from './types';
 
 type USSDApplicationFromDB = Tables<'mspace_ussd_applications'>;
-
-interface USSDApplication {
-  id: string;
-  service_code: string;
-  menu_structure: MenuNode[];
-  callback_url: string;
-  status: string;
-}
 
 const fetchUSSDApplications = async (): Promise<USSDApplication[]> => {
   const { data, error } = await supabase

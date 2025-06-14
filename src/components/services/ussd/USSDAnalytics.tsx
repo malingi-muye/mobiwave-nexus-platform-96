@@ -5,21 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Phone, Users, TrendingUp, Clock, BarChart3 } from 'lucide-react';
-
-interface AnalyticsData {
-  totalSessions: number;
-  uniqueUsers: number;
-  avgSessionDuration: number;
-  topMenuPaths: Array<{
-    path: string;
-    count: number;
-  }>;
-  completionRate: number;
-  peakHours: Array<{
-    hour: number;
-    sessions: number;
-  }>;
-}
+import { AnalyticsData, USSDSession } from './types';
 
 interface USSDAnalyticsProps {
   applicationId?: string;
@@ -30,7 +16,6 @@ export function USSDAnalytics({ applicationId, timeRange = '7d' }: USSDAnalytics
   const { data: analytics, isLoading } = useQuery({
     queryKey: ['ussd-analytics', applicationId, timeRange],
     queryFn: async (): Promise<AnalyticsData> => {
-      // Calculate date range
       const now = new Date();
       const daysAgo = parseInt(timeRange.replace('d', ''));
       const startDate = new Date(now.getTime() - (daysAgo * 24 * 60 * 60 * 1000));
@@ -50,27 +35,25 @@ export function USSDAnalytics({ applicationId, timeRange = '7d' }: USSDAnalytics
       const { data: sessions, error } = await query;
       if (error) throw error;
 
-      const totalSessions = sessions?.length || 0;
-      const uniqueUsers = new Set(sessions?.map(s => s.phone_number) || []).size;
+      const sessionData = sessions as USSDSession[] || [];
+      const totalSessions = sessionData.length;
+      const uniqueUsers = new Set(sessionData.map(s => s.phone_number)).size;
       
-      // Calculate average session duration (based on input steps)
-      const avgSessionDuration = sessions?.reduce((acc, s) => acc + s.input_path.length, 0) / (totalSessions || 1);
+      const avgSessionDuration = sessionData.reduce((acc, s) => acc + s.input_path.length, 0) / (totalSessions || 1);
 
-      // Calculate completion rate
-      const completedSessions = sessions?.filter(s => {
-        const app = s.application;
+      const completedSessions = sessionData.filter(s => {
+        const app = s.application as any;
         if (!app) return false;
-        const endNode = app.menu_structure.find((node: any) => 
+        const endNode = app.menu_structure?.find((node: any) => 
           node.id === s.current_node_id && node.isEndNode
         );
         return !!endNode;
-      }).length || 0;
+      }).length;
       
       const completionRate = (completedSessions / (totalSessions || 1)) * 100;
 
-      // Calculate top menu paths
       const pathCounts: Record<string, number> = {};
-      sessions?.forEach(s => {
+      sessionData.forEach(s => {
         const pathKey = s.navigation_path.join(' → ');
         pathCounts[pathKey] = (pathCounts[pathKey] || 0) + 1;
       });
@@ -80,9 +63,8 @@ export function USSDAnalytics({ applicationId, timeRange = '7d' }: USSDAnalytics
         .slice(0, 5)
         .map(([path, count]) => ({ path, count }));
 
-      // Calculate peak hours
       const hourCounts: Record<number, number> = {};
-      sessions?.forEach(s => {
+      sessionData.forEach(s => {
         const hour = new Date(s.created_at).getHours();
         hourCounts[hour] = (hourCounts[hour] || 0) + 1;
       });

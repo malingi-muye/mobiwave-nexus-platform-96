@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Bell, 
   User, 
@@ -20,6 +22,28 @@ export function DashboardTopBar() {
   const navigate = useNavigate();
   
   const isAdminRoute = location.pathname.startsWith('/admin');
+
+  // Fetch user profile to get first_name and last_name
+  const { data: userProfile } = useQuery({
+    queryKey: ['user-profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
+      }
+      
+      return data;
+    },
+    enabled: !!user?.id
+  });
   
   const handleLogout = async () => {
     try {
@@ -45,6 +69,16 @@ export function DashboardTopBar() {
       badgeColor: 'bg-blue-500',
       theme: 'from-blue-50 to-blue-100'
     };
+  };
+
+  const getUserDisplayName = () => {
+    // If we have a first name, use it
+    if (userProfile?.first_name) {
+      return userProfile.first_name;
+    }
+    
+    // Fallback to current structure (email username)
+    return user?.email?.split('@')[0] || 'User';
   };
 
   const context = getContextualInfo();
@@ -76,7 +110,7 @@ export function DashboardTopBar() {
           <div className="flex items-center space-x-2">
             <div className="text-right">
               <p className="text-sm font-medium text-gray-900">
-                {user?.email?.split('@')[0] || 'User'}
+                {getUserDisplayName()}
               </p>
               <p className="text-xs text-gray-500">
                 {isAdminRoute ? 'Administrator' : 'Client User'}

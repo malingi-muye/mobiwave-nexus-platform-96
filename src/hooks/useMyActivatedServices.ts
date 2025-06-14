@@ -11,7 +11,7 @@ export function useMyActivatedServices() {
         .from('user_service_activations')
         .select(`
           *,
-          services_catalog(service_name, service_type)
+          services_catalog!user_service_activations_service_id_fkey(service_name, service_type)
         `)
         .eq('is_active', true);
 

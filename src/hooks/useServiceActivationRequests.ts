@@ -11,8 +11,8 @@ export function useServiceActivationRequests() {
         .from('service_activation_requests')
         .select(`
           *,
-          services_catalog(service_name, service_type, description),
-          profiles(email, first_name, last_name)
+          services_catalog!service_activation_requests_service_id_fkey(service_name, service_type, description),
+          profiles!service_activation_requests_user_id_fkey(email, first_name, last_name)
         `)
         .order('requested_at', { ascending: false });
 

@@ -103,6 +103,10 @@ export function useServiceActivationMutations() {
     requestServiceActivation,
     approveServiceRequest,
     rejectServiceRequest,
-    deactivateUserService
+    deactivateUserService,
+    isRequesting: requestServiceActivation.isPending,
+    isApproving: approveServiceRequest.isPending,
+    isRejecting: rejectServiceRequest.isPending,
+    isDeactivating: deactivateUserService.isPending
   };
 }

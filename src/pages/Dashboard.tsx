@@ -1,10 +1,9 @@
 
 import React from 'react';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import { BulkSMS } from '@/components/messaging/BulkSMS';
+import { ClientDashboard } from '@/components/client/ClientDashboard';
 
 const Dashboard = () => {
-  return <BulkSMS />;
+  return <ClientDashboard />;
 };
 
 export default Dashboard;

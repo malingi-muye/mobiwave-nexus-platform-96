@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -215,7 +214,15 @@ export function ClientDashboard() {
               <Zap className="w-5 h-5 text-blue-600" />
               <div>
                 <p className="font-semibold text-blue-800">Live Update</p>
-                <p className="text-sm text-blue-700">{latestUpdate.message}</p>
+                <p className="text-sm text-blue-700">
+                  {
+                    typeof latestUpdate === "string"
+                      ? latestUpdate
+                      : typeof latestUpdate === "object" && "message" in latestUpdate && typeof latestUpdate.message === "string"
+                        ? latestUpdate.message
+                        : JSON.stringify(latestUpdate)
+                  }
+                </p>
               </div>
             </div>
           )}

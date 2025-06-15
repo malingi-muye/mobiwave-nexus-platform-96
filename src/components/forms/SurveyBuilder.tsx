@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Plus, Trash2, Save, Send, Eye } from 'lucide-react';
 import { useSurveys } from '@/hooks/useSurveys';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface Question {
@@ -75,13 +76,20 @@ export function SurveyBuilder({ onBack }: SurveyBuilderProps) {
     }
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Please log in to save surveys');
+        return;
+      }
+
       await createSurvey({
         title: surveyData.title,
         description: surveyData.description,
         question_flow: surveyData.questions,
         status: 'draft',
         target_audience: {},
-        distribution_channels: []
+        distribution_channels: [],
+        user_id: user.id
       });
       if (onBack) onBack();
     } catch (error) {
@@ -96,13 +104,20 @@ export function SurveyBuilder({ onBack }: SurveyBuilderProps) {
     }
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Please log in to publish surveys');
+        return;
+      }
+
       await createSurvey({
         title: surveyData.title,
         description: surveyData.description,
         question_flow: surveyData.questions,
         status: 'active',
         target_audience: {},
-        distribution_channels: ['sms']
+        distribution_channels: ['sms'],
+        user_id: user.id
       });
       
       toast.success('Survey published successfully');

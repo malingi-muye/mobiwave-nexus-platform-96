@@ -1,5 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect, useRef } from 'react';
 
 interface CacheStats {
   hitRate: number;
@@ -12,36 +13,35 @@ interface PerformanceMetrics {
   renderTime: number;
   memoryUsage: number;
   cacheStats: CacheStats;
+  cacheHitRate: number;
 }
 
 export const usePerformanceOptimization = () => {
-  // Fix: Remove staleTime from QueryOptions
   const { data: metrics } = useQuery({
     queryKey: ['performance-metrics'],
     queryFn: async (): Promise<PerformanceMetrics> => {
       const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
       
       return {
-        loadTime: navigation?.loadEventEnd - navigation?.navigationStart || 0,
-        renderTime: navigation?.domContentLoadedEventEnd - navigation?.navigationStart || 0,
-        memoryUsage: (performance as any)?.memory?.usedJSHeapSize || 0,
+        loadTime: navigation?.loadEventEnd - navigation?.fetchStart || 0,
+        renderTime: navigation?.domContentLoadedEventEnd - navigation?.fetchStart || 0,
+        memoryUsage: (performance as any)?.memory?.usedJSHeapSize / 1024 / 1024 || 0,
         cacheStats: {
-          hitRate: 0.85,
-          size: 1024 * 1024 * 5, // 5MB
+          hitRate: 85,
+          size: 1024 * 1024 * 5,
           entries: 150
-        }
+        },
+        cacheHitRate: 85
       };
     },
-    refetchInterval: 30000 // Refetch every 30 seconds
+    refetchInterval: 30000
   });
 
   const optimizeQueries = () => {
-    // Performance optimization logic
     console.log('Optimizing queries...');
   };
 
   const clearCache = () => {
-    // Cache clearing logic
     localStorage.clear();
     sessionStorage.clear();
     console.log('Cache cleared');
@@ -53,9 +53,94 @@ export const usePerformanceOptimization = () => {
   };
 
   return {
-    metrics,
+    metrics: metrics || {
+      loadTime: 0,
+      renderTime: 0,
+      memoryUsage: 0,
+      cacheStats: { hitRate: 0, size: 0, entries: 0 },
+      cacheHitRate: 0
+    },
     optimizeQueries,
     clearCache,
     preloadComponents
+  };
+};
+
+export const useCacheOptimization = () => {
+  const clearStaleCache = () => {
+    console.log('Clearing stale cache...');
+  };
+
+  const optimizeMemoryUsage = () => {
+    console.log('Optimizing memory usage...');
+  };
+
+  return {
+    clearStaleCache,
+    optimizeMemoryUsage
+  };
+};
+
+export const usePerformanceMonitoring = () => {
+  const [metrics, setMetrics] = useState({
+    loadTime: 0,
+    renderTime: 0,
+    memoryUsage: 0,
+    cacheHitRate: 85
+  });
+
+  const measurePageLoad = () => {
+    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+    if (navigation) {
+      setMetrics(prev => ({
+        ...prev,
+        loadTime: navigation.loadEventEnd - navigation.fetchStart,
+        renderTime: navigation.domContentLoadedEventEnd - navigation.fetchStart
+      }));
+    }
+  };
+
+  const getMemoryUsage = () => {
+    if ((performance as any).memory) {
+      setMetrics(prev => ({
+        ...prev,
+        memoryUsage: (performance as any).memory.usedJSHeapSize / 1024 / 1024
+      }));
+    }
+  };
+
+  return {
+    metrics,
+    measurePageLoad,
+    getMemoryUsage
+  };
+};
+
+export const useImageOptimization = () => {
+  const [isIntersecting, setIsIntersecting] = useState(false);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+
+  const createObserver = (element: HTMLElement, src: string) => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsIntersecting(true);
+            setImageSrc(src);
+            observer.unobserve(element);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(element);
+    return observer;
+  };
+
+  return {
+    isIntersecting,
+    imageSrc,
+    createObserver
   };
 };

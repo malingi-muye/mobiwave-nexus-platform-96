@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { useUserCredits } from '@/hooks/useUserCredits';
@@ -50,15 +49,13 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
     }
 
     try {
-      // Fix: Call the mutation function, not the result
       const campaign = await createCampaign.mutateAsync({
         ...campaignData,
         status,
         recipient_count: campaignData.recipients.length,
         delivered_count: 0,
         failed_count: 0,
-        cost: estimatedCost,
-        scheduled_at: null
+        cost: estimatedCost
       });
 
       if (status === 'active' && campaignData.recipients.length > 0) {

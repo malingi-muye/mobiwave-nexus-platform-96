@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -44,9 +43,8 @@ export function EnhancedContactsManager() {
     await importContacts(contactsToImport);
   };
 
-  const handleMergeContacts = async (primaryId: string, duplicateIds: string[]) => {
-    // Fix the parameter name to match the expected interface
-    await mergeContacts({ primaryId, duplicateIds });
+  const handleMergeContacts = async (keepContact: any, duplicateIds: string[]) => {
+    await mergeContacts({ primaryId: keepContact.id, duplicateIds });
   };
 
   const handleCreateContactGroup = async (group: any) => {

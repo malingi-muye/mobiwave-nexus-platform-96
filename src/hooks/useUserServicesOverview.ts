@@ -105,12 +105,16 @@ export const useUserServicesOverview = () => {
           },
           services: (services || []).map(service => {
             const activation = activations?.find(a => a.user_id === user.id && a.service_id === service.id);
+            
+            // Fix eligibility logic
+            const isEligible = !service.is_premium || ['admin', 'super_admin'].includes(user.role || 'user');
+            
             return {
               id: service.id,
               service_name: service.service_name,
               service_type: service.service_type,
               is_activated: activation?.is_active || false,
-              is_eligible: !service.is_premium || (user.role !== 'user' || user.role === 'admin' || user.role === 'super_admin'),
+              is_eligible: isEligible,
               status: activation?.is_active ? 'active' : 'available'
             };
           })

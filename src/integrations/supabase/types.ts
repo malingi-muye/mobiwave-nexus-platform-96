@@ -1202,6 +1202,13 @@ export type Database = {
             referencedRelation: "services_catalog"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_service_subscriptions_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "user_services_overview"
+            referencedColumns: ["service_id"]
+          },
         ]
       }
       user_services: {
@@ -1243,6 +1250,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_services_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_services_overview"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -1496,12 +1510,52 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      user_services_overview: {
+        Row: {
+          activated_at: string | null
+          activated_by: string | null
+          configuration: Json | null
+          description: string | null
+          email: string | null
+          first_name: string | null
+          is_activated: boolean | null
+          is_premium: boolean | null
+          last_name: string | null
+          monthly_billing_active: boolean | null
+          monthly_fee: number | null
+          overall_status: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
+          service_available: boolean | null
+          service_id: string | null
+          service_name: string | null
+          service_type: string | null
+          setup_fee: number | null
+          setup_fee_paid: boolean | null
+          subscription_activated_at: string | null
+          subscription_status: string | null
+          user_id: string | null
+          user_type: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       approve_service_request: {
         Args: { request_id: string; admin_user_id?: string }
         Returns: boolean
+      }
+      bulk_service_operation: {
+        Args: {
+          user_ids: string[]
+          service_id: string
+          operation: string
+          performed_by?: string
+        }
+        Returns: {
+          user_id: string
+          success: boolean
+          message: string
+        }[]
       }
       generate_ticket_number: {
         Args: Record<PropertyKey, never>
@@ -1510,6 +1564,30 @@ export type Database = {
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_user_services: {
+        Args: { target_user_id?: string }
+        Returns: {
+          user_id: string
+          email: string
+          first_name: string
+          last_name: string
+          role: string
+          user_type: string
+          service_id: string
+          service_name: string
+          service_type: string
+          description: string
+          setup_fee: number
+          monthly_fee: number
+          is_premium: boolean
+          service_available: boolean
+          is_activated: boolean
+          activated_at: string
+          subscription_status: string
+          overall_status: string
+          is_eligible: boolean
+        }[]
       }
       log_analytics_event: {
         Args: {

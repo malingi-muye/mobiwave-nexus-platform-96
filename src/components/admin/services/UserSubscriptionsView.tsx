@@ -56,7 +56,11 @@ export function UserSubscriptionsView({
     configuration: subscription.configuration || {},
     setup_fee_paid: subscription.setup_fee_paid || false,
     monthly_billing_active: subscription.monthly_billing_active || false,
-    service: subscription.service
+    service: {
+      id: subscription.service.id,
+      service_name: subscription.service.service_name,
+      service_type: subscription.service.service_type
+    }
   }));
 
   const {

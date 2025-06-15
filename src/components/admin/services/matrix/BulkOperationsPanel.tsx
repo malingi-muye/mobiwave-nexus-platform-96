@@ -1,9 +1,10 @@
 
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Power, PowerOff, UserCheck } from 'lucide-react';
+import { Users, Zap, X } from 'lucide-react';
 
 interface BulkOperationsPanelProps {
   selectedUsers: string[];
@@ -11,7 +12,7 @@ interface BulkOperationsPanelProps {
   allServices: any[];
   isUpdating: boolean;
   onServiceChange: (serviceId: string) => void;
-  onBulkOperation: (operation: 'activate' | 'deactivate') => void;
+  onBulkOperation: (operation: 'activate' | 'deactivate') => Promise<void>;
   onClearSelection: () => void;
 }
 
@@ -26,55 +27,59 @@ export function BulkOperationsPanel({
 }: BulkOperationsPanelProps) {
   return (
     <Card className="border-blue-200 bg-blue-50">
-      <CardContent className="p-4">
-        <div className="flex items-center gap-4">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <UserCheck className="w-4 h-4 text-blue-600" />
-            <span className="font-medium">{selectedUsers.length} users selected</span>
+            <Zap className="w-5 h-5 text-blue-600" />
+            Bulk Operations
+          </div>
+          <Button variant="ghost" size="sm" onClick={onClearSelection}>
+            <X className="w-4 h-4" />
+          </Button>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Users className="w-4 h-4 text-blue-600" />
+          <span className="text-sm">Selected users:</span>
+          <Badge variant="outline">{selectedUsers.length}</Badge>
+        </div>
+        
+        <div className="flex gap-4 items-end">
+          <div className="flex-1">
+            <label className="text-sm font-medium">Select Service</label>
+            <Select value={selectedService} onValueChange={onServiceChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choose a service..." />
+              </SelectTrigger>
+              <SelectContent>
+                {allServices.map((service) => (
+                  <SelectItem key={service.id} value={service.id}>
+                    {service.service_name} ({service.service_type})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
-          <select
-            value={selectedService}
-            onChange={(e) => onServiceChange(e.target.value)}
-            className="rounded border border-gray-300 px-3 py-1"
-          >
-            <option value="">Select service</option>
-            {allServices.map((service: any) => (
-              <option key={service.service_id} value={service.service_id}>
-                {service.service_name}
-              </option>
-            ))}
-          </select>
-
           <div className="flex gap-2">
             <Button
               size="sm"
               onClick={() => onBulkOperation('activate')}
-              disabled={!selectedService || isUpdating}
-              className="flex items-center gap-1"
+              disabled={!selectedService || selectedUsers.length === 0 || isUpdating}
+              className="bg-green-600 hover:bg-green-700"
             >
-              <Power className="w-3 h-3" />
               Activate
             </Button>
             <Button
               size="sm"
-              variant="outline"
+              variant="destructive"
               onClick={() => onBulkOperation('deactivate')}
-              disabled={!selectedService || isUpdating}
-              className="flex items-center gap-1"
+              disabled={!selectedService || selectedUsers.length === 0 || isUpdating}
             >
-              <PowerOff className="w-3 h-3" />
               Deactivate
             </Button>
           </div>
-
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={onClearSelection}
-          >
-            Clear Selection
-          </Button>
         </div>
       </CardContent>
     </Card>

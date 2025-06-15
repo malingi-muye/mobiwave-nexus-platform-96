@@ -8,45 +8,48 @@ interface PricingDisplayProps {
   transactionFeeAmount: number;
 }
 
-export function PricingDisplay({ 
-  setupFee, 
-  monthlyFee, 
-  transactionFeeType, 
-  transactionFeeAmount 
+export function PricingDisplay({
+  setupFee,
+  monthlyFee,
+  transactionFeeType,
+  transactionFeeAmount
 }: PricingDisplayProps) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-KE', {
       style: 'currency',
-      currency: 'KES',
-      minimumFractionDigits: 0
+      currency: 'KES'
     }).format(amount);
   };
 
+  const formatTransactionFee = () => {
+    if (transactionFeeType === 'none' || transactionFeeAmount === 0) {
+      return 'No transaction fees';
+    }
+    
+    if (transactionFeeType === 'percentage') {
+      return `${transactionFeeAmount}% per transaction`;
+    }
+    
+    return `${formatCurrency(transactionFeeAmount)} per transaction`;
+  };
+
   return (
-    <div className="space-y-1 text-xs">
-      {setupFee > 0 && (
+    <div className="bg-gray-50 p-3 rounded-lg">
+      <h4 className="font-medium text-sm mb-2">Pricing</h4>
+      <div className="space-y-1 text-sm">
         <div className="flex justify-between">
-          <span>Setup Fee:</span>
+          <span className="text-gray-600">Setup Fee:</span>
           <span className="font-medium">{formatCurrency(setupFee)}</span>
         </div>
-      )}
-      {monthlyFee > 0 && (
         <div className="flex justify-between">
-          <span>Monthly Fee:</span>
+          <span className="text-gray-600">Monthly Fee:</span>
           <span className="font-medium">{formatCurrency(monthlyFee)}</span>
         </div>
-      )}
-      {transactionFeeAmount > 0 && (
         <div className="flex justify-between">
-          <span>Transaction Fee:</span>
-          <span className="font-medium">
-            {transactionFeeType === 'percentage' 
-              ? `${transactionFeeAmount}%`
-              : formatCurrency(transactionFeeAmount)
-            }
-          </span>
+          <span className="text-gray-600">Transaction Fee:</span>
+          <span className="font-medium">{formatTransactionFee()}</span>
         </div>
-      )}
+      </div>
     </div>
   );
 }

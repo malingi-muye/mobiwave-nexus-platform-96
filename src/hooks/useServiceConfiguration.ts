@@ -1,36 +1,30 @@
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
-interface ServiceConfiguration {
-  [key: string]: any;
-}
-
-export function useServiceConfiguration() {
-  const [configuration, setConfiguration] = useState<ServiceConfiguration>({});
+export const useServiceConfiguration = () => {
+  const [configuration, setConfiguration] = useState<any>({});
   const [isConfiguring, setIsConfiguring] = useState(false);
 
-  const updateConfiguration = useCallback((field: string, value: any) => {
-    setConfiguration(prev => ({ ...prev, [field]: value }));
-  }, []);
+  const updateConfiguration = (key: string, value: any) => {
+    setConfiguration((prev: any) => ({
+      ...prev,
+      [key]: value
+    }));
+  };
 
-  const resetConfiguration = useCallback(() => {
+  const resetConfiguration = () => {
     setConfiguration({});
-  }, []);
+  };
 
-  const saveConfiguration = useCallback(async (
-    serviceId: string, 
-    config: ServiceConfiguration,
-    onSave: (serviceId: string, configuration: any) => Promise<void>
-  ) => {
-    if (!serviceId) {
-      toast.error('Please select a service first');
-      return false;
-    }
-
+  const saveConfiguration = async (
+    serviceId: string,
+    config: any,
+    onServiceConfigured: (serviceId: string, configuration: any) => Promise<void>
+  ): Promise<boolean> => {
     setIsConfiguring(true);
     try {
-      await onSave(serviceId, config);
+      await onServiceConfigured(serviceId, config);
       toast.success('Service configuration saved successfully');
       resetConfiguration();
       return true;
@@ -40,7 +34,7 @@ export function useServiceConfiguration() {
     } finally {
       setIsConfiguring(false);
     }
-  }, [resetConfiguration]);
+  };
 
   return {
     configuration,
@@ -49,4 +43,4 @@ export function useServiceConfiguration() {
     resetConfiguration,
     saveConfiguration
   };
-}
+};

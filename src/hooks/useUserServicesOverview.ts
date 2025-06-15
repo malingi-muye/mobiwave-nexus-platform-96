@@ -2,205 +2,112 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useEffect } from 'react';
 
-export interface UserServiceOverview {
-  user_id: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  role: string;
-  user_type: string;
-  service_id: string;
-  service_name: string;
-  service_type: string;
-  description: string;
-  setup_fee: number;
-  monthly_fee: number;
-  is_premium: boolean;
-  service_available: boolean;
-  is_activated: boolean;
-  activated_at: string | null;
-  subscription_status: string | null;
-  overall_status: string;
-  is_eligible: boolean;
+interface UserServicesData {
+  user: {
+    id: string;
+    email: string;
+    first_name?: string;
+    last_name?: string;
+    role: string;
+  };
+  services: Array<{
+    id: string;
+    service_name: string;
+    service_type: string;
+    is_activated: boolean;
+    is_eligible: boolean;
+    status: string;
+  }>;
 }
 
-export interface BulkOperationResult {
-  user_id: string;
-  success: boolean;
-  message: string;
-}
-
-export function useUserServicesOverview(targetUserId?: string) {
+export const useUserServicesOverview = () => {
   const queryClient = useQueryClient();
 
-  // Fetch user services data
-  const { data: userServices = [], isLoading, error } = useQuery({
-    queryKey: ['user-services-overview', targetUserId],
-    queryFn: async (): Promise<UserServiceOverview[]> => {
-      const { data, error } = await supabase.rpc('get_user_services', {
-        target_user_id: targetUserId || null
-      });
-
+  const { data: groupedByUser = [], isLoading } = useQuery({
+    queryKey: ['user-services-overview'],
+    queryFn: async (): Promise<UserServicesData[]> => {
+      const { data, error } = await supabase.rpc('get_user_services');
+      
       if (error) throw error;
-      return data || [];
+      
+      // Group by user
+      const grouped = data.reduce((acc: any, item: any) => {
+        const userId = item.user_id;
+        if (!acc[userId]) {
+          acc[userId] = {
+            user: {
+              id: item.user_id,
+              email: item.email,
+              first_name: item.first_name,
+              last_name: item.last_name,
+              role: item.role
+            },
+            services: []
+          };
+        }
+        
+        acc[userId].services.push({
+          id: item.service_id,
+          service_name: item.service_name,
+          service_type: item.service_type,
+          is_activated: item.is_activated || false,
+          is_eligible: item.is_eligible || false,
+          status: item.overall_status || 'inactive'
+        });
+        
+        return acc;
+      }, {});
+      
+      return Object.values(grouped);
     }
   });
 
-  // Set up real-time subscriptions
-  useEffect(() => {
-    const channel = supabase
-      .channel('user-services-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'user_service_activations'
-        },
-        (payload) => {
-          console.log('Service activation change:', payload);
-          queryClient.invalidateQueries({ queryKey: ['user-services-overview'] });
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'user_service_subscriptions'
-        },
-        (payload) => {
-          console.log('Service subscription change:', payload);
-          queryClient.invalidateQueries({ queryKey: ['user-services-overview'] });
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'services_catalog'
-        },
-        (payload) => {
-          console.log('Service catalog change:', payload);
-          queryClient.invalidateQueries({ queryKey: ['user-services-overview'] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
-
-  // Individual service activation/deactivation
-  const toggleServiceMutation = useMutation({
-    mutationFn: async ({ userId, serviceId, operation }: { 
-      userId: string; 
-      serviceId: string; 
-      operation: 'activate' | 'deactivate' 
-    }) => {
+  const toggleService = useMutation({
+    mutationFn: async ({ userId, serviceId, operation }: { userId: string; serviceId: string; operation: 'activate' | 'deactivate' }) => {
       const { data, error } = await supabase.rpc('bulk_service_operation', {
         user_ids: [userId],
         service_id: serviceId,
-        operation: operation
+        operation
       });
 
       if (error) throw error;
-      return data as BulkOperationResult[];
+      return data;
     },
-    onSuccess: (data) => {
-      const result = data[0];
-      if (result.success) {
-        toast.success(result.message);
-      } else {
-        toast.error(result.message);
-      }
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-services-overview'] });
+      toast.success('Service status updated successfully');
     },
     onError: (error: any) => {
-      console.error('Service toggle failed:', error);
-      toast.error('Failed to update service status');
+      toast.error(`Failed to update service: ${error.message}`);
     }
   });
 
-  // Bulk service operations
-  const bulkServiceMutation = useMutation({
-    mutationFn: async ({ userIds, serviceId, operation }: { 
-      userIds: string[]; 
-      serviceId: string; 
-      operation: 'activate' | 'deactivate' 
-    }) => {
+  const bulkServiceOperation = useMutation({
+    mutationFn: async ({ userIds, serviceId, operation }: { userIds: string[]; serviceId: string; operation: 'activate' | 'deactivate' }) => {
       const { data, error } = await supabase.rpc('bulk_service_operation', {
         user_ids: userIds,
         service_id: serviceId,
-        operation: operation
+        operation
       });
 
       if (error) throw error;
-      return data as BulkOperationResult[];
+      return data;
     },
-    onSuccess: (data) => {
-      const successCount = data.filter(r => r.success).length;
-      const failureCount = data.filter(r => !r.success).length;
-      
-      if (successCount > 0) {
-        toast.success(`${successCount} users updated successfully`);
-      }
-      if (failureCount > 0) {
-        toast.error(`${failureCount} users failed to update`);
-      }
-      
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-services-overview'] });
+      toast.success('Bulk operation completed successfully');
     },
     onError: (error: any) => {
-      console.error('Bulk operation failed:', error);
-      toast.error('Failed to perform bulk operation');
+      toast.error(`Bulk operation failed: ${error.message}`);
     }
   });
 
-  // Group data by user for easier display
-  const groupedByUser = userServices.reduce((acc, item) => {
-    if (!acc[item.user_id]) {
-      acc[item.user_id] = {
-        user: {
-          id: item.user_id,
-          email: item.email,
-          first_name: item.first_name,
-          last_name: item.last_name,
-          role: item.role,
-          user_type: item.user_type
-        },
-        services: []
-      };
-    }
-    acc[item.user_id].services.push({
-      service_id: item.service_id,
-      service_name: item.service_name,
-      service_type: item.service_type,
-      description: item.description,
-      setup_fee: item.setup_fee,
-      monthly_fee: item.monthly_fee,
-      is_premium: item.is_premium,
-      service_available: item.service_available,
-      is_activated: item.is_activated,
-      activated_at: item.activated_at,
-      subscription_status: item.subscription_status,
-      overall_status: item.overall_status,
-      is_eligible: item.is_eligible
-    });
-    return acc;
-  }, {} as Record<string, any>);
-
   return {
-    userServices,
-    groupedByUser: Object.values(groupedByUser),
+    groupedByUser,
     isLoading,
-    error,
-    toggleService: toggleServiceMutation.mutateAsync,
-    bulkServiceOperation: bulkServiceMutation.mutateAsync,
-    isUpdating: toggleServiceMutation.isPending || bulkServiceMutation.isPending
+    toggleService: toggleService.mutateAsync,
+    bulkServiceOperation: bulkServiceOperation.mutateAsync,
+    isUpdating: toggleService.isPending || bulkServiceOperation.isPending
   };
-}
+};

@@ -2,15 +2,15 @@
 import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 
 interface SubscriptionFiltersProps {
   searchTerm: string;
-  setSearchTerm: (term: string) => void;
+  setSearchTerm: (value: string) => void;
   statusFilter: string;
-  setStatusFilter: (status: string) => void;
+  setStatusFilter: (value: string) => void;
   serviceTypeFilter: string;
-  setServiceTypeFilter: (type: string) => void;
+  setServiceTypeFilter: (value: string) => void;
   availableStatuses: string[];
   availableServiceTypes: string[];
 }
@@ -26,7 +26,7 @@ export function SubscriptionFilters({
   availableServiceTypes
 }: SubscriptionFiltersProps) {
   return (
-    <div className="flex gap-4 mb-4">
+    <div className="flex gap-4 items-center">
       <div className="relative flex-1">
         <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
         <Input
@@ -37,33 +37,36 @@ export function SubscriptionFilters({
         />
       </div>
       
-      <Select value={statusFilter} onValueChange={setStatusFilter}>
-        <SelectTrigger className="w-40">
-          <SelectValue placeholder="All Statuses" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Statuses</SelectItem>
-          {availableStatuses.map((status) => (
-            <SelectItem key={status} value={status}>
-              {status.charAt(0).toUpperCase() + status.slice(1)}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter}>
-        <SelectTrigger className="w-40">
-          <SelectValue placeholder="All Types" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Types</SelectItem>
-          {availableServiceTypes.map((type) => (
-            <SelectItem key={type} value={type}>
-              {type.toUpperCase()}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="flex gap-2 items-center">
+        <Filter className="h-4 w-4 text-gray-500" />
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-32">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            {availableStatuses.map(status => (
+              <SelectItem key={status} value={status}>
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        
+        <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter}>
+          <SelectTrigger className="w-32">
+            <SelectValue placeholder="Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            {availableServiceTypes.map(type => (
+              <SelectItem key={type} value={type}>
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 }

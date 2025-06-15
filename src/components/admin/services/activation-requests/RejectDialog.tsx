@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 interface RejectDialogProps {
   open: boolean;
@@ -27,22 +28,28 @@ export function RejectDialog({
         <DialogHeader>
           <DialogTitle>Reject Service Request</DialogTitle>
         </DialogHeader>
+        
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Rejection Reason (Optional)</label>
+            <Label htmlFor="rejection-reason">Rejection Reason (Optional)</Label>
             <Textarea
+              id="rejection-reason"
+              placeholder="Provide a reason for rejecting this request..."
               value={rejectReason}
               onChange={(e) => onRejectReasonChange(e.target.value)}
-              placeholder="Enter reason for rejection..."
-              className="mt-1"
             />
           </div>
+          
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={onConfirmReject} disabled={isRejecting}>
-              Reject Request
+            <Button
+              variant="destructive"
+              onClick={onConfirmReject}
+              disabled={isRejecting}
+            >
+              {isRejecting ? 'Rejecting...' : 'Reject Request'}
             </Button>
           </div>
         </div>

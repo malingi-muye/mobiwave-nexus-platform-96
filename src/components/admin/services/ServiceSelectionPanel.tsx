@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Settings } from 'lucide-react';
 
 interface ServiceCatalog {
   id: string;
@@ -23,15 +24,32 @@ interface ServiceSelectionPanelProps {
   onServiceSelect: (service: ServiceCatalog) => void;
 }
 
-export function ServiceSelectionPanel({ 
-  services, 
-  selectedService, 
-  onServiceSelect 
+export function ServiceSelectionPanel({
+  services,
+  selectedService,
+  onServiceSelect
 }: ServiceSelectionPanelProps) {
+  const getServiceIcon = (serviceType: string) => {
+    switch (serviceType) {
+      case 'ussd': return '📱';
+      case 'shortcode': return '💬';
+      case 'mpesa': return '💳';
+      case 'survey': return '📊';
+      case 'servicedesk': return '🎫';
+      case 'rewards': return '🎁';
+      case 'whatsapp': return '💚';
+      case 'sms': return '📧';
+      default: return '⚙️';
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Select Service</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Settings className="w-5 h-5" />
+          Available Services
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
         {services.map((service) => (
@@ -44,15 +62,16 @@ export function ServiceSelectionPanel({
             }`}
             onClick={() => onServiceSelect(service)}
           >
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="font-medium text-sm">{service.service_name}</h4>
-              <Badge variant="outline" className="text-xs">
-                {service.service_type}
-              </Badge>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{getServiceIcon(service.service_type)}</span>
+              <div className="flex-1">
+                <h4 className="font-medium text-sm">{service.service_name}</h4>
+                <p className="text-xs text-gray-500 capitalize">{service.service_type}</p>
+              </div>
+              {service.is_premium && (
+                <Badge variant="outline" className="text-xs">Premium</Badge>
+              )}
             </div>
-            <p className="text-xs text-gray-600 line-clamp-2">
-              {service.description}
-            </p>
           </div>
         ))}
       </CardContent>

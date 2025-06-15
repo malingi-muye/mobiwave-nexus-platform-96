@@ -1,11 +1,9 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { CheckCircle, Circle, AlertCircle, Clock } from 'lucide-react';
-import { toast } from 'sonner';
+import { Zap, Play, Pause, MoreHorizontal } from 'lucide-react';
 
 interface ServiceCatalog {
   id: string;
@@ -21,243 +19,146 @@ interface ServiceCatalog {
   provider: string;
 }
 
-interface WorkflowStep {
-  id: string;
-  title: string;
-  description: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'failed';
-  required: boolean;
-}
-
 interface ServiceSetupWorkflowProps {
   services: ServiceCatalog[];
   activeWorkflow: string | null;
   onWorkflowComplete: () => void;
 }
 
-export function ServiceSetupWorkflow({
-  services,
-  activeWorkflow,
-  onWorkflowComplete
+export function ServiceSetupWorkflow({ 
+  services, 
+  activeWorkflow, 
+  onWorkflowComplete 
 }: ServiceSetupWorkflowProps) {
-  const [selectedService, setSelectedService] = useState<ServiceCatalog | null>(null);
-  const [workflowSteps, setWorkflowSteps] = useState<WorkflowStep[]>([]);
-  const [currentStep, setCurrentStep] = useState(0);
-
-  const initializeWorkflow = (service: ServiceCatalog) => {
-    const baseSteps: WorkflowStep[] = [
-      {
-        id: 'prerequisite_check',
-        title: 'Prerequisite Check',
-        description: 'Verify all requirements are met',
-        status: 'pending',
-        required: true
-      },
-      {
-        id: 'configuration',
-        title: 'Service Configuration',
-        description: 'Configure service-specific settings',
-        status: 'pending',
-        required: true
-      },
-      {
-        id: 'validation',
-        title: 'Configuration Validation',
-        description: 'Validate configuration settings',
-        status: 'pending',
-        required: true
-      },
-      {
-        id: 'provisioning',
-        title: 'Service Provisioning',
-        description: 'Provision service with provider',
-        status: 'pending',
-        required: true
-      },
-      {
-        id: 'testing',
-        title: 'Integration Testing',
-        description: 'Test service integration',
-        status: 'pending',
-        required: false
-      },
-      {
-        id: 'activation',
-        title: 'Service Activation',
-        description: 'Activate service for users',
-        status: 'pending',
-        required: true
-      }
-    ];
-
-    // Add service-specific steps
-    if (service.service_type === 'ussd') {
-      baseSteps.splice(2, 0, {
-        id: 'menu_setup',
-        title: 'USSD Menu Setup',
-        description: 'Configure USSD menu structure',
-        status: 'pending',
-        required: true
-      });
-    } else if (service.service_type === 'mpesa') {
-      baseSteps.splice(2, 0, {
-        id: 'mpesa_setup',
-        title: 'M-Pesa Integration Setup',
-        description: 'Configure M-Pesa integration parameters',
-        status: 'pending',
-        required: true
-      });
+  const workflows = [
+    {
+      id: '1',
+      name: 'New User Onboarding',
+      description: 'Complete setup workflow for new users including service activation',
+      steps: ['Create Profile', 'Verify Email', 'Activate Basic Services', 'Send Welcome Message'],
+      status: 'active',
+      completedRuns: 1250,
+      lastRun: '2024-01-15T14:30:00Z'
+    },
+    {
+      id: '2',
+      name: 'Service Migration',
+      description: 'Migrate users from old service configuration to new one',
+      steps: ['Backup Current Config', 'Apply New Configuration', 'Test Services', 'Notify Users'],
+      status: 'draft',
+      completedRuns: 0,
+      lastRun: null
+    },
+    {
+      id: '3',
+      name: 'Bulk Service Activation',
+      description: 'Activate multiple services for selected users in bulk',
+      steps: ['Validate Users', 'Check Eligibility', 'Activate Services', 'Send Notifications'],
+      status: 'paused',
+      completedRuns: 45,
+      lastRun: '2024-01-10T09:15:00Z'
     }
+  ];
 
-    setWorkflowSteps(baseSteps);
-    setCurrentStep(0);
-    setSelectedService(service);
-  };
-
-  const executeStep = async (stepIndex: number) => {
-    const step = workflowSteps[stepIndex];
-    
-    // Update step to in_progress
-    setWorkflowSteps(prev => prev.map((s, i) => 
-      i === stepIndex ? { ...s, status: 'in_progress' } : s
-    ));
-
-    try {
-      // Simulate step execution
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Mark step as completed
-      setWorkflowSteps(prev => prev.map((s, i) => 
-        i === stepIndex ? { ...s, status: 'completed' } : s
-      ));
-
-      toast.success(`${step.title} completed successfully`);
-
-      // Move to next step
-      if (stepIndex < workflowSteps.length - 1) {
-        setCurrentStep(stepIndex + 1);
-      } else {
-        // Workflow complete
-        toast.success('Service setup workflow completed successfully');
-        onWorkflowComplete();
-      }
-    } catch (error) {
-      // Mark step as failed
-      setWorkflowSteps(prev => prev.map((s, i) => 
-        i === stepIndex ? { ...s, status: 'failed' } : s
-      ));
-      toast.error(`${step.title} failed`);
-    }
-  };
-
-  const getStepIcon = (status: string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed':
-        return <CheckCircle className="w-5 h-5 text-green-600" />;
-      case 'in_progress':
-        return <Clock className="w-5 h-5 text-blue-600 animate-spin" />;
-      case 'failed':
-        return <AlertCircle className="w-5 h-5 text-red-600" />;
-      default:
-        return <Circle className="w-5 h-5 text-gray-400" />;
+      case 'active': return 'bg-green-100 text-green-800';
+      case 'paused': return 'bg-yellow-100 text-yellow-800';
+      case 'draft': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
-
-  const completedSteps = workflowSteps.filter(s => s.status === 'completed').length;
-  const progress = workflowSteps.length > 0 ? (completedSteps / workflowSteps.length) * 100 : 0;
-
-  if (!activeWorkflow) {
-    return (
-      <Card>
-        <CardContent className="text-center py-12">
-          <h3 className="text-lg font-medium mb-2">No Active Workflow</h3>
-          <p className="text-gray-600 mb-4">
-            Start a setup workflow to configure and provision services.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {services.slice(0, 6).map((service) => (
-              <Card key={service.id} className="cursor-pointer hover:shadow-md transition-shadow">
-                <CardContent className="p-4" onClick={() => initializeWorkflow(service)}>
-                  <h4 className="font-medium mb-2">{service.service_name}</h4>
-                  <p className="text-sm text-gray-600 mb-3">{service.description}</p>
-                  <Badge variant="outline">{service.service_type.toUpperCase()}</Badge>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <div className="space-y-6">
-      {selectedService && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Setup Workflow: {selectedService.service_name}</span>
-              <Badge variant="outline">{selectedService.service_type.toUpperCase()}</Badge>
-            </CardTitle>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span>Progress: {completedSteps} of {workflowSteps.length} steps</span>
-                <span>{Math.round(progress)}%</span>
-              </div>
-              <Progress value={progress} className="h-2" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {workflowSteps.map((step, index) => (
-                <div
-                  key={step.id}
-                  className={`flex items-center gap-4 p-4 rounded-lg border ${
-                    index === currentStep ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
-                  }`}
-                >
-                  {getStepIcon(step.status)}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-medium">{step.title}</h4>
-                      {step.required && <Badge variant="destructive" className="text-xs">Required</Badge>}
-                    </div>
-                    <p className="text-sm text-gray-600">{step.description}</p>
-                  </div>
-                  {index === currentStep && step.status === 'pending' && (
-                    <Button
-                      size="sm"
-                      onClick={() => executeStep(index)}
-                    >
-                      Execute
-                    </Button>
-                  )}
-                  {step.status === 'failed' && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => executeStep(index)}
-                    >
-                      Retry
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-2xl font-bold tracking-tight">Setup Workflows</h3>
+          <p className="text-gray-600">
+            Automated workflows for service setup and management tasks
+          </p>
+        </div>
+        <Button className="flex items-center gap-2">
+          <Zap className="w-4 h-4" />
+          Create New Workflow
+        </Button>
+      </div>
 
-            <div className="flex justify-end gap-3 mt-6">
-              <Button variant="outline" onClick={onWorkflowComplete}>
-                Cancel Workflow
-              </Button>
-              {progress === 100 && (
-                <Button onClick={onWorkflowComplete}>
-                  Complete Setup
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <div className="grid gap-4">
+        {workflows.map((workflow) => (
+          <Card key={workflow.id}>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">{workflow.name}</CardTitle>
+                  <p className="text-sm text-gray-600 mt-1">{workflow.description}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge className={getStatusColor(workflow.status)}>
+                    {workflow.status}
+                  </Badge>
+                  <Button size="sm" variant="ghost">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Workflow Steps</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {workflow.steps.map((step, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-xs font-medium">
+                          {index + 1}
+                        </div>
+                        <span className="text-sm">{step}</span>
+                        {index < workflow.steps.length - 1 && (
+                          <div className="w-4 h-0.5 bg-gray-300 ml-2" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-500">Completed Runs:</span>
+                    <span className="ml-2 font-medium">{workflow.completedRuns.toLocaleString()}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Last Run:</span>
+                    <span className="ml-2 font-medium">
+                      {workflow.lastRun 
+                        ? new Date(workflow.lastRun).toLocaleString()
+                        : 'Never'
+                      }
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button size="sm" className="flex items-center gap-1">
+                    <Play className="w-3 h-3" />
+                    Run Now
+                  </Button>
+                  <Button size="sm" variant="outline" className="flex items-center gap-1">
+                    <Pause className="w-3 h-3" />
+                    {workflow.status === 'active' ? 'Pause' : 'Resume'}
+                  </Button>
+                  <Button size="sm" variant="outline">
+                    Edit
+                  </Button>
+                  <Button size="sm" variant="outline">
+                    View Logs
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }

@@ -1,47 +1,65 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
-interface ServiceUsageData {
-  service_name: string;
-  active_users: number;
-  total_users: number;
-  adoption_rate: number;
+interface UsageDataPoint {
+  date: string;
+  usage: number;
+  service_type: string;
 }
 
 interface ServiceUsageChartProps {
-  data: ServiceUsageData[];
+  data: UsageDataPoint[];
 }
 
 export function ServiceUsageChart({ data }: ServiceUsageChartProps) {
+  // Transform data for chart
+  const chartData = data.reduce((acc: any[], item) => {
+    const existingDate = acc.find(d => d.date === item.date);
+    if (existingDate) {
+      existingDate[item.service_type] = item.usage;
+    } else {
+      acc.push({
+        date: item.date,
+        [item.service_type]: item.usage
+      });
+    }
+    return acc;
+  }, []);
+
+  const colors = {
+    sms: '#8884d8',
+    ussd: '#82ca9d',
+    mpesa: '#ffc658',
+    whatsapp: '#ff7300',
+    survey: '#0088fe'
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Service Adoption Rates</CardTitle>
+        <CardTitle>Service Usage Trends</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data}>
+          <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="service_name" 
-              tick={{ fontSize: 12 }}
-              angle={-45}
-              textAnchor="end"
-              height={60}
-            />
+            <XAxis dataKey="date" />
             <YAxis />
-            <Tooltip 
-              formatter={(value: number, name: string) => [
-                name === 'adoption_rate' ? `${value.toFixed(1)}%` : value,
-                name === 'adoption_rate' ? 'Adoption Rate' : 
-                name === 'active_users' ? 'Active Users' : 'Total Users'
-              ]}
-            />
-            <Bar dataKey="active_users" fill="#3b82f6" name="active_users" />
-            <Bar dataKey="adoption_rate" fill="#10b981" name="adoption_rate" />
-          </BarChart>
+            <Tooltip />
+            <Legend />
+            {Object.entries(colors).map(([service, color]) => (
+              <Line
+                key={service}
+                type="monotone"
+                dataKey={service}
+                stroke={color}
+                strokeWidth={2}
+                name={service.toUpperCase()}
+              />
+            ))}
+          </LineChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>

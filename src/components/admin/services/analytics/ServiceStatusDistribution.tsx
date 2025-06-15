@@ -3,25 +3,23 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
-interface StatusData {
+interface StatusDataPoint {
   status: string;
   count: number;
-  percentage: number;
 }
 
 interface ServiceStatusDistributionProps {
-  data: StatusData[];
+  data: StatusDataPoint[];
 }
 
-const COLORS = {
-  active: '#10b981',
-  subscribed: '#3b82f6',
-  pending: '#f59e0b',
-  available: '#6b7280',
-  inactive: '#ef4444'
-};
-
 export function ServiceStatusDistribution({ data }: ServiceStatusDistributionProps) {
+  const colors = {
+    active: '#10b981',
+    pending: '#f59e0b',
+    suspended: '#ef4444',
+    inactive: '#6b7280'
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -35,7 +33,7 @@ export function ServiceStatusDistribution({ data }: ServiceStatusDistributionPro
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={({ status, percentage }) => `${status}: ${percentage.toFixed(1)}%`}
+              label={({ status, percent }) => `${status}: ${(percent * 100).toFixed(0)}%`}
               outerRadius={80}
               fill="#8884d8"
               dataKey="count"
@@ -43,11 +41,11 @@ export function ServiceStatusDistribution({ data }: ServiceStatusDistributionPro
               {data.map((entry, index) => (
                 <Cell 
                   key={`cell-${index}`} 
-                  fill={COLORS[entry.status as keyof typeof COLORS] || '#6b7280'} 
+                  fill={colors[entry.status as keyof typeof colors] || '#8884d8'} 
                 />
               ))}
             </Pie>
-            <Tooltip formatter={(value: number) => [value, 'Count']} />
+            <Tooltip />
             <Legend />
           </PieChart>
         </ResponsiveContainer>

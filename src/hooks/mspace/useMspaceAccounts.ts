@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
@@ -25,29 +26,27 @@ interface ResellerClient {
 
 export const useMspaceAccounts = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const { handleError, handleSuccess, handleRetry } = useErrorHandler();
+  const { handleError, handleRetry } = useErrorHandler();
 
   const querySubAccounts = async (): Promise<SubUser[]> => {
     setIsLoading(true);
     try {
-      const subAccountsOperation = async () => {
+      const accountsOperation = async () => {
         const { data, error } = await supabase.functions.invoke('mspace-accounts', {
-          body: { operation: 'subAccounts' }
+          body: { operation: 'querysubs' }
         });
         
         if (error) {
           throw new Error(error.message);
         }
         
-        return data || [];
+        return data?.subUsers || [];
       };
 
-      const result = await handleRetry(subAccountsOperation);
-      handleSuccess('Sub-accounts retrieved successfully');
-      return result;
+      return await handleRetry(accountsOperation);
     } catch (error: any) {
       handleError(error, {
-        operation: 'Query Sub-Accounts',
+        operation: 'Query Sub Accounts',
         shouldRetry: true,
         retryFn: () => querySubAccounts()
       });
@@ -60,27 +59,23 @@ export const useMspaceAccounts = () => {
   const queryResellerClients = async (): Promise<ResellerClient[]> => {
     setIsLoading(true);
     try {
-      const resellerClientsOperation = async () => {
+      const clientsOperation = async () => {
         const { data, error } = await supabase.functions.invoke('mspace-accounts', {
-          body: { operation: 'resellerClients' }
+          body: { operation: 'queryresellerclients' }
         });
         
         if (error) {
           throw new Error(error.message);
         }
         
-        // Map the API response to our expected format
-        const apiResponse: ResellerClientApiResponse[] = data || [];
-        return apiResponse.map(client => ({
+        return (data?.resellerClients || []).map((client: ResellerClientApiResponse) => ({
           clientname: client.clientUserName,
           balance: client.smsBalance,
           status: 'active'
         }));
       };
 
-      const result = await handleRetry(resellerClientsOperation);
-      handleSuccess('Reseller clients retrieved successfully');
-      return result;
+      return await handleRetry(clientsOperation);
     } catch (error: any) {
       handleError(error, {
         operation: 'Query Reseller Clients',
@@ -99,7 +94,7 @@ export const useMspaceAccounts = () => {
       const topUpOperation = async () => {
         const { data, error } = await supabase.functions.invoke('mspace-accounts', {
           body: {
-            operation: 'topUpSubAccount',
+            operation: 'topupsub',
             clientname: payload.clientname,
             noOfSms: payload.noOfSms
           }
@@ -112,13 +107,11 @@ export const useMspaceAccounts = () => {
         return data;
       };
 
-      const result = await handleRetry(topUpOperation);
-      handleSuccess(`Sub-account ${payload.clientname} topped up with ${payload.noOfSms} SMS credits`);
-      return result;
+      return await handleRetry(topUpOperation);
     } catch (error: any) {
       handleError(error, {
-        operation: 'Top-up Sub-Account',
-        details: { clientname: payload.clientname, smsCount: payload.noOfSms },
+        operation: 'Top Up Sub Account',
+        details: payload,
         shouldRetry: true,
         retryFn: () => topUpSubAccount(payload)
       });
@@ -134,7 +127,7 @@ export const useMspaceAccounts = () => {
       const topUpOperation = async () => {
         const { data, error } = await supabase.functions.invoke('mspace-accounts', {
           body: {
-            operation: 'topUpResellerClient',
+            operation: 'topupresellerclient',
             clientname: payload.clientname,
             noOfSms: payload.noOfSms
           }
@@ -147,13 +140,11 @@ export const useMspaceAccounts = () => {
         return data;
       };
 
-      const result = await handleRetry(topUpOperation);
-      handleSuccess(`Reseller client ${payload.clientname} topped up with ${payload.noOfSms} SMS credits`);
-      return result;
+      return await handleRetry(topUpOperation);
     } catch (error: any) {
       handleError(error, {
-        operation: 'Top-up Reseller Client',
-        details: { clientname: payload.clientname, smsCount: payload.noOfSms },
+        operation: 'Top Up Reseller Client',
+        details: payload,
         shouldRetry: true,
         retryFn: () => topUpResellerClient(payload)
       });

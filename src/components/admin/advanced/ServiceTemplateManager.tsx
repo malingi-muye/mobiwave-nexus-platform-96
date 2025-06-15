@@ -48,22 +48,17 @@ export function ServiceTemplateManager() {
     setEditingTemplate(template);
   };
 
-  const handleDelete = async (template: ServiceTemplate) => {
-    await deleteTemplate(template.id);
+  const handleDelete = async (templateId: string) => {
+    await deleteTemplate(templateId);
   };
 
   const handleDuplicate = async (template: ServiceTemplate) => {
     await duplicateTemplate(template);
   };
 
-  const handleCreateTemplate = async (templateData: any): Promise<boolean> => {
-    try {
-      await createTemplate(templateData);
-      return true;
-    } catch (error) {
-      console.error('Failed to create template:', error);
-      return false;
-    }
+  const handleCreateTemplate = async (templateData: any) => {
+    await createTemplate(templateData);
+    setIsCreating(false);
   };
 
   const exportTemplates = () => {

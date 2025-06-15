@@ -9,7 +9,6 @@ import {
   Mail,
   Smartphone,
   FileText,
-  HelpCircle,
   Headphones,
   Zap,
   DollarSign,
@@ -90,6 +89,13 @@ export const sidebarSections: SidebarSection[] = [
     title: 'Services',
     items: [
       {
+        id: 'user-services',
+        label: 'All Services',
+        href: '/user-services',
+        icon: <Grid3X3 className="w-5 h-5" />,
+        color: 'bg-gray-600'
+      },
+      {
         id: 'surveys',
         label: 'Surveys & Forms',
         href: '/surveys',
@@ -116,15 +122,7 @@ export const sidebarSections: SidebarSection[] = [
         href: '/mpesa',
         icon: <DollarSign className="w-5 h-5" />,
         color: 'bg-emerald-500'
-      },
-      {
-        id: 'whatsapp',
-        label: 'WhatsApp',
-        href: '/whatsapp',
-        icon: <MessageCircle className="w-5 h-5" />,
-        color: 'bg-green-600'
-      },
-      // ... add more service menu items as needed, ensure no duplicates
+      }
     ]
   },
   {

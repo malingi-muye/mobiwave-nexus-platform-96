@@ -13,14 +13,16 @@ import {
   TrendingUp,
   Activity,
   Zap,
-  AlertTriangle
+  AlertTriangle,
+  FileText,
+  PlusCircle,
 } from 'lucide-react';
 import { ClientDashboardLayout } from './ClientDashboardLayout';
 import { useAuth } from '@/hooks/useAuth';
-import { useCampaigns } from '@/hooks/useCampaigns';
-import { useSurveys } from '@/hooks/useSurveys';
-import { useContacts } from '@/hooks/useContacts';
-import { useUserCredits } from '@/hooks/useUserCredits';
+import { useCampaigns, Campaign } from '@/hooks/useCampaigns';
+import { useSurveys, Survey } from '@/hooks/useSurveys';
+import { useContacts, Contact } from '@/hooks/useContacts';
+import { useUserCredits, UserCredits } from '@/hooks/useUserCredits';
 import { useRealTimeUpdates } from '@/hooks/useRealTimeUpdates';
 import { useCacheOptimization, usePerformanceMonitoring } from '@/hooks/usePerformanceOptimization';
 import { ErrorBoundaryWrapper } from '@/components/common/ErrorBoundaryWrapper';
@@ -35,7 +37,7 @@ export function ClientDashboard() {
   const { campaigns, isLoading: campaignsLoading } = useCampaigns();
   const { surveys, isLoading: surveysLoading } = useSurveys();
   const { contacts, isLoading: contactsLoading } = useContacts();
-  const { credits, isLoading: creditsLoading } = useUserCredits();
+  const { data: credits, isLoading: creditsLoading } = useUserCredits();
 
   // Performance optimizations
   const { prefetchKey } = useCacheOptimization();
@@ -43,13 +45,12 @@ export function ClientDashboard() {
   const renderStartTime = performance.now();
 
   React.useEffect(() => {
-    // Correct usage: measure render time with no arguments
-    measureRenderTime();
-    // Prefetch likely next pages (simulate with string key or array as in hook)
+    measureRenderTime(renderStartTime);
+    // Prefetch likely next pages
     if (!campaignsLoading) {
       prefetchKey("campaign-analytics");
     }
-  }, [campaignsLoading]);
+  }, [campaignsLoading, measureRenderTime, prefetchKey, renderStartTime]);
 
   const { isConnected, latestUpdate } = useRealTimeUpdates({
     userId: user?.id,
@@ -95,32 +96,36 @@ export function ClientDashboard() {
         <div className="space-y-6 p-4 sm:p-6">
           {/* Header Section */}
           <DashboardHeader isConnected={isConnected} />
+
           {/* Main Metrics Grid */}
           <MetricsGrid />
-          {/* Key metrics cards */}
+
+          {/* Key metrics cards - this component is now defined below */}
           <KeyMetricsCards
-            activeCampaigns={activeCampaigns}
-            campaigns={campaigns}
-            activeSurveys={activeSurveys}
-            surveys={surveys}
-            contacts={contacts}
-            credits={credits}
+            activeCampaignsCount={activeCampaigns.length}
+            totalCampaigns={campaigns?.length || 0}
+            activeSurveysCount={activeSurveys.length}
+            totalContacts={totalContacts}
             remainingCredits={remainingCredits}
           />
-          {/* Quick Actions */}
+
+          {/* Quick Actions - this component is now defined below */}
           <QuickActions />
+
           {/* My Services */}
           <div>
             <h2 className="text-xl font-bold mt-10 mb-3">My Services</h2>
             <ServiceStatusWidget />
           </div>
-          {/* Recent Activity */}
+
+          {/* Recent Activity - this component is now defined below */}
           <RecentActivity
             recentCampaigns={recentCampaigns}
             recentSurveys={recentSurveys}
             getStatusColor={getStatusColor}
           />
-          {/* Real-time Update Indicator */}
+
+          {/* Real-time Update Indicator - this component is now defined below */}
           {latestUpdate && (
             <RealtimeUpdateBanner latestUpdate={latestUpdate} />
           )}
@@ -130,7 +135,8 @@ export function ClientDashboard() {
   );
 }
 
-// Extracted header as a subcomponent for clarity and maintainability
+// Sub-components for ClientDashboard clarity and to fix build errors
+
 function DashboardHeader({ isConnected }: { isConnected: boolean }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -153,4 +159,134 @@ function DashboardHeader({ isConnected }: { isConnected: boolean }) {
   );
 }
 
-// Add similar extractions for KeyMetricsCards, QuickActions, RecentActivity, RealtimeUpdateBanner if you want to break out further, or keep inline if codebase small.
+interface KeyMetricsCardsProps {
+  activeCampaignsCount: number;
+  totalCampaigns: number;
+  activeSurveysCount: number;
+  totalContacts: number;
+  remainingCredits: number;
+}
+
+function KeyMetricsCards({
+  activeCampaignsCount,
+  totalCampaigns,
+  activeSurveysCount,
+  totalContacts,
+  remainingCredits
+}: KeyMetricsCardsProps) {
+  const metrics = [
+    { title: 'Active Campaigns', value: activeCampaignsCount, icon: Send, path: '/bulk-sms' },
+    { title: 'Active Surveys', value: activeSurveysCount, icon: FileText, path: '/surveys' },
+    { title: 'Total Contacts', value: totalContacts, icon: Users, path: '/contacts' },
+    { title: 'Remaining Credits', value: `$${remainingCredits.toFixed(2)}`, icon: CreditCard, path: '/billing' }
+  ];
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {metrics.map((metric, index) => (
+        <Card key={index}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{metric.title}</CardTitle>
+            <metric.icon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metric.value}</div>
+            <p className="text-xs text-muted-foreground">
+              <Link to={metric.path} className="hover:underline">View details</Link>
+            </p>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function QuickActions() {
+  const actions = [
+    { label: 'New Campaign', path: '/bulk-sms', icon: Send },
+    { label: 'New Survey', path: '/survey-builder', icon: FileText },
+    { label: 'Add Contact', path: '/contacts', icon: PlusCircle },
+    { label: 'Buy Credits', path: '/billing', icon: CreditCard }
+  ];
+
+  return (
+    <div>
+      <h2 className="text-xl font-bold mb-3">Quick Actions</h2>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {actions.map((action, index) => (
+          <Button asChild key={index} variant="outline">
+            <Link to={action.path}>
+              <action.icon className="mr-2 h-4 w-4" />
+              {action.label}
+            </Link>
+          </Button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+interface RecentActivityProps {
+  recentCampaigns: Campaign[];
+  recentSurveys: Survey[];
+  getStatusColor: (status: string) => string;
+}
+
+function RecentActivity({ recentCampaigns, recentSurveys, getStatusColor }: RecentActivityProps) {
+  return (
+    <div className="grid gap-6 md:grid-cols-2">
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Campaigns</CardTitle>
+          <CardDescription>Your latest SMS campaigns.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-3">
+            {recentCampaigns.map(campaign => (
+              <li key={campaign.id} className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">{campaign.name}</p>
+                  <p className="text-sm text-muted-foreground">Sent: {new Date(campaign.created_at).toLocaleDateString()}</p>
+                </div>
+                <Badge className={getStatusColor(campaign.status)}>{campaign.status}</Badge>
+              </li>
+            ))}
+             {recentCampaigns.length === 0 && <p className="text-sm text-gray-500">No recent campaigns.</p>}
+          </ul>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Surveys</CardTitle>
+          <CardDescription>Your latest surveys and forms.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-3">
+            {recentSurveys.map(survey => (
+              <li key={survey.id} className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">{survey.title}</p>
+                  <p className="text-sm text-muted-foreground">Created: {new Date(survey.created_at).toLocaleDateString()}</p>
+                </div>
+                <Badge className={getStatusColor(survey.status)}>{survey.status}</Badge>
+              </li>
+            ))}
+             {recentSurveys.length === 0 && <p className="text-sm text-gray-500">No recent surveys.</p>}
+          </ul>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function RealtimeUpdateBanner({ latestUpdate }: { latestUpdate: any }) {
+  return (
+    <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-3">
+      <Zap className="w-5 h-5 text-blue-600" />
+      <div>
+        <p className="font-semibold text-blue-800">Live Update</p>
+        <p className="text-sm text-blue-700">{latestUpdate.message}</p>
+      </div>
+    </div>
+  );
+}

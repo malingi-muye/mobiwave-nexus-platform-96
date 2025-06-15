@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from './PasswordInput';
 import { PasswordRequirements } from './PasswordRequirements';
+import { ValidationSchemas } from '@/components/security/EnhancedInputValidator';
 
 interface SignupFormFieldsProps {
   email: string;
@@ -38,6 +39,28 @@ export function SignupFormFields({
   showConfirmPassword,
   setShowConfirmPassword
 }: SignupFormFieldsProps) {
+  
+  const handleNameChange = (value: string, setter: (value: string) => void) => {
+    try {
+      const sanitized = ValidationSchemas.name.parse(value);
+      setter(sanitized);
+    } catch (error) {
+      // If validation fails, still update but log the issue
+      console.warn('Name validation failed:', error);
+      setter(value);
+    }
+  };
+
+  const handleEmailChange = (value: string) => {
+    try {
+      const sanitized = ValidationSchemas.email.parse(value);
+      setEmail(sanitized);
+    } catch (error) {
+      // Still update for real-time feedback, validation happens on submit
+      setEmail(value);
+    }
+  };
+
   return (
     <>
       <div className="grid grid-cols-2 gap-4">
@@ -47,8 +70,9 @@ export function SignupFormFields({
             id="firstName"
             type="text"
             value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
+            onChange={(e) => handleNameChange(e.target.value, setFirstName)}
             required
+            maxLength={100}
           />
         </div>
         <div className="space-y-2">
@@ -57,8 +81,9 @@ export function SignupFormFields({
             id="lastName"
             type="text"
             value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
+            onChange={(e) => handleNameChange(e.target.value, setLastName)}
             required
+            maxLength={100}
           />
         </div>
       </div>
@@ -69,8 +94,10 @@ export function SignupFormFields({
           id="email"
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => handleEmailChange(e.target.value)}
           required
+          maxLength={255}
+          autoComplete="email"
         />
       </div>
 

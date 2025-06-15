@@ -50,10 +50,14 @@ export function useSignupHandler() {
     setIsLoading(true);
 
     try {
+      // SECURITY FIX: Add proper email redirect configuration
+      const redirectUrl = `${window.location.origin}/auth`;
+      
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: redirectUrl,
           data: {
             first_name: firstName,
             last_name: lastName,

@@ -6,10 +6,10 @@ import { Toaster } from "./components/ui/sonner";
 import { AuthProvider } from './components/auth/AuthProvider';
 import NotFound from './pages/NotFound';
 
-// Route arrays
+// Route components
 import { publicRoutes } from './routes/PublicRoutes';
 import { clientRoutes } from './routes/ClientRoutes';
-import { adminRoutes } from './routes/AdminRoutes';
+import { AdminRoutes } from './routes/AdminRoutes';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,7 +34,7 @@ function App() {
               {clientRoutes}
 
               {/* Admin Routes */}
-              {adminRoutes}
+              <Route path="/admin/*" element={<AdminRoutes />} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>

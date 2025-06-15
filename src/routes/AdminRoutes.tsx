@@ -1,4 +1,3 @@
-
 import { Routes, Route } from 'react-router-dom';
 import { RoleBasedRoute } from '../components/auth/RoleBasedRoute';
 import AdminDashboard from '../pages/AdminDashboard';
@@ -22,6 +21,7 @@ import SystemHealth from '../pages/admin/SystemHealth';
 import AdvancedSecurityCenter from '../pages/admin/AdvancedSecurityCenter';
 import NotificationCenter from '../pages/admin/NotificationCenter';
 import SystemIntegrity from '../pages/admin/SystemIntegrity';
+import ApiManagement from '../pages/ApiManagement';
 
 export function AdminRoutes() {
   return (
@@ -191,6 +191,14 @@ export function AdminRoutes() {
         element={
           <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
             <NotificationCenter />
+          </RoleBasedRoute>
+        } 
+      />
+      <Route 
+        path="/admin/api" 
+        element={
+          <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
+            <ApiManagement />
           </RoleBasedRoute>
         } 
       />

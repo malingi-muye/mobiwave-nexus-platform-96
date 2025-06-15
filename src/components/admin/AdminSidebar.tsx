@@ -18,7 +18,8 @@ import {
   Bell,
   Server,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  Globe
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -78,6 +79,11 @@ const sidebarItems = [
       { title: 'Database Admin', href: '/admin/database', icon: Database },
       { title: 'System Logs', href: '/admin/logs', icon: FileText },
     ]
+  },
+  {
+    title: 'API Management',
+    href: '/admin/api',
+    icon: Globe,
   },
   {
     title: 'Revenue Reports',

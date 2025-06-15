@@ -50,7 +50,8 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
     }
 
     try {
-      const campaign = await createCampaign({
+      // Fix: Call the mutation function, not the result
+      const campaign = await createCampaign.mutateAsync({
         ...campaignData,
         status,
         recipient_count: campaignData.recipients.length,

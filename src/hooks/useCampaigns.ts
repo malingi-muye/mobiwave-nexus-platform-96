@@ -39,10 +39,11 @@ export const useCampaigns = () => {
   });
 
   const createCampaign = useMutation({
-    mutationFn: async (campaignData: Partial<Campaign>) => {
+    mutationFn: async (campaignData: Omit<Campaign, 'id' | 'created_at' | 'updated_at'>) => {
+      // Fix: Pass single object instead of array
       const { data, error } = await supabase
         .from('campaigns')
-        .insert([campaignData])
+        .insert(campaignData)
         .select()
         .single();
 

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -79,7 +78,11 @@ export function ContactsManager() {
 
   const handleAddGroup = async () => {
     try {
-      await createContactGroup(newGroup);
+      // Add the required contact_count property
+      await createContactGroup({
+        ...newGroup,
+        contact_count: 0
+      });
       setNewGroup({ name: '', description: '' });
       setIsAddGroupOpen(false);
     } catch (error) {
@@ -137,7 +140,7 @@ export function ContactsManager() {
           
           return contact;
         })
-        .filter(contact => contact.phone); // Only import contacts with phone numbers
+        .filter(contact => contact.phone);
 
       await importContacts(contactsToImport);
       toast.success(`Successfully imported ${contactsToImport.length} contacts`);

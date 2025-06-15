@@ -44,8 +44,9 @@ export function EnhancedContactsManager() {
     await importContacts(contactsToImport);
   };
 
-  const handleMergeContacts = async (keepContact: any, duplicateIds: string[]) => {
-    await mergeContacts({ keepContact, duplicateIds });
+  const handleMergeContacts = async (primaryId: string, duplicateIds: string[]) => {
+    // Fix the parameter name to match the expected interface
+    await mergeContacts({ primaryId, duplicateIds });
   };
 
   const handleCreateContactGroup = async (group: any) => {

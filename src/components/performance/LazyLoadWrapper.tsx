@@ -22,18 +22,18 @@ export const LazyLoadWrapper: React.FC<LazyLoadWrapperProps> = ({
   );
 };
 
-// HOC for lazy loading components
-export const withLazyLoading = <P extends Record<string, any>>(
+// Fixed HOC for lazy loading components
+export const withLazyLoading = <P extends object>(
   importFn: () => Promise<{ default: React.ComponentType<P> }>,
   fallback?: React.ReactNode
 ) => {
   const LazyComponent = lazy(importFn);
   
-  return (props: P) => (
+  return React.forwardRef<any, P>((props, ref) => (
     <LazyLoadWrapper fallback={fallback}>
-      <LazyComponent {...props} />
+      <LazyComponent {...props} ref={ref} />
     </LazyLoadWrapper>
-  );
+  ));
 };
 
 // Lazy loaded route components

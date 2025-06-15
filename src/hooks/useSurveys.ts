@@ -40,17 +40,25 @@ export const useSurveys = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      
+      // Fix: Properly type the data transformation
+      return (data || []).map(item => ({
+        ...item,
+        question_flow: Array.isArray(item.question_flow) ? item.question_flow : [],
+        target_audience: item.target_audience || {},
+        distribution_channels: Array.isArray(item.distribution_channels) ? item.distribution_channels : []
+      }));
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 
   const createSurvey = useMutation({
-    mutationFn: async (surveyData: Partial<Survey>) => {
+    mutationFn: async (surveyData: Omit<Survey, 'id' | 'created_at' | 'updated_at'>) => {
+      // Fix: Pass single object instead of array
       const { data, error } = await supabase
         .from('surveys')
-        .insert([surveyData])
+        .insert(surveyData)
         .select()
         .single();
 

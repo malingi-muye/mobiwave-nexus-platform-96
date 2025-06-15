@@ -1,4 +1,3 @@
-
 import { 
   LayoutDashboard, 
   MessageSquare, 
@@ -32,6 +31,19 @@ export interface SidebarSection {
   items: SidebarItem[];
 }
 
+// These are the canonical types for services in the catalog
+export const ACTIVATION_REQUIRED_SERVICE_TYPES = [
+  'surveys',   // will map to /surveys
+  'ussd',      // will map to /ussd
+  'mpesa',
+  'servicedesk',
+  'rewards',
+  'whatsapp',
+  'sms',
+  // ... add more if catalog grows
+];
+
+// On the "services" section: Remove survey-builder if not required, deduplicate surveys tab
 export const sidebarSections: SidebarSection[] = [
   {
     id: 'main',
@@ -85,13 +97,6 @@ export const sidebarSections: SidebarSection[] = [
         color: 'bg-purple-500'
       },
       {
-        id: 'survey-builder',
-        label: 'Survey Builder',
-        href: '/survey-builder',
-        icon: <FileText className="w-5 h-5" />,
-        color: 'bg-purple-600'
-      },
-      {
         id: 'service-desk',
         label: 'Service Desk',
         href: '/service-desk',
@@ -113,12 +118,13 @@ export const sidebarSections: SidebarSection[] = [
         color: 'bg-emerald-500'
       },
       {
-        id: 'subscriptions',
-        label: 'My Subscriptions',
-        href: '/subscriptions',
-        icon: <Zap className="w-5 h-5" />,
-        color: 'bg-yellow-500'
-      }
+        id: 'whatsapp',
+        label: 'WhatsApp',
+        href: '/whatsapp',
+        icon: <MessageCircle className="w-5 h-5" />,
+        color: 'bg-green-600'
+      },
+      // ... add more service menu items as needed, ensure no duplicates
     ]
   },
   {

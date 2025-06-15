@@ -29,7 +29,7 @@ export const useWebhooks = () => {
     queryKey: ['webhook-endpoints'],
     queryFn: async (): Promise<WebhookEndpoint[]> => {
       const { data, error } = await supabase
-        .from('webhook_endpoints' as any)
+        .from('webhook_endpoints')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -49,7 +49,7 @@ export const useWebhooks = () => {
       const secret = `whsec_${Math.random().toString(36).substring(2, 15)}`;
       
       const { data, error } = await supabase
-        .from('webhook_endpoints' as any)
+        .from('webhook_endpoints')
         .insert({
           name: webhookData.name,
           url: webhookData.url,
@@ -82,7 +82,7 @@ export const useWebhooks = () => {
   const toggleWebhook = useMutation({
     mutationFn: async ({ webhookId, isActive }: { webhookId: string; isActive: boolean }) => {
       const { error } = await supabase
-        .from('webhook_endpoints' as any)
+        .from('webhook_endpoints')
         .update({ is_active: isActive })
         .eq('id', webhookId);
 
@@ -100,7 +100,7 @@ export const useWebhooks = () => {
   const deleteWebhook = useMutation({
     mutationFn: async (webhookId: string) => {
       const { error } = await supabase
-        .from('webhook_endpoints' as any)
+        .from('webhook_endpoints')
         .delete()
         .eq('id', webhookId);
 
@@ -135,7 +135,7 @@ export const useWebhooks = () => {
 
   const getWebhookDeliveries = async (webhookId: string) => {
     const { data, error } = await supabase
-      .from('webhook_deliveries' as any)
+      .from('webhook_deliveries')
       .select('*')
       .eq('webhook_id', webhookId)
       .order('created_at', { ascending: false })

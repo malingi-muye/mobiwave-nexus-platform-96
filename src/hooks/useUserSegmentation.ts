@@ -23,51 +23,35 @@ interface CreateSegmentData {
 export const useUserSegmentation = () => {
   const queryClient = useQueryClient();
 
-  // Using raw SQL query since the table might not be in types yet
+  // Fetch user segments using direct table access
   const { data: segments = [], isLoading } = useQuery({
     queryKey: ['user-segments'],
     queryFn: async (): Promise<UserSegment[]> => {
-      const { data, error } = await supabase.rpc('get_user_segments');
-
-      if (error) {
-        // Fallback: try direct table access
-        const fallback = await supabase
-          .from('user_segments' as any)
-          .select('*')
-          .order('created_at', { ascending: false });
-        
-        if (fallback.error) throw fallback.error;
-        return fallback.data || [];
-      }
+      const { data, error } = await supabase
+        .from('user_segments')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
       return data || [];
     }
   });
 
   const createSegment = useMutation({
     mutationFn: async (segmentData: CreateSegmentData): Promise<UserSegment> => {
-      const { data, error } = await supabase.rpc('create_user_segment', {
-        segment_name: segmentData.name,
-        segment_description: segmentData.description,
-        segment_criteria: segmentData.criteria
-      });
+      const { data, error } = await supabase
+        .from('user_segments')
+        .insert({
+          name: segmentData.name,
+          description: segmentData.description,
+          criteria: segmentData.criteria,
+          created_by: (await supabase.auth.getUser()).data.user?.id,
+          is_active: true
+        })
+        .select()
+        .single();
 
-      if (error) {
-        // Fallback: direct insert
-        const fallback = await supabase
-          .from('user_segments' as any)
-          .insert({
-            name: segmentData.name,
-            description: segmentData.description,
-            criteria: segmentData.criteria,
-            created_by: (await supabase.auth.getUser()).data.user?.id,
-            is_active: true
-          })
-          .select()
-          .single();
-
-        if (fallback.error) throw fallback.error;
-        return fallback.data;
-      }
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {
@@ -82,7 +66,7 @@ export const useUserSegmentation = () => {
   const deleteSegment = useMutation({
     mutationFn: async (segmentId: string) => {
       const { error } = await supabase
-        .from('user_segments' as any)
+        .from('user_segments')
         .delete()
         .eq('id', segmentId);
 
@@ -99,7 +83,7 @@ export const useUserSegmentation = () => {
 
   const getSegmentUsers = async (segmentId: string) => {
     const { data, error } = await supabase
-      .from('user_segment_members' as any)
+      .from('user_segment_members')
       .select(`
         *,
         profiles!inner(*)

@@ -17,6 +17,17 @@ import { useServiceTemplates } from '@/hooks/useServiceTemplates';
 import { TemplateCard } from '../services/templates/TemplateCard';
 import { TemplateCreateForm } from '../services/templates/TemplateCreateForm';
 
+interface ServiceTemplate {
+  id: string;
+  name: string;
+  description: string;
+  service_type: string;
+  template_config: any;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export function ServiceTemplateManager() {
   const { 
     templates, 
@@ -27,12 +38,24 @@ export function ServiceTemplateManager() {
     duplicateTemplate 
   } = useServiceTemplates();
 
-  const [editingTemplate, setEditingTemplate] = useState<any>(null);
+  const [editingTemplate, setEditingTemplate] = useState<ServiceTemplate | null>(null);
 
   const serviceTypes = ['ussd', 'sms', 'mpesa', 'whatsapp', 'survey'];
 
-  const handleEdit = (template: any) => {
+  const handleEdit = (template: ServiceTemplate) => {
     setEditingTemplate(template);
+  };
+
+  const handleDelete = (template: ServiceTemplate) => {
+    deleteTemplate(template);
+  };
+
+  const handleDuplicate = (template: ServiceTemplate) => {
+    duplicateTemplate(template);
+  };
+
+  const handleCreateTemplate = async (templateData: any): Promise<boolean> => {
+    return await createTemplate(templateData);
   };
 
   const exportTemplates = () => {
@@ -88,8 +111,8 @@ export function ServiceTemplateManager() {
             key={template.id}
             template={template}
             onEdit={handleEdit}
-            onDuplicate={duplicateTemplate}
-            onDelete={deleteTemplate}
+            onDuplicate={handleDuplicate}
+            onDelete={handleDelete}
           />
         ))}
       </div>
@@ -97,7 +120,7 @@ export function ServiceTemplateManager() {
       {isCreating && (
         <TemplateCreateForm
           serviceTypes={serviceTypes}
-          onSubmit={createTemplate}
+          onSubmit={handleCreateTemplate}
           onCancel={() => setIsCreating(false)}
         />
       )}

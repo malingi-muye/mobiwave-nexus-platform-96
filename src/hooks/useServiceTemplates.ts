@@ -34,7 +34,7 @@ export const useServiceTemplates = () => {
 
   const [isCreating, setIsCreating] = useState(false);
 
-  const createTemplate = async (templateData: any) => {
+  const createTemplate = async (templateData: any): Promise<boolean> => {
     try {
       const newTemplate: ServiceTemplate = {
         id: Date.now().toString(),
@@ -46,35 +46,34 @@ export const useServiceTemplates = () => {
       setTemplates(prev => [...prev, newTemplate]);
       setIsCreating(false);
       toast.success('Template created successfully');
+      return true;
     } catch (error) {
       toast.error('Failed to create template');
+      return false;
     }
   };
 
-  const deleteTemplate = async (templateId: string) => {
+  const deleteTemplate = async (template: ServiceTemplate): Promise<void> => {
     try {
-      setTemplates(prev => prev.filter(t => t.id !== templateId));
+      setTemplates(prev => prev.filter(t => t.id !== template.id));
       toast.success('Template deleted successfully');
     } catch (error) {
       toast.error('Failed to delete template');
     }
   };
 
-  const duplicateTemplate = async (templateId: string) => {
+  const duplicateTemplate = async (template: ServiceTemplate): Promise<void> => {
     try {
-      const template = templates.find(t => t.id === templateId);
-      if (template) {
-        const duplicated: ServiceTemplate = {
-          ...template,
-          id: Date.now().toString(),
-          name: `${template.name} (Copy)`,
-          is_default: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        setTemplates(prev => [...prev, duplicated]);
-        toast.success('Template duplicated successfully');
-      }
+      const duplicated: ServiceTemplate = {
+        ...template,
+        id: Date.now().toString(),
+        name: `${template.name} (Copy)`,
+        is_default: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      setTemplates(prev => [...prev, duplicated]);
+      toast.success('Template duplicated successfully');
     } catch (error) {
       toast.error('Failed to duplicate template');
     }

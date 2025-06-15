@@ -8,7 +8,7 @@ interface UserServiceActionsProps {
   serviceId: string;
   isActivated: boolean;
   isEligible: boolean;
-  onToggle: (params: { userId: string; serviceId: string; operation: 'activate' | 'deactivate' }) => Promise<void>;
+  onToggle: (params: { userId: string; serviceId: string; operation: 'activate' | 'deactivate' }) => Promise<any>;
   isLoading: boolean;
 }
 
@@ -28,8 +28,8 @@ export function UserServiceActions({
     );
   }
 
-  const handleToggle = () => {
-    onToggle({
+  const handleToggle = async () => {
+    await onToggle({
       userId,
       serviceId,
       operation: isActivated ? 'deactivate' : 'activate'

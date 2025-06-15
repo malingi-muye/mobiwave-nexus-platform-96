@@ -63,6 +63,14 @@ export function UserServicesMatrix() {
     }
   };
 
+  const handleToggleService = async (params: { userId: string; serviceId: string; operation: 'activate' | 'deactivate' }) => {
+    try {
+      await toggleService(params);
+    } catch (error) {
+      console.error('Service toggle failed:', error);
+    }
+  };
+
   // Get all unique services for the service selector
   const allServices = groupedByUser.length > 0 
     ? groupedByUser[0].services || []
@@ -225,7 +233,7 @@ export function UserServicesMatrix() {
                                 serviceId={service.service_id}
                                 isActivated={userService?.is_activated || false}
                                 isEligible={userService?.is_eligible || false}
-                                onToggle={toggleService}
+                                onToggle={handleToggleService}
                                 isLoading={isUpdating}
                               />
                             </div>

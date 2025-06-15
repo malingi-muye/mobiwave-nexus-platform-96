@@ -46,16 +46,12 @@ export function UserSubscriptionsView({
   isUpdating,
   onToggleServiceStatus 
 }: UserSubscriptionsViewProps) {
-  // Transform userSubscriptions to ensure all required properties are present
-  const transformedSubscriptions = userSubscriptions.map(subscription => ({
+  // Transform userSubscriptions for the useServiceFilters hook (which expects a simpler interface)
+  const subscriptionsForFiltering = userSubscriptions.map(subscription => ({
     id: subscription.id,
     user_id: subscription.user_id,
     service_id: subscription.service_id,
     status: subscription.status,
-    activated_at: subscription.activated_at || new Date().toISOString(),
-    configuration: subscription.configuration || {},
-    setup_fee_paid: subscription.setup_fee_paid || false,
-    monthly_billing_active: subscription.monthly_billing_active || false,
     service: {
       id: subscription.service.id,
       service_name: subscription.service.service_name,
@@ -73,7 +69,12 @@ export function UserSubscriptionsView({
     filteredSubscriptions,
     availableStatuses,
     availableServiceTypes
-  } = useServiceFilters(transformedSubscriptions, users);
+  } = useServiceFilters(subscriptionsForFiltering, users);
+
+  // Map filtered results back to full subscription objects
+  const filteredFullSubscriptions = filteredSubscriptions.map(filtered => 
+    userSubscriptions.find(sub => sub.id === filtered.id)!
+  );
 
   return (
     <ServiceLoadingWrapper isLoading={isLoading}>
@@ -95,7 +96,7 @@ export function UserSubscriptionsView({
           />
         </CardHeader>
         <CardContent>
-          {filteredSubscriptions.length === 0 ? (
+          {filteredFullSubscriptions.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-500">No subscriptions found matching your filters.</p>
             </div>
@@ -111,7 +112,7 @@ export function UserSubscriptionsView({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredSubscriptions.map((subscription) => (
+                {filteredFullSubscriptions.map((subscription) => (
                   <SubscriptionTableRow
                     key={subscription.id}
                     subscription={subscription}

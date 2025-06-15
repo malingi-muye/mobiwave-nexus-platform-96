@@ -46,6 +46,15 @@ export function UserSubscriptionsView({
   isUpdating,
   onToggleServiceStatus 
 }: UserSubscriptionsViewProps) {
+  // Transform userSubscriptions to match the expected interface
+  const transformedSubscriptions = userSubscriptions.map(subscription => ({
+    ...subscription,
+    configuration: subscription.configuration || {},
+    setup_fee_paid: subscription.setup_fee_paid || false,
+    monthly_billing_active: subscription.monthly_billing_active || false,
+    activated_at: subscription.activated_at || new Date().toISOString()
+  }));
+
   const {
     searchTerm,
     setSearchTerm,
@@ -56,7 +65,7 @@ export function UserSubscriptionsView({
     filteredSubscriptions,
     availableStatuses,
     availableServiceTypes
-  } = useServiceFilters(userSubscriptions, users);
+  } = useServiceFilters(transformedSubscriptions, users);
 
   return (
     <ServiceLoadingWrapper isLoading={isLoading}>

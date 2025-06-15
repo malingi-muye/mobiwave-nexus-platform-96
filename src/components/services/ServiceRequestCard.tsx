@@ -25,7 +25,7 @@ export function ServiceRequestCard({ service, isActivated }: ServiceRequestCardP
 
   const handleRequestAccess = async () => {
     try {
-      await requestServiceActivation(service.id);
+      await requestServiceActivation({ serviceId: service.id });
     } catch (error) {
       console.error('Failed to request service access:', error);
     }

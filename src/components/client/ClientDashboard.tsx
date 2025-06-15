@@ -24,6 +24,7 @@ import { useRealTimeUpdates } from '@/hooks/useRealTimeUpdates';
 import { ErrorBoundaryWrapper } from '@/components/common/ErrorBoundaryWrapper';
 import { LoadingState } from '@/components/common/LoadingState';
 import { RealTimeNotifications } from '@/components/notifications/RealTimeNotifications';
+import { MetricsGrid } from '@/components/dashboard/MetricsGrid';
 import { Link } from 'react-router-dom';
 
 export function ClientDashboard() {
@@ -74,12 +75,12 @@ export function ClientDashboard() {
   return (
     <ClientDashboardLayout>
       <ErrorBoundaryWrapper>
-        <div className="space-y-6">
-          {/* Header with Real-time Status */}
-          <div className="flex items-center justify-between">
+        <div className="space-y-6 p-4 sm:p-6">
+          {/* Mobile-First Header with Real-time Status */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-              <p className="text-gray-600">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h1>
+              <p className="text-sm sm:text-base text-gray-600">
                 Welcome back! Here's what's happening with your account.
               </p>
             </div>
@@ -94,86 +95,89 @@ export function ClientDashboard() {
             </div>
           </div>
 
-          {/* Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card>
+          {/* Enhanced Metrics Grid */}
+          <MetricsGrid />
+
+          {/* Mobile-Responsive Key Metrics */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <Card className="col-span-1">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Active Campaigns</CardTitle>
+                <CardTitle className="text-xs sm:text-sm font-medium text-gray-600">Active Campaigns</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{activeCampaigns.length}</div>
+                <div className="text-xl sm:text-2xl font-bold">{activeCampaigns.length}</div>
                 <p className="text-xs text-gray-600">
-                  {campaigns?.length || 0} total campaigns
+                  {campaigns?.length || 0} total
                 </p>
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="col-span-1">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Live Surveys</CardTitle>
+                <CardTitle className="text-xs sm:text-sm font-medium text-gray-600">Live Surveys</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{activeSurveys.length}</div>
+                <div className="text-xl sm:text-2xl font-bold">{activeSurveys.length}</div>
                 <p className="text-xs text-gray-600">
-                  {surveys?.length || 0} total surveys
+                  {surveys?.length || 0} total
                 </p>
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="col-span-1">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Contacts</CardTitle>
+                <CardTitle className="text-xs sm:text-sm font-medium text-gray-600">Contacts</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{totalContacts}</div>
+                <div className="text-xl sm:text-2xl font-bold">{totalContacts}</div>
                 <p className="text-xs text-gray-600">
-                  Total contacts in database
+                  Total contacts
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="col-span-1">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Credits</CardTitle>
+                <CardTitle className="text-xs sm:text-sm font-medium text-gray-600">Credits</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">${remainingCredits.toFixed(2)}</div>
+                <div className="text-xl sm:text-2xl font-bold">${remainingCredits.toFixed(2)}</div>
                 <p className="text-xs text-gray-600">
-                  Available balance
+                  Available
                 </p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Quick Actions */}
+          {/* Mobile-Responsive Quick Actions */}
           <Card>
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Jump to your most common tasks</CardDescription>
+              <CardTitle className="text-lg sm:text-xl">Quick Actions</CardTitle>
+              <CardDescription className="text-sm">Jump to your most common tasks</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Link to="/messaging/sms">
-                  <Button variant="outline" className="w-full h-20 flex-col">
-                    <MessageSquare className="w-6 h-6 mb-2" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Link to="/messaging/sms" className="block">
+                  <Button variant="outline" className="w-full h-16 sm:h-20 flex-col text-xs sm:text-sm">
+                    <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 mb-2" />
                     Send SMS
                   </Button>
                 </Link>
-                <Link to="/surveys">
-                  <Button variant="outline" className="w-full h-20 flex-col">
-                    <BarChart3 className="w-6 h-6 mb-2" />
+                <Link to="/surveys" className="block">
+                  <Button variant="outline" className="w-full h-16 sm:h-20 flex-col text-xs sm:text-sm">
+                    <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 mb-2" />
                     Create Survey
                   </Button>
                 </Link>
-                <Link to="/contacts">
-                  <Button variant="outline" className="w-full h-20 flex-col">
-                    <Users className="w-6 h-6 mb-2" />
+                <Link to="/contacts" className="block">
+                  <Button variant="outline" className="w-full h-16 sm:h-20 flex-col text-xs sm:text-sm">
+                    <Users className="w-5 h-5 sm:w-6 sm:h-6 mb-2" />
                     Manage Contacts
                   </Button>
                 </Link>
-                <Link to="/billing">
-                  <Button variant="outline" className="w-full h-20 flex-col">
-                    <CreditCard className="w-6 h-6 mb-2" />
+                <Link to="/billing" className="block">
+                  <Button variant="outline" className="w-full h-16 sm:h-20 flex-col text-xs sm:text-sm">
+                    <CreditCard className="w-5 h-5 sm:w-6 sm:h-6 mb-2" />
                     Top Up Credits
                   </Button>
                 </Link>
@@ -181,20 +185,20 @@ export function ClientDashboard() {
             </CardContent>
           </Card>
 
-          {/* Recent Activity */}
+          {/* Mobile-Responsive Recent Activity */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
+                <CardTitle className="flex items-center space-x-2 text-lg">
                   <Send className="w-5 h-5" />
                   <span>Recent Campaigns</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {recentCampaigns.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>No campaigns yet</p>
+                  <div className="text-center py-6 sm:py-8 text-gray-500">
+                    <MessageSquare className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 opacity-50" />
+                    <p className="text-sm sm:text-base">No campaigns yet</p>
                     <Link to="/messaging/sms">
                       <Button size="sm" className="mt-2">Create your first campaign</Button>
                     </Link>
@@ -203,13 +207,13 @@ export function ClientDashboard() {
                   <div className="space-y-3">
                     {recentCampaigns.map((campaign) => (
                       <div key={campaign.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <h4 className="font-medium">{campaign.name}</h4>
-                          <p className="text-sm text-gray-600">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-medium text-sm sm:text-base truncate">{campaign.name}</h4>
+                          <p className="text-xs sm:text-sm text-gray-600">
                             {campaign.recipient_count} recipients
                           </p>
                         </div>
-                        <Badge className={getStatusColor(campaign.status)}>
+                        <Badge className={`ml-2 text-xs ${getStatusColor(campaign.status)}`}>
                           {campaign.status}
                         </Badge>
                       </div>
@@ -221,16 +225,16 @@ export function ClientDashboard() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
+                <CardTitle className="flex items-center space-x-2 text-lg">
                   <BarChart3 className="w-5 h-5" />
                   <span>Recent Surveys</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {recentSurveys.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <BarChart3 className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>No surveys yet</p>
+                  <div className="text-center py-6 sm:py-8 text-gray-500">
+                    <BarChart3 className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 opacity-50" />
+                    <p className="text-sm sm:text-base">No surveys yet</p>
                     <Link to="/surveys">
                       <Button size="sm" className="mt-2">Create your first survey</Button>
                     </Link>
@@ -239,13 +243,13 @@ export function ClientDashboard() {
                   <div className="space-y-3">
                     {recentSurveys.map((survey) => (
                       <div key={survey.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <h4 className="font-medium">{survey.title}</h4>
-                          <p className="text-sm text-gray-600">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-medium text-sm sm:text-base truncate">{survey.title}</h4>
+                          <p className="text-xs sm:text-sm text-gray-600">
                             {survey.question_flow?.length || 0} questions
                           </p>
                         </div>
-                        <Badge className={getStatusColor(survey.status)}>
+                        <Badge className={`ml-2 text-xs ${getStatusColor(survey.status)}`}>
                           {survey.status}
                         </Badge>
                       </div>

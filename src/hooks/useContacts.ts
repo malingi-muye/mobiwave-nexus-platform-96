@@ -1,30 +1,33 @@
 
-import { useContactsData } from './contacts/useContactsData';
-import { useContactGroups } from './contacts/useContactGroups';
-import { useContactMutations } from './contacts/useContactMutations';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Contact {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  created_at: string;
+}
 
 export const useContacts = () => {
-  const { data: contacts, isLoading: contactsLoading, error: contactsError, refetch: refetchContacts } = useContactsData();
-  const { contactGroups, isLoading: groupsLoading, error: groupsError, createContactGroup, refetch: refetchGroups } = useContactGroups();
-  const { createContact, updateContact, deleteContact, importContacts, mergeContacts } = useContactMutations();
+  const { data: contacts, isLoading, error } = useQuery({
+    queryKey: ['contacts'],
+    queryFn: async (): Promise<Contact[]> => {
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
   return {
-    contacts: contacts || [],
-    contactGroups,
-    isLoading: contactsLoading || groupsLoading,
-    error: contactsError || groupsError,
-    createContact,
-    updateContact,
-    deleteContact,
-    createContactGroup,
-    importContacts,
-    mergeContacts,
-    refetch: () => {
-      refetchContacts();
-      refetchGroups();
-    }
+    contacts,
+    isLoading,
+    error
   };
 };
-
-export type { Contact } from './contacts/useContactsData';
-export type { ContactGroup } from './contacts/useContactGroups';

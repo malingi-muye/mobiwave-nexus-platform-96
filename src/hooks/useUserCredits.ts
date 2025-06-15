@@ -7,104 +7,61 @@ interface UserCredits {
   id: string;
   user_id: string;
   credits_remaining: number;
-  total_purchased: number;
-  last_updated: string;
+  credits_purchased: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export const useUserCredits = () => {
   const queryClient = useQueryClient();
 
-  const getUserCredits = useQuery({
+  const { data: credits, isLoading, error } = useQuery({
     queryKey: ['user-credits'],
-    queryFn: async (): Promise<UserCredits | null> => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
-
+    queryFn: async (): Promise<UserCredits> => {
       const { data, error } = await supabase
         .from('user_credits')
         .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .single();
 
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
-
-      // If no credits record exists, create one with default values
-      if (!data) {
-        const { data: newCredits, error: insertError } = await supabase
-          .from('user_credits')
-          .insert({
-            user_id: user.id,
-            credits_remaining: 10.00,
-            credits_purchased: 10.00
-          })
-          .select()
-          .single();
-
-        if (insertError) throw insertError;
-        
-        // Map database fields to our interface
-        return {
-          id: newCredits.id,
-          user_id: newCredits.user_id,
-          credits_remaining: newCredits.credits_remaining || 0,
-          total_purchased: newCredits.credits_purchased,
-          last_updated: newCredits.updated_at
-        };
-      }
-
-      // Map database fields to our interface
-      return {
-        id: data.id,
-        user_id: data.user_id,
-        credits_remaining: data.credits_remaining || 0,
-        total_purchased: data.credits_purchased,
-        last_updated: data.updated_at
-      };
-    },
-    staleTime: 30000, // 30 seconds
+      if (error) throw error;
+      return data;
+    }
   });
 
   const purchaseCredits = useMutation({
     mutationFn: async (amount: number) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      // Use proper SQL increment syntax
       const { data, error } = await supabase
         .from('user_credits')
         .update({
-          credits_remaining: amount, // For now, just set the amount
-          credits_purchased: amount
+          credits_remaining: (credits?.credits_remaining || 0) + amount,
+          credits_purchased: (credits?.credits_purchased || 0) + amount,
+          updated_at: new Date().toISOString()
         })
-        .eq('user_id', user.id)
+        .eq('user_id', credits?.user_id)
         .select()
         .single();
 
       if (error) throw error;
-      return {
-        id: data.id,
-        user_id: data.user_id,
-        credits_remaining: data.credits_remaining || 0,
-        total_purchased: data.credits_purchased,
-        last_updated: data.updated_at
-      };
+      return data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-credits'] });
-      toast.success(`$${data.credits_remaining.toFixed(2)} credits added successfully`);
+      toast.success('Credits purchased successfully');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to purchase credits');
+      toast.error(`Failed to purchase credits: ${error.message}`);
     }
   });
 
+  const refetch = async () => {
+    return queryClient.refetchQueries({ queryKey: ['user-credits'] });
+  };
+
   return {
-    data: getUserCredits.data,
-    isLoading: getUserCredits.isLoading,
-    error: getUserCredits.error,
+    credits,
+    isLoading,
+    error,
     purchaseCredits,
-    refetch: getUserCredits.refetch
+    refetch
   };
 };

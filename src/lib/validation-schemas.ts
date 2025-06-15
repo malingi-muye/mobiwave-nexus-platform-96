@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 // Service validation schema with comprehensive security checks
 export const serviceValidationSchema = z.object({
+  id: z.string().uuid().optional(), // Add id field to match ServiceCatalog interface
   service_name: z
     .string()
     .min(1, 'Service name is required')

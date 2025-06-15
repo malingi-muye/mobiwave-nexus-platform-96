@@ -2,7 +2,8 @@
 import React from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Crown } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Crown, Edit, Power } from 'lucide-react';
 import { PricingDisplay } from './PricingDisplay';
 
 interface ServiceCatalog {
@@ -21,9 +22,12 @@ interface ServiceCatalog {
 
 interface ServiceCardProps {
   service: ServiceCatalog;
+  onEdit?: (service: ServiceCatalog) => void;
+  onToggleStatus?: (serviceId: string, isActive: boolean) => void;
+  isUpdating?: boolean;
 }
 
-export function ServiceCard({ service }: ServiceCardProps) {
+export function ServiceCard({ service, onEdit, onToggleStatus, isUpdating }: ServiceCardProps) {
   const getServiceIcon = (serviceType: string) => {
     switch (serviceType) {
       case 'ussd': return '📱';
@@ -33,8 +37,18 @@ export function ServiceCard({ service }: ServiceCardProps) {
       case 'servicedesk': return '🎫';
       case 'rewards': return '🎁';
       case 'whatsapp': return '💚';
+      case 'email': return '📧';
+      case 'sms': return '📱';
       default: return '⚙️';
     }
+  };
+
+  const handleEdit = () => {
+    onEdit?.(service);
+  };
+
+  const handleToggleStatus = () => {
+    onToggleStatus?.(service.id, !service.is_active);
   };
 
   return (
@@ -61,13 +75,36 @@ export function ServiceCard({ service }: ServiceCardProps) {
           transactionFeeAmount={service.transaction_fee_amount}
         />
 
-        <div className="flex items-center justify-between mt-3">
+        <div className="flex items-center justify-between mt-3 mb-3">
           <Badge variant={service.is_active ? "default" : "secondary"}>
             {service.is_active ? 'Active' : 'Inactive'}
           </Badge>
           <Badge variant="outline" className="text-xs">
             {service.provider}
           </Badge>
+        </div>
+
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleEdit}
+            className="flex-1"
+            disabled={isUpdating}
+          >
+            <Edit className="w-3 h-3 mr-1" />
+            Edit
+          </Button>
+          <Button
+            size="sm"
+            variant={service.is_active ? "destructive" : "default"}
+            onClick={handleToggleStatus}
+            disabled={isUpdating}
+            className="flex-1"
+          >
+            <Power className="w-3 h-3 mr-1" />
+            {service.is_active ? 'Deactivate' : 'Activate'}
+          </Button>
         </div>
       </CardContent>
     </Card>

@@ -4,7 +4,6 @@ import { Routes, Route } from 'react-router-dom';
 import { RoleBasedRoute } from '@/components/auth/RoleBasedRoute';
 import AdminDashboard from '@/pages/AdminDashboard';
 import UserManagement from '@/pages/admin/UserManagement';
-import EnhancedUserManagement from '@/pages/admin/EnhancedUserManagement';
 import UserCreation from '@/pages/admin/UserCreation';
 import ServicesManagement from '@/pages/admin/ServicesManagement';
 import Analytics from '@/pages/admin/Analytics';
@@ -31,7 +30,6 @@ export function AdminRoutes() {
       <Routes>
         <Route path="/" element={<AdminDashboard />} />
         <Route path="/users" element={<UserManagement />} />
-        <Route path="/users/enhanced" element={<EnhancedUserManagement />} />
         <Route path="/users/create" element={<UserCreation />} />
         <Route path="/services" element={<ServicesManagement />} />
         <Route path="/analytics" element={<Analytics />} />

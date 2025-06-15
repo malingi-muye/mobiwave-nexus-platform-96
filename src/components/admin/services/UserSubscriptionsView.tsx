@@ -46,13 +46,17 @@ export function UserSubscriptionsView({
   isUpdating,
   onToggleServiceStatus 
 }: UserSubscriptionsViewProps) {
-  // Transform userSubscriptions to match the expected interface
+  // Transform userSubscriptions to match the expected interface with proper defaults
   const transformedSubscriptions = userSubscriptions.map(subscription => ({
-    ...subscription,
+    id: subscription.id,
+    user_id: subscription.user_id,
+    service_id: subscription.service_id,
+    status: subscription.status,
+    activated_at: subscription.activated_at || new Date().toISOString(),
     configuration: subscription.configuration || {},
-    setup_fee_paid: subscription.setup_fee_paid || false,
-    monthly_billing_active: subscription.monthly_billing_active || false,
-    activated_at: subscription.activated_at || new Date().toISOString()
+    setup_fee_paid: subscription.setup_fee_paid ?? false,
+    monthly_billing_active: subscription.monthly_billing_active ?? false,
+    service: subscription.service
   }));
 
   const {

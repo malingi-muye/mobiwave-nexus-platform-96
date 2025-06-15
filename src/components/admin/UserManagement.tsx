@@ -6,8 +6,9 @@ import { CompleteUserStats } from './user-management/CompleteUserStats';
 import { EnhancedUserFilters } from './user-management/EnhancedUserFilters';
 import { CompleteUserTable } from './user-management/CompleteUserTable';
 import { MspaceUserManagement } from './mspace/MspaceUserManagement';
+import { UserServicesManagement } from './services/UserServicesManagement';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Globe, AlertTriangle } from 'lucide-react';
+import { Users, Globe, AlertTriangle, Settings } from 'lucide-react';
 
 export function UserManagement() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -24,11 +25,11 @@ export function UserManagement() {
     <div className="space-y-6">
       <div className="mb-8">
         <h2 className="text-4xl font-bold tracking-tight mb-3 bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700 bg-clip-text text-transparent">
-          Complete User Management
+          Comprehensive User Management
         </h2>
         <div className="flex items-center gap-2">
           <p className="text-lg text-gray-600 max-w-2xl">
-            Comprehensive user management including auth users, profiles, and Mspace clients with automated profile creation.
+            Advanced user management including auth users, profiles, Mspace clients, service activations, and automated profile creation.
           </p>
           {stats.without_profiles > 0 && (
             <div className="flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-1 rounded-md text-sm">
@@ -40,10 +41,14 @@ export function UserManagement() {
       </div>
 
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
             All Users ({stats.total})
+          </TabsTrigger>
+          <TabsTrigger value="services" className="flex items-center gap-2">
+            <Settings className="w-4 h-4" />
+            User Services
           </TabsTrigger>
           <TabsTrigger value="mspace" className="flex items-center gap-2">
             <Globe className="w-4 h-4" />
@@ -81,6 +86,10 @@ export function UserManagement() {
               onUserUpdated={handleUserUpdated}
             />
           </LoadingWrapper>
+        </TabsContent>
+
+        <TabsContent value="services" className="space-y-6">
+          <UserServicesManagement />
         </TabsContent>
 
         <TabsContent value="mspace" className="space-y-6">

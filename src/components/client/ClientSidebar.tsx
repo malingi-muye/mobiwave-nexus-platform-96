@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { sidebarSections } from './sidebar/SidebarData';
+import { sidebarSections, ACTIVATION_REQUIRED_SERVICE_TYPES } from './sidebar/SidebarData';
 import { SidebarGroup } from './sidebar/SidebarGroup';
 import { SidebarHeader } from './sidebar/SidebarHeader';
 import { useUserCredits } from '@/hooks/useUserCredits';
@@ -14,19 +13,29 @@ export function ClientSidebar() {
   const { activatedTypes, isLoading } = useActivatedServiceTypes();
 
   // Only show service menu items in sidebar when the service is ACTIVATED
-  function filterSidebarSections(sections) {
+  function filterSidebarSections(sections: any[]) {
+    if (isLoading) {
+        // While loading, show non-service specific items but hide those that need activation status
+        return sections.map(section => {
+            if (section.id !== 'services') return section;
+            return { ...section, items: section.items.filter((item: any) => !ACTIVATION_REQUIRED_SERVICE_TYPES.includes(item.id)) };
+        });
+    }
+    
     return sections.map(section => {
       if (section.id !== 'services') {
         return section;
       }
       return {
         ...section,
-        items: section.items.filter(item =>
-          // Show if service doesn't require activation filtering (i.e. it's not a typed catalog service)
-          !item.id ||
-          // For eligible menu items, check activation
-          activatedTypes.has(item.id)
-        )
+        items: section.items.filter((item: any) => {
+          // If the item.id is not a service that needs activation, always show it.
+          if (!ACTIVATION_REQUIRED_SERVICE_TYPES.includes(item.id)) {
+            return true;
+          }
+          // Otherwise, only show if the user has activated this service type.
+          return activatedTypes.has(item.id);
+        })
       };
     });
   }
@@ -39,11 +48,13 @@ export function ClientSidebar() {
       <ScrollArea className="flex-1 px-2">
         <div className="py-4">
           {filteredSections.map((section) =>
-            <SidebarGroup
-              key={section.id}
-              section={section}
-              currentPath={location.pathname}
-            />
+            section.items.length > 0 && (
+              <SidebarGroup
+                key={section.id}
+                section={section}
+                currentPath={location.pathname}
+              />
+            )
           )}
         </div>
       </ScrollArea>

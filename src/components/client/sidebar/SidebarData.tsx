@@ -12,7 +12,7 @@ import {
   Headphones,
   Zap,
   DollarSign,
-  Grid3X3
+  Package
 } from 'lucide-react';
 
 export interface SidebarItem {
@@ -89,10 +89,10 @@ export const sidebarSections: SidebarSection[] = [
     title: 'Services',
     items: [
       {
-        id: 'user-services',
-        label: 'All Services',
-        href: '/user-services',
-        icon: <Grid3X3 className="w-5 h-5" />,
+        id: 'my-services',
+        label: 'My Services',
+        href: '/my-services',
+        icon: <Package className="w-5 h-5" />,
         color: 'bg-gray-600'
       },
       {

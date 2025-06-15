@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Route } from 'react-router-dom';
 import { ProtectedRoute } from '../components/auth/ProtectedRoute';
@@ -12,11 +13,10 @@ import BillingDashboard from '../pages/BillingDashboard';
 import SurveyBuilder from '../pages/SurveyBuilder';
 import Surveys from '../pages/Surveys';
 import ServiceDesk from '../pages/ServiceDesk';
-import UserServices from '../pages/UserServices';
 import USSDServices from '../pages/USSDServices';
 import MpesaServices from '../pages/MpesaServices';
-import MySubscriptions from '../pages/MySubscriptions';
 import ServiceRequests from '../pages/ServiceRequests';
+import MyServices from '../pages/MyServices';
 
 export const clientRoutes = [
   <Route
@@ -101,11 +101,11 @@ export const clientRoutes = [
     }
   />,
   <Route
-    key="user-services"
-    path="/user-services"
+    key="my-services"
+    path="/my-services"
     element={
       <ProtectedRoute>
-        <UserServices />
+        <MyServices />
       </ProtectedRoute>
     }
   />,
@@ -124,15 +124,6 @@ export const clientRoutes = [
     element={
       <ProtectedRoute>
         <MpesaServices />
-      </ProtectedRoute>
-    }
-  />,
-  <Route
-    key="subscriptions"
-    path="/subscriptions"
-    element={
-      <ProtectedRoute>
-        <MySubscriptions />
       </ProtectedRoute>
     }
   />,

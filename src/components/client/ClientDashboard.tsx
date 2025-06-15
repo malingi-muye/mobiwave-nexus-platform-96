@@ -42,15 +42,14 @@ export function ClientDashboard() {
   // Performance optimizations
   const { prefetchKey } = useCacheOptimization();
   const { measureRenderTime } = usePerformanceMonitoring();
-  const renderStartTime = performance.now();
 
   React.useEffect(() => {
-    measureRenderTime(renderStartTime);
+    measureRenderTime();
     // Prefetch likely next pages
     if (!campaignsLoading) {
       prefetchKey("campaign-analytics");
     }
-  }, [campaignsLoading, measureRenderTime, prefetchKey, renderStartTime]);
+  }, [campaignsLoading, measureRenderTime, prefetchKey]);
 
   const { isConnected, latestUpdate } = useRealTimeUpdates({
     userId: user?.id,

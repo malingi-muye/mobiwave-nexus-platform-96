@@ -20,10 +20,10 @@ interface UserServiceSubscription {
   user_id: string;
   service_id: string;
   status: string;
-  activated_at: string;
-  configuration: any;
-  setup_fee_paid: boolean;
-  monthly_billing_active: boolean;
+  activated_at?: string;
+  configuration?: any;
+  setup_fee_paid?: boolean;
+  monthly_billing_active?: boolean;
   service: {
     id: string;
     service_name: string;
@@ -46,7 +46,7 @@ export function UserSubscriptionsView({
   isUpdating,
   onToggleServiceStatus 
 }: UserSubscriptionsViewProps) {
-  // Transform userSubscriptions to match the expected interface with proper defaults
+  // Transform userSubscriptions to ensure all required properties are present
   const transformedSubscriptions = userSubscriptions.map(subscription => ({
     id: subscription.id,
     user_id: subscription.user_id,

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
@@ -33,8 +34,7 @@ const sidebarItems = [
     title: 'User Management',
     icon: Users,
     children: [
-      { title: 'Basic Users', href: '/admin/users', icon: Users },
-      { title: 'Enhanced Users', href: '/admin/users/enhanced', icon: Users },
+      { title: 'Comprehensive Users', href: '/admin/users', icon: Users },
       { title: 'Create User', href: '/admin/users/create', icon: UserPlus },
     ]
   },

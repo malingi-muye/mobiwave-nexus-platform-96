@@ -6,9 +6,8 @@ import { CompleteUserStats } from './user-management/CompleteUserStats';
 import { EnhancedUserFilters } from './user-management/EnhancedUserFilters';
 import { CompleteUserTable } from './user-management/CompleteUserTable';
 import { MspaceUserManagement } from './mspace/MspaceUserManagement';
-import { UserServicesManagement } from './services/UserServicesManagement';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Globe, AlertTriangle, Settings } from 'lucide-react';
+import { Users, Globe, AlertTriangle } from 'lucide-react';
 
 export function UserManagement() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -41,14 +40,10 @@ export function UserManagement() {
       </div>
 
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
             All Users ({stats.total})
-          </TabsTrigger>
-          <TabsTrigger value="services" className="flex items-center gap-2">
-            <Settings className="w-4 h-4" />
-            User Services
           </TabsTrigger>
           <TabsTrigger value="mspace" className="flex items-center gap-2">
             <Globe className="w-4 h-4" />
@@ -86,10 +81,6 @@ export function UserManagement() {
               onUserUpdated={handleUserUpdated}
             />
           </LoadingWrapper>
-        </TabsContent>
-
-        <TabsContent value="services" className="space-y-6">
-          <UserServicesManagement />
         </TabsContent>
 
         <TabsContent value="mspace" className="space-y-6">

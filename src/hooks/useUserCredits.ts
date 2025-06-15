@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-interface UserCredits {
+export interface UserCredits {
   id: string;
   user_id: string;
   credits_remaining: number;
@@ -25,7 +25,9 @@ export const useUserCredits = () => {
 
       if (error) throw error;
       return data;
-    }
+    },
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 
   const purchaseCredits = useMutation({
@@ -59,6 +61,7 @@ export const useUserCredits = () => {
 
   return {
     credits,
+    data: credits, // For backward compatibility
     isLoading,
     error,
     purchaseCredits,

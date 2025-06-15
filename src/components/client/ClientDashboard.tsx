@@ -21,6 +21,7 @@ import { useSurveys } from '@/hooks/useSurveys';
 import { useContacts } from '@/hooks/useContacts';
 import { useUserCredits } from '@/hooks/useUserCredits';
 import { useRealTimeUpdates } from '@/hooks/useRealTimeUpdates';
+import { useCacheOptimization, usePerformanceMonitoring } from '@/hooks/usePerformanceOptimization';
 import { ErrorBoundaryWrapper } from '@/components/common/ErrorBoundaryWrapper';
 import { LoadingState } from '@/components/common/LoadingState';
 import { RealTimeNotifications } from '@/components/notifications/RealTimeNotifications';
@@ -33,6 +34,23 @@ export function ClientDashboard() {
   const { surveys, isLoading: surveysLoading } = useSurveys();
   const { contacts, isLoading: contactsLoading } = useContacts();
   const { credits, isLoading: creditsLoading } = useUserCredits();
+
+  // Performance optimizations
+  const { prefetchKey } = useCacheOptimization();
+  const { measureRenderTime } = usePerformanceMonitoring();
+  const renderStartTime = performance.now();
+
+  React.useEffect(() => {
+    measureRenderTime('ClientDashboard', renderStartTime);
+    
+    // Prefetch likely next pages
+    if (!campaignsLoading) {
+      prefetchKey(['campaign-analytics'], async () => {
+        // This would fetch analytics data
+        return {};
+      });
+    }
+  }, [campaignsLoading]);
 
   const { isConnected, latestUpdate } = useRealTimeUpdates({
     userId: user?.id,

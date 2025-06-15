@@ -109,9 +109,9 @@ export const useSurveys = () => {
     surveys,
     isLoading,
     error,
-    createSurvey,
-    updateSurvey,
-    publishSurvey,
+    createSurvey: createSurvey.mutateAsync,
+    updateSurvey: updateSurvey.mutateAsync,
+    publishSurvey: publishSurvey.mutateAsync,
     isCreating: createSurvey.isPending,
     isUpdating: updateSurvey.isPending
   };

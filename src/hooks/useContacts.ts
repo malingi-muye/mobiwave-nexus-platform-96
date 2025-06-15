@@ -124,7 +124,7 @@ export const useContacts = () => {
   });
 
   const createContactGroup = useMutation({
-    mutationFn: async (groupData: { name: string; description?: string }) => {
+    mutationFn: async (groupData: { name: string; description?: string; contact_count: number }) => {
       // This would need a contact_groups table
       toast.success('Contact group created successfully');
     },
@@ -137,12 +137,12 @@ export const useContacts = () => {
     contacts,
     isLoading,
     error,
-    createContact,
-    updateContact,
-    deleteContact,
-    importContacts,
-    mergeContacts,
-    createContactGroup,
+    createContact: createContact.mutateAsync,
+    updateContact: updateContact.mutateAsync,
+    deleteContact: deleteContact.mutateAsync,
+    importContacts: importContacts.mutateAsync,
+    mergeContacts: mergeContacts.mutateAsync,
+    createContactGroup: createContactGroup.mutateAsync,
     contactGroups: [] // Placeholder until contact_groups table is implemented
   };
 };

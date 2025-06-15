@@ -12,7 +12,7 @@ interface SurveyAnalyticsProps {
 }
 
 export function SurveyAnalytics({ surveyId, onBack }: SurveyAnalyticsProps) {
-  const { responses, isLoading } = useSurveyResponses(surveyId);
+  const { data: responses, isLoading } = useSurveyResponses(surveyId);
 
   // Mock data for demonstration
   const responseData = [
@@ -65,7 +65,7 @@ export function SurveyAnalytics({ surveyId, onBack }: SurveyAnalyticsProps) {
             <CardTitle className="text-sm font-medium">Total Responses</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">287</div>
+            <div className="text-2xl font-bold">{responses?.length || 0}</div>
             <p className="text-xs text-gray-600">+12% from last week</p>
           </CardContent>
         </Card>

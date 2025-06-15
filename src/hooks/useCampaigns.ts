@@ -59,13 +59,29 @@ export const useCampaigns = () => {
   });
 
   const getCampaignStats = () => {
-    if (!campaigns) return { total: 0, active: 0, completed: 0, failed: 0 };
+    if (!campaigns) return { 
+      total: 0, 
+      active: 0, 
+      completed: 0, 
+      failed: 0,
+      activeCampaigns: 0,
+      totalCampaigns: 0,
+      totalDelivered: 0,
+      deliveryRate: 0
+    };
+    
+    const totalDelivered = campaigns.reduce((sum, c) => sum + (c.delivered_count || 0), 0);
+    const totalSent = campaigns.reduce((sum, c) => sum + (c.sent_count || 0), 0);
     
     return {
       total: campaigns.length,
       active: campaigns.filter(c => c.status === 'sending' || c.status === 'scheduled').length,
       completed: campaigns.filter(c => c.status === 'completed').length,
-      failed: campaigns.filter(c => c.status === 'failed').length
+      failed: campaigns.filter(c => c.status === 'failed').length,
+      activeCampaigns: campaigns.filter(c => c.status === 'sending' || c.status === 'scheduled').length,
+      totalCampaigns: campaigns.length,
+      totalDelivered,
+      deliveryRate: totalSent > 0 ? (totalDelivered / totalSent) * 100 : 0
     };
   };
 

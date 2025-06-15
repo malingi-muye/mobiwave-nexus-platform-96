@@ -14,7 +14,7 @@ import { ContactGroup } from '@/hooks/useContacts';
 
 interface ContactGroupManagerProps {
   contactGroups: ContactGroup[];
-  onCreateGroup: (group: Omit<ContactGroup, 'id' | 'user_id' | 'created_at'>) => Promise<void>;
+  onCreateGroup: (group: { name: string; description?: string; contact_count: number }) => Promise<void>;
 }
 
 export function ContactGroupManager({ contactGroups, onCreateGroup }: ContactGroupManagerProps) {
@@ -33,7 +33,8 @@ export function ContactGroupManager({ contactGroups, onCreateGroup }: ContactGro
     try {
       await onCreateGroup({
         name: newGroup.name.trim(),
-        description: newGroup.description.trim() || undefined
+        description: newGroup.description.trim() || undefined,
+        contact_count: 0
       });
       
       setNewGroup({ name: '', description: '' });
@@ -123,7 +124,7 @@ export function ContactGroupManager({ contactGroups, onCreateGroup }: ContactGro
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span>0 contacts</span>
+                  <span>{group.contact_count} contacts</span>
                   <span>{new Date(group.created_at).toLocaleDateString()}</span>
                 </div>
               </div>

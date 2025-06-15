@@ -50,13 +50,13 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
     }
 
     try {
-      const campaign = await createCampaign.mutateAsync({
+      const campaign = await createCampaign({
         ...campaignData,
         status,
         recipient_count: campaignData.recipients.length,
         delivered_count: 0,
         failed_count: 0,
-        total_cost: estimatedCost,
+        cost: estimatedCost,
         scheduled_at: null
       });
 

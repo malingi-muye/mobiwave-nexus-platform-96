@@ -23,7 +23,7 @@ export const LazyLoadWrapper: React.FC<LazyLoadWrapperProps> = ({
 };
 
 // HOC for lazy loading components
-export const withLazyLoading = <P extends object>(
+export const withLazyLoading = <P extends Record<string, any>>(
   importFn: () => Promise<{ default: React.ComponentType<P> }>,
   fallback?: React.ReactNode
 ) => {

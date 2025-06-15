@@ -54,8 +54,8 @@ export function UserSubscriptionsView({
     status: subscription.status,
     activated_at: subscription.activated_at || new Date().toISOString(),
     configuration: subscription.configuration || {},
-    setup_fee_paid: subscription.setup_fee_paid ?? false,
-    monthly_billing_active: subscription.monthly_billing_active ?? false,
+    setup_fee_paid: subscription.setup_fee_paid || false,
+    monthly_billing_active: subscription.monthly_billing_active || false,
     service: subscription.service
   }));
 

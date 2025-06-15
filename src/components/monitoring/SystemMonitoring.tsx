@@ -1,142 +1,79 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Server, Cpu, HardDrive, Wifi, AlertTriangle, CheckCircle, Bell } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { Activity, Server, Database, Wifi, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 
-interface SystemHealth {
-  services: Array<{
-    name: string;
-    status: 'healthy' | 'warning' | 'error';
-    uptime: number;
-    responseTime: number;
-    cpu: number;
-    memory: number;
-  }>;
-  alerts: Array<{
-    id: string;
-    service: string;
-    message: string;
-    severity: 'low' | 'medium' | 'high';
+interface SystemMetrics {
+  cpuUsage: number;
+  memoryUsage: number;
+  diskUsage: number;
+  networkLatency: number;
+  activeConnections: number;
+  errorRate: number;
+  uptime: string;
+  lastUpdated: string;
+  performanceData: Array<{
     timestamp: string;
-  }>;
-  performanceMetrics: Array<{
-    time: string;
     cpu: number;
     memory: number;
     network: number;
-    disk: number;
+  }>;
+  serviceStatus: Array<{
+    name: string;
+    status: 'healthy' | 'warning' | 'critical';
+    uptime: number;
+    lastCheck: string;
   }>;
 }
 
+const COLORS = ['#10B981', '#F59E0B', '#EF4444'];
+
 export function SystemMonitoring() {
-  const { data: systemHealth, isLoading } = useQuery({
-    queryKey: ['system-health'],
-    queryFn: async (): Promise<SystemHealth> => {
-      // Get recent audit logs to simulate system activity
-      const { data: recentLogs } = await supabase
-        .from('audit_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(100);
-
-      // Simulate service health data
-      const services = [
-        {
-          name: 'SMS Gateway',
-          status: 'healthy' as const,
-          uptime: 99.9,
-          responseTime: 120,
-          cpu: 45,
-          memory: 68
-        },
-        {
-          name: 'WhatsApp Service',
-          status: 'healthy' as const,
-          uptime: 99.8,
-          responseTime: 95,
-          cpu: 32,
-          memory: 55
-        },
-        {
-          name: 'M-Pesa Integration',
-          status: 'warning' as const,
-          uptime: 98.5,
-          responseTime: 180,
-          cpu: 78,
-          memory: 85
-        },
-        {
-          name: 'Database',
-          status: 'healthy' as const,
-          uptime: 99.99,
-          responseTime: 25,
-          cpu: 55,
-          memory: 72
-        },
-        {
-          name: 'USSD Service',
-          status: 'healthy' as const,
-          uptime: 99.7,
-          responseTime: 110,
-          cpu: 38,
-          memory: 62
-        }
-      ];
-
-      // Generate alerts based on service status
-      const alerts = [
-        {
-          id: '1',
-          service: 'M-Pesa Integration',
-          message: 'High memory usage detected (85%)',
-          severity: 'medium' as const,
-          timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString()
-        },
-        {
-          id: '2',
-          service: 'SMS Gateway',
-          message: 'Response time spike detected',
-          severity: 'low' as const,
-          timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString()
-        },
-        {
-          id: '3',
-          service: 'Database',
-          message: 'Scheduled maintenance completed',
-          severity: 'low' as const,
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-        }
-      ];
-
-      // Generate performance metrics for the last 24 hours
-      const performanceMetrics = [];
+  const { data: metrics, isLoading } = useQuery({
+    queryKey: ['system-metrics'],
+    queryFn: async (): Promise<SystemMetrics> => {
+      // Simulate API call - replace with actual monitoring data
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Generate performance data for the last 24 hours
+      const performanceData = [];
       for (let i = 23; i >= 0; i--) {
-        const time = new Date();
-        time.setHours(time.getHours() - i);
-        performanceMetrics.push({
-          time: time.toISOString(),
-          cpu: Math.floor(Math.random() * 30) + 40,
-          memory: Math.floor(Math.random() * 25) + 60,
-          network: Math.floor(Math.random() * 20) + 70,
-          disk: Math.floor(Math.random() * 15) + 25
+        const date = new Date();
+        date.setHours(date.getHours() - i);
+        performanceData.push({
+          timestamp: date.toISOString(),
+          cpu: Math.floor(Math.random() * 40) + 30,
+          memory: Math.floor(Math.random() * 30) + 50,
+          network: Math.floor(Math.random() * 20) + 10
         });
       }
 
       return {
-        services,
-        alerts,
-        performanceMetrics
+        cpuUsage: 45.2,
+        memoryUsage: 67.8,
+        diskUsage: 34.5,
+        networkLatency: 23,
+        activeConnections: 1247,
+        errorRate: 0.12,
+        uptime: '99.98%',
+        lastUpdated: new Date().toISOString(),
+        performanceData,
+        serviceStatus: [
+          { name: 'API Gateway', status: 'healthy', uptime: 99.99, lastCheck: '2 minutes ago' },
+          { name: 'SMS Service', status: 'healthy', uptime: 99.95, lastCheck: '1 minute ago' },
+          { name: 'Database', status: 'warning', uptime: 99.87, lastCheck: '30 seconds ago' },
+          { name: 'Authentication', status: 'healthy', uptime: 99.98, lastCheck: '1 minute ago' },
+          { name: 'File Storage', status: 'healthy', uptime: 99.92, lastCheck: '3 minutes ago' },
+          { name: 'Analytics Engine', status: 'critical', uptime: 98.45, lastCheck: '5 minutes ago' }
+        ]
       };
     },
     refetchInterval: 30000
   });
 
-  if (isLoading || !systemHealth) {
+  if (isLoading || !metrics) {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -151,37 +88,38 @@ export function SystemMonitoring() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'healthy':
-        return <CheckCircle className="w-4 h-4 text-green-600" />;
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
       case 'warning':
-        return <AlertTriangle className="w-4 h-4 text-yellow-600" />;
-      case 'error':
-        return <AlertTriangle className="w-4 h-4 text-red-600" />;
+        return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
+      case 'critical':
+        return <AlertTriangle className="h-4 w-4 text-red-600" />;
       default:
-        return <AlertTriangle className="w-4 h-4 text-gray-600" />;
+        return <Activity className="h-4 w-4 text-gray-600" />;
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusBadgeColor = (status: string) => {
     switch (status) {
-      case 'healthy': return 'bg-green-100 text-green-800';
-      case 'warning': return 'bg-yellow-100 text-yellow-800';
-      case 'error': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'healthy':
+        return 'bg-green-100 text-green-800';
+      case 'warning':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'critical':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  const healthyServices = metrics.serviceStatus.filter(s => s.status === 'healthy').length;
+  const warningServices = metrics.serviceStatus.filter(s => s.status === 'warning').length;
+  const criticalServices = metrics.serviceStatus.filter(s => s.status === 'critical').length;
 
-  const healthyServices = systemHealth.services.filter(s => s.status === 'healthy').length;
-  const avgResponseTime = systemHealth.services.reduce((sum, s) => sum + s.responseTime, 0) / systemHealth.services.length;
-  const avgUptime = systemHealth.services.reduce((sum, s) => sum + s.uptime, 0) / systemHealth.services.length;
+  const serviceHealthData = [
+    { name: 'Healthy', value: healthyServices, color: COLORS[0] },
+    { name: 'Warning', value: warningServices, color: COLORS[1] },
+    { name: 'Critical', value: criticalServices, color: COLORS[2] }
+  ].filter(item => item.value > 0);
 
   return (
     <div className="space-y-6">
@@ -189,160 +127,157 @@ export function SystemMonitoring() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Services Status</CardTitle>
+            <CardTitle className="text-sm font-medium">CPU Usage</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metrics.cpuUsage}%</div>
+            <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+              <div 
+                className="bg-blue-600 h-2 rounded-full" 
+                style={{ width: `${metrics.cpuUsage}%` }}
+              ></div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Memory Usage</CardTitle>
             <Server className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {healthyServices}/{systemHealth.services.length}
+            <div className="text-2xl font-bold">{metrics.memoryUsage}%</div>
+            <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+              <div 
+                className="bg-green-600 h-2 rounded-full" 
+                style={{ width: `${metrics.memoryUsage}%` }}
+              ></div>
             </div>
-            <p className="text-xs text-muted-foreground">Services healthy</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Response</CardTitle>
-            <Cpu className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Disk Usage</CardTitle>
+            <Database className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{avgResponseTime.toFixed(0)}ms</div>
-            <p className="text-xs text-muted-foreground">Response time</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">System Uptime</CardTitle>
-            <HardDrive className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{avgUptime.toFixed(1)}%</div>
-            <p className="text-xs text-muted-foreground">Average uptime</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Alerts</CardTitle>
-            <Bell className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              {systemHealth.alerts.length}
+            <div className="text-2xl font-bold">{metrics.diskUsage}%</div>
+            <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+              <div 
+                className="bg-purple-600 h-2 rounded-full" 
+                style={{ width: `${metrics.diskUsage}%` }}
+              ></div>
             </div>
-            <p className="text-xs text-muted-foreground">Requires attention</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Network Latency</CardTitle>
+            <Wifi className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metrics.networkLatency}ms</div>
+            <p className="text-xs text-muted-foreground">
+              {metrics.activeConnections} active connections
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Service Status Grid */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Service Health</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {systemHealth.services.map((service, index) => (
-              <div key={index} className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    {getStatusIcon(service.status)}
-                    <span className="font-medium">{service.name}</span>
-                  </div>
-                  <Badge className={getStatusColor(service.status)}>
-                    {service.status}
-                  </Badge>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Uptime:</span>
-                    <span className="font-medium">{service.uptime}%</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Response:</span>
-                    <span className="font-medium">{service.responseTime}ms</span>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span>CPU:</span>
-                      <span>{service.cpu}%</span>
-                    </div>
-                    <Progress value={service.cpu} className="h-1" />
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span>Memory:</span>
-                      <span>{service.memory}%</span>
-                    </div>
-                    <Progress value={service.memory} className="h-1" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Performance Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>System Performance (24h)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={metrics.performanceData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="timestamp" 
+                  tickFormatter={(value) => new Date(value).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                />
+                <YAxis />
+                <Tooltip 
+                  labelFormatter={(value) => new Date(value).toLocaleString()}
+                  formatter={(value, name) => [`${value}%`, String(name).toUpperCase()]}
+                />
+                <Line type="monotone" dataKey="cpu" stroke="#3B82F6" strokeWidth={2} name="CPU" />
+                <Line type="monotone" dataKey="memory" stroke="#10B981" strokeWidth={2} name="Memory" />
+                <Line type="monotone" dataKey="network" stroke="#8B5CF6" strokeWidth={2} name="Network" />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
 
-      {/* Performance Metrics */}
-      <Card>
-        <CardHeader>
-          <CardTitle>System Performance (24h)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={systemHealth.performanceMetrics}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="time" 
-                tickFormatter={(value) => new Date(value).toLocaleTimeString('en-US', { 
-                  hour: '2-digit', 
-                  minute: '2-digit' 
-                })}
-              />
-              <YAxis />
-              <Tooltip 
-                labelFormatter={(value) => new Date(value).toLocaleTimeString()}
-                formatter={(value, name) => [`${value}%`, name.toUpperCase()]}
-              />
-              <Line type="monotone" dataKey="cpu" stroke="#3B82F6" strokeWidth={2} name="cpu" />
-              <Line type="monotone" dataKey="memory" stroke="#10B981" strokeWidth={2} name="memory" />
-              <Line type="monotone" dataKey="network" stroke="#F59E0B" strokeWidth={2} name="network" />
-              <Line type="monotone" dataKey="disk" stroke="#EF4444" strokeWidth={2} name="disk" />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Service Health Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={serviceHealthData}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  dataKey="value"
+                  label={({ name, value }) => `${name}: ${value}`}
+                >
+                  {serviceHealthData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Recent Alerts */}
+      {/* Service Status Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Alerts</CardTitle>
+          <CardTitle>Service Status</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {systemHealth.alerts.map((alert) => (
-              <div key={alert.id} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <AlertTriangle className="w-4 h-4 text-orange-500" />
-                  <div>
-                    <div className="font-medium">{alert.service}</div>
-                    <div className="text-sm text-gray-600">{alert.message}</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <Badge className={getSeverityColor(alert.severity)}>
-                    {alert.severity}
-                  </Badge>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {new Date(alert.timestamp).toLocaleTimeString()}
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-2">Service</th>
+                  <th className="text-center p-2">Status</th>
+                  <th className="text-center p-2">Uptime</th>
+                  <th className="text-center p-2">Last Check</th>
+                </tr>
+              </thead>
+              <tbody>
+                {metrics.serviceStatus.map((service, index) => (
+                  <tr key={index} className="border-b">
+                    <td className="p-2 font-medium flex items-center gap-2">
+                      {getStatusIcon(service.status)}
+                      {service.name}
+                    </td>
+                    <td className="text-center p-2">
+                      <span className={`px-2 py-1 rounded-full text-xs ${getStatusBadgeColor(service.status)}`}>
+                        {service.status.charAt(0).toUpperCase() + service.status.slice(1)}
+                      </span>
+                    </td>
+                    <td className="text-center p-2 font-mono">
+                      {service.uptime}%
+                    </td>
+                    <td className="text-center p-2 text-muted-foreground">
+                      {service.lastCheck}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>

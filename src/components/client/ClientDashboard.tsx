@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   FileText,
   PlusCircle,
+  Mail
 } from 'lucide-react';
 import { ClientDashboardLayout } from './ClientDashboardLayout';
 import { useAuth } from '@/hooks/useAuth';
@@ -162,6 +163,18 @@ export function ClientDashboard() {
           <div>
             <h2 className="text-xl font-bold mt-10 mb-3">My Services</h2>
             <ServiceStatusWidget />
+          </div>
+
+          {/* Contact Support Button */}
+          <div className="flex justify-end my-4">
+            <a
+              href="mailto:support@mobiwave.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition"
+            >
+              <Mail className="w-4 h-4" /> Contact Support
+            </a>
           </div>
 
           {/* Recent Activity */}

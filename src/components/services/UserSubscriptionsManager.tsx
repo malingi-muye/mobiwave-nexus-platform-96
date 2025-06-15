@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Settings, CheckCircle, Clock, AlertTriangle, XCircle } from 'lucide-react';
+import { CsvExportButton } from "@/components/common/CsvExportButton";
 
 interface UserSubscriptionWithService {
   id: string;
@@ -137,15 +137,28 @@ export function UserSubscriptionsManager() {
     );
   }
 
+  // Add CSV data generation
+  const csvData = subscriptions.map(sub => ({
+    Service: sub.service.service_name,
+    Type: sub.service.service_type,
+    Status: sub.status,
+    "Setup Fee Paid": sub.setup_fee_paid ? "Yes" : "No",
+    "Monthly Billing": sub.monthly_billing_active ? "Active" : "Inactive",
+    "Created": sub.created_at,
+    "Activated At": sub.activated_at,
+  }));
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight mb-3">My Subscriptions</h2>
-        <p className="text-gray-600">
-          Manage your active service subscriptions and configurations.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight mb-3">My Subscriptions</h2>
+          <p className="text-gray-600">
+            Manage your active service subscriptions and configurations.
+          </p>
+        </div>
+        <CsvExportButton data={csvData} filename="my_service_subscriptions.csv" />
       </div>
-
       <Card>
         <CardHeader>
           <CardTitle>Active Subscriptions</CardTitle>

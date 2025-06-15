@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Crown, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+import { CsvExportButton } from "@/components/common/CsvExportButton";
 
 interface ServiceCatalog {
   id: string;
@@ -123,6 +123,19 @@ export function UserServicesCatalog() {
     }
   };
 
+  // CSV data for export
+  const csvData = services.map((service) => ({
+    Name: service.service_name,
+    Type: service.service_type,
+    Description: service.description,
+    "Setup Fee": service.setup_fee,
+    "Monthly Fee": service.monthly_fee,
+    "Transaction Fee Type": service.transaction_fee_type,
+    "Transaction Fee Amount": service.transaction_fee_amount,
+    Premium: service.is_premium ? "Yes" : "No",
+    Provider: service.provider,
+  }));
+
   const isLoading = servicesLoading || subscriptionsLoading;
 
   if (isLoading) {
@@ -135,11 +148,14 @@ export function UserServicesCatalog() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight mb-3">Available Services</h2>
-        <p className="text-gray-600">
-          Browse and subscribe to MSpace services to enhance your business communication.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight mb-3">Available Services</h2>
+          <p className="text-gray-600">
+            Browse and subscribe to MSpace services to enhance your business communication.
+          </p>
+        </div>
+        <CsvExportButton data={csvData} filename="available_services.csv" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

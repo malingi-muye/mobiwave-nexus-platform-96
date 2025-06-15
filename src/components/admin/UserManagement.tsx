@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { LoadingWrapper } from '@/components/ui/loading-wrapper';
 import { useCompleteUserManagement } from '@/hooks/useCompleteUserManagement';
@@ -7,7 +6,8 @@ import { EnhancedUserFilters } from './user-management/EnhancedUserFilters';
 import { CompleteUserTable } from './user-management/CompleteUserTable';
 import { MspaceUserManagement } from './mspace/MspaceUserManagement';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Globe, AlertTriangle } from 'lucide-react';
+import { Users, Globe, AlertTriangle, Shield } from 'lucide-react';
+import { UserRoleManager } from './user-management/UserRoleManager';
 
 export function UserManagement() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -40,7 +40,7 @@ export function UserManagement() {
       </div>
 
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
             All Users ({stats.total})
@@ -48,6 +48,10 @@ export function UserManagement() {
           <TabsTrigger value="mspace" className="flex items-center gap-2">
             <Globe className="w-4 h-4" />
             Mspace Management
+          </TabsTrigger>
+          <TabsTrigger value="roles" className="flex items-center gap-2">
+            <Shield className="w-4 h-4" />
+            Role Management
           </TabsTrigger>
         </TabsList>
 
@@ -85,6 +89,18 @@ export function UserManagement() {
 
         <TabsContent value="mspace" className="space-y-6">
           <MspaceUserManagement />
+        </TabsContent>
+
+        <TabsContent value="roles" className="space-y-6">
+          <div>
+            <h3 className="text-2xl font-bold mb-2">Manage User Roles</h3>
+            <p className="text-gray-500 mb-4">
+              Assign or revoke roles for users. Only admins can perform these actions.
+            </p>
+            <React.Suspense fallback={<div>Loading roles...</div>}>
+              <UserRoleManager />
+            </React.Suspense>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

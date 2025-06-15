@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { useUserCredits } from '@/hooks/useUserCredits';
@@ -55,6 +56,7 @@ export function CampaignManager({ onSuccess }: CampaignManagerProps) {
         recipient_count: campaignData.recipients.length,
         delivered_count: 0,
         failed_count: 0,
+        sent_count: 0,
         cost: estimatedCost
       });
 

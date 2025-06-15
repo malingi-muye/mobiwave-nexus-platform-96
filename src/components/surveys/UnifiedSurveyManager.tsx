@@ -25,8 +25,10 @@ export function UnifiedSurveyManager() {
     }
   };
 
-  const activeSurveys = surveys.filter(s => s.status === 'active').length;
-  const totalResponses = surveys.reduce((sum, survey) => {
+  // Safely handle surveys array with default empty array
+  const surveysList = surveys || [];
+  const activeSurveys = surveysList.filter(s => s.status === 'active').length;
+  const totalResponses = surveysList.reduce((sum, survey) => {
     return sum + Math.floor(Math.random() * 100);
   }, 0);
 
@@ -83,7 +85,7 @@ export function UnifiedSurveyManager() {
                 <CardTitle className="text-sm font-medium">Total Surveys</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{surveys.length}</div>
+                <div className="text-2xl font-bold">{surveysList.length}</div>
                 <p className="text-xs text-gray-600">{activeSurveys} active</p>
               </CardContent>
             </Card>
@@ -165,7 +167,7 @@ export function UnifiedSurveyManager() {
               <CardDescription>Your latest survey activity</CardDescription>
             </CardHeader>
             <CardContent>
-              {surveys.slice(0, 3).map((survey) => (
+              {surveysList.slice(0, 3).map((survey) => (
                 <div key={survey.id} className="flex items-center justify-between p-3 border rounded-lg mb-3 last:mb-0">
                   <div className="flex items-center gap-3">
                     <div>
@@ -202,6 +204,9 @@ export function UnifiedSurveyManager() {
                   </div>
                 </div>
               ))}
+              {surveysList.length === 0 && (
+                <p className="text-gray-500 text-center py-4">No surveys created yet</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -217,7 +222,7 @@ export function UnifiedSurveyManager() {
                 <div className="flex items-center justify-center p-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 </div>
-              ) : surveys.length === 0 ? (
+              ) : surveysList.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-gray-500 mb-4">No surveys created yet</p>
                   <Button onClick={() => {
@@ -230,7 +235,7 @@ export function UnifiedSurveyManager() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {surveys.map((survey) => (
+                  {surveysList.map((survey) => (
                     <div key={survey.id} className="border rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-3">

@@ -75,9 +75,14 @@ export const useCacheOptimization = () => {
     console.log('Optimizing memory usage...');
   };
 
+  const prefetchKey = (key: string) => {
+    console.log('Prefetching key:', key);
+  };
+
   return {
     clearStaleCache,
-    optimizeMemoryUsage
+    optimizeMemoryUsage,
+    prefetchKey
   };
 };
 
@@ -109,10 +114,19 @@ export const usePerformanceMonitoring = () => {
     }
   };
 
+  const measureRenderTime = () => {
+    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+    if (navigation) {
+      const renderTime = navigation.domContentLoadedEventEnd - navigation.fetchStart;
+      setMetrics(prev => ({ ...prev, renderTime }));
+    }
+  };
+
   return {
     metrics,
     measurePageLoad,
-    getMemoryUsage
+    getMemoryUsage,
+    measureRenderTime
   };
 };
 

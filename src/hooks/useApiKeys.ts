@@ -3,27 +3,23 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-export interface ApiKey {
+interface ApiKey {
   id: string;
-  user_id: string;
   key_name: string;
   api_key: string;
   permissions: string[];
-  rate_limit: number;
   is_active: boolean;
-  last_used_at?: string;
-  expires_at?: string;
   created_at: string;
+  expires_at?: string;
+  last_used_at?: string;
+  rate_limit: number;
 }
 
-export interface ApiUsage {
-  id: string;
-  api_key_id: string;
-  endpoint: string;
-  method: string;
-  status_code: number;
-  response_time_ms?: number;
-  created_at: string;
+interface CreateApiKeyData {
+  key_name: string;
+  permissions: string[];
+  rate_limit?: number;
+  expires_at?: string;
 }
 
 export const useApiKeys = () => {
@@ -38,24 +34,26 @@ export const useApiKeys = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return (data || []).map(item => ({
-        ...item,
-        permissions: Array.isArray(item.permissions) ? item.permissions as string[] : []
-      }));
+      return data || [];
     }
   });
 
   const createApiKey = useMutation({
-    mutationFn: async (keyData: Omit<ApiKey, 'id' | 'user_id' | 'api_key' | 'created_at'>) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
+    mutationFn: async (keyData: CreateApiKeyData): Promise<ApiKey> => {
       // Generate a random API key
-      const apiKey = `mb_${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
-
+      const apiKey = `mk_${keyData.key_name.includes('live') ? 'live' : 'test'}_${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
+      
       const { data, error } = await supabase
         .from('api_keys')
-        .insert({ ...keyData, user_id: user.id, api_key: apiKey })
+        .insert({
+          key_name: keyData.key_name,
+          api_key: apiKey,
+          permissions: keyData.permissions,
+          rate_limit: keyData.rate_limit || 1000,
+          expires_at: keyData.expires_at,
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          is_active: true
+        })
         .select()
         .single();
 
@@ -71,17 +69,14 @@ export const useApiKeys = () => {
     }
   });
 
-  const updateApiKey = useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<ApiKey> & { id: string }) => {
-      const { data, error } = await supabase
+  const toggleApiKey = useMutation({
+    mutationFn: async ({ keyId, isActive }: { keyId: string; isActive: boolean }) => {
+      const { error } = await supabase
         .from('api_keys')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+        .update({ is_active: isActive })
+        .eq('id', keyId);
 
       if (error) throw error;
-      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['api-keys'] });
@@ -93,11 +88,11 @@ export const useApiKeys = () => {
   });
 
   const deleteApiKey = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (keyId: string) => {
       const { error } = await supabase
         .from('api_keys')
         .delete()
-        .eq('id', id);
+        .eq('id', keyId);
 
       if (error) throw error;
     },
@@ -110,36 +105,25 @@ export const useApiKeys = () => {
     }
   });
 
+  const getApiUsage = async (keyId: string) => {
+    const { data, error } = await supabase
+      .from('api_usage')
+      .select('*')
+      .eq('api_key_id', keyId)
+      .order('created_at', { ascending: false })
+      .limit(100);
+
+    if (error) throw error;
+    return data;
+  };
+
   return {
     apiKeys,
     isLoading,
     createApiKey: createApiKey.mutateAsync,
-    updateApiKey: updateApiKey.mutateAsync,
+    toggleApiKey: toggleApiKey.mutateAsync,
     deleteApiKey: deleteApiKey.mutateAsync,
-    isCreating: createApiKey.isPending,
-    isUpdating: updateApiKey.isPending,
-    isDeleting: deleteApiKey.isPending
+    getApiUsage,
+    isCreating: createApiKey.isPending
   };
-};
-
-export const useApiUsage = (apiKeyId?: string) => {
-  const { data: usage = [], isLoading } = useQuery({
-    queryKey: ['api-usage', apiKeyId],
-    queryFn: async (): Promise<ApiUsage[]> => {
-      if (!apiKeyId) return [];
-      
-      const { data, error } = await supabase
-        .from('api_usage')
-        .select('*')
-        .eq('api_key_id', apiKeyId)
-        .order('created_at', { ascending: false })
-        .limit(100);
-
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!apiKeyId
-  });
-
-  return { usage, isLoading };
 };

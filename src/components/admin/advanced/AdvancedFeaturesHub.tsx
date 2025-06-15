@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Users, 
   Key, 
-  Template, 
+  FileTemplate, 
   Webhook,
   Zap,
   Settings,
@@ -33,7 +33,7 @@ export function AdvancedFeaturesHub() {
             User Segmentation
           </TabsTrigger>
           <TabsTrigger value="templates" className="flex items-center gap-2">
-            <Template className="w-4 h-4" />
+            <FileTemplate className="w-4 h-4" />
             Service Templates
           </TabsTrigger>
           <TabsTrigger value="api" className="flex items-center gap-2">

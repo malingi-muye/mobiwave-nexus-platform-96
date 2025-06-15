@@ -34,7 +34,12 @@ export const useApiKeys = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      
+      // Transform the data to ensure permissions is always an array
+      return (data || []).map(item => ({
+        ...item,
+        permissions: Array.isArray(item.permissions) ? item.permissions : JSON.parse(item.permissions as string || '[]')
+      }));
     }
   });
 
@@ -58,7 +63,11 @@ export const useApiKeys = () => {
         .single();
 
       if (error) throw error;
-      return data;
+      
+      return {
+        ...data,
+        permissions: Array.isArray(data.permissions) ? data.permissions : JSON.parse(data.permissions as string || '[]')
+      };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['api-keys'] });

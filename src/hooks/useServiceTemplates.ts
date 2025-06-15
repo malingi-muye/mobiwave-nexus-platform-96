@@ -1,89 +1,84 @@
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 interface ServiceTemplate {
   id: string;
   name: string;
-  service_type: string;
   description: string;
-  configuration: any;
+  service_type: string;
+  template_config: any;
   is_default: boolean;
   created_at: string;
+  updated_at: string;
 }
 
-const initialTemplates: ServiceTemplate[] = [
-  {
-    id: '1',
-    name: 'Basic USSD Menu',
-    service_type: 'ussd',
-    description: 'Simple welcome menu with balance check and airtime purchase',
-    configuration: {
-      serviceCode: '*123#',
-      network: 'safaricom',
-      welcomeMessage: 'Welcome to our service',
-      menuStructure: {
-        '1': { text: 'Check Balance', action: 'check_balance' },
-        '2': { text: 'Buy Airtime', action: 'buy_airtime' }
-      }
-    },
-    is_default: true,
-    created_at: '2024-01-15'
-  },
-  {
-    id: '2',
-    name: 'Standard M-Pesa Integration',
-    service_type: 'mpesa',
-    description: 'Basic M-Pesa configuration for payments',
-    configuration: {
-      responseType: 'json',
-      autoReconciliation: true,
-      minimumAmount: 10,
-      maximumAmount: 70000
-    },
-    is_default: true,
-    created_at: '2024-01-15'
-  }
-];
+export const useServiceTemplates = () => {
+  const [templates, setTemplates] = useState<ServiceTemplate[]>([
+    {
+      id: '1',
+      name: 'Basic SMS Template',
+      description: 'Standard SMS service configuration',
+      service_type: 'sms',
+      template_config: {
+        monthly_fee: 5000,
+        setup_fee: 2000,
+        transaction_fee_type: 'fixed',
+        transaction_fee_amount: 1
+      },
+      is_default: true,
+      created_at: '2024-06-01',
+      updated_at: '2024-06-01'
+    }
+  ]);
 
-export function useServiceTemplates() {
-  const [templates, setTemplates] = useState<ServiceTemplate[]>(initialTemplates);
   const [isCreating, setIsCreating] = useState(false);
 
-  const createTemplate = useCallback((templateData: Omit<ServiceTemplate, 'id' | 'created_at' | 'is_default'>) => {
-    if (!templateData.name || !templateData.service_type) {
-      toast.error('Please fill in template name and service type');
-      return false;
+  const createTemplate = async (templateData: any) => {
+    try {
+      const newTemplate: ServiceTemplate = {
+        id: Date.now().toString(),
+        ...templateData,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      setTemplates(prev => [...prev, newTemplate]);
+      setIsCreating(false);
+      toast.success('Template created successfully');
+    } catch (error) {
+      toast.error('Failed to create template');
     }
+  };
 
-    const newTemplate: ServiceTemplate = {
-      ...templateData,
-      id: Date.now().toString(),
-      is_default: false,
-      created_at: new Date().toISOString().split('T')[0]
-    };
+  const deleteTemplate = async (templateId: string) => {
+    try {
+      setTemplates(prev => prev.filter(t => t.id !== templateId));
+      toast.success('Template deleted successfully');
+    } catch (error) {
+      toast.error('Failed to delete template');
+    }
+  };
 
-    setTemplates(prev => [...prev, newTemplate]);
-    toast.success('Template created successfully');
-    return true;
-  }, []);
-
-  const deleteTemplate = useCallback((templateId: string) => {
-    setTemplates(prev => prev.filter(t => t.id !== templateId));
-    toast.success('Template deleted successfully');
-  }, []);
-
-  const duplicateTemplate = useCallback((template: ServiceTemplate) => {
-    const duplicated: ServiceTemplate = {
-      ...template,
-      id: Date.now().toString(),
-      name: `${template.name} (Copy)`,
-      is_default: false,
-      created_at: new Date().toISOString().split('T')[0]
-    };
-    setTemplates(prev => [...prev, duplicated]);
-    toast.success('Template duplicated successfully');
-  }, []);
+  const duplicateTemplate = async (templateId: string) => {
+    try {
+      const template = templates.find(t => t.id === templateId);
+      if (template) {
+        const duplicated: ServiceTemplate = {
+          ...template,
+          id: Date.now().toString(),
+          name: `${template.name} (Copy)`,
+          is_default: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        setTemplates(prev => [...prev, duplicated]);
+        toast.success('Template duplicated successfully');
+      }
+    } catch (error) {
+      toast.error('Failed to duplicate template');
+    }
+  };
 
   return {
     templates,
@@ -93,4 +88,4 @@ export function useServiceTemplates() {
     deleteTemplate,
     duplicateTemplate
   };
-}
+};

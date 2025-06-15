@@ -721,6 +721,42 @@ export type Database = {
           },
         ]
       }
+      service_templates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_default: boolean
+          name: string
+          service_type: string
+          template_config: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean
+          name: string
+          service_type: string
+          template_config?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean
+          name?: string
+          service_type?: string
+          template_config?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       services: {
         Row: {
           base_price: number | null
@@ -1121,6 +1157,71 @@ export type Database = {
           },
         ]
       }
+      user_segment_members: {
+        Row: {
+          added_at: string
+          id: string
+          segment_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          added_at?: string
+          id?: string
+          segment_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          added_at?: string
+          id?: string
+          segment_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_segment_members_segment_id_fkey"
+            columns: ["segment_id"]
+            isOneToOne: false
+            referencedRelation: "user_segments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_segments: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          criteria: Json
+          description: string | null
+          id: string
+          is_active: boolean
+          last_updated: string | null
+          name: string
+          user_count: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          criteria?: Json
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          last_updated?: string | null
+          name: string
+          user_count?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          criteria?: Json
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          last_updated?: string | null
+          name?: string
+          user_count?: number
+        }
+        Relationships: []
+      }
       user_service_activations: {
         Row: {
           activated_at: string
@@ -1330,6 +1431,89 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      webhook_deliveries: {
+        Row: {
+          delivered_at: string
+          event_type: string
+          id: string
+          payload: Json
+          response_body: string | null
+          response_status: number | null
+          success: boolean
+          webhook_id: string | null
+        }
+        Insert: {
+          delivered_at?: string
+          event_type: string
+          id?: string
+          payload: Json
+          response_body?: string | null
+          response_status?: number | null
+          success?: boolean
+          webhook_id?: string | null
+        }
+        Update: {
+          delivered_at?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          response_body?: string | null
+          response_status?: number | null
+          success?: boolean
+          webhook_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_deliveries_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "webhook_endpoints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhook_endpoints: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          delivery_success_rate: number | null
+          events: Json
+          id: string
+          is_active: boolean
+          last_delivery: string | null
+          name: string
+          secret: string
+          total_deliveries: number | null
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          delivery_success_rate?: number | null
+          events?: Json
+          id?: string
+          is_active?: boolean
+          last_delivery?: string | null
+          name: string
+          secret: string
+          total_deliveries?: number | null
+          url: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          delivery_success_rate?: number | null
+          events?: Json
+          id?: string
+          is_active?: boolean
+          last_delivery?: string | null
+          name?: string
+          secret?: string
+          total_deliveries?: number | null
+          url?: string
+        }
+        Relationships: []
       }
       whatsapp_messages: {
         Row: {
@@ -1626,6 +1810,10 @@ export type Database = {
           synced_count: number
           error_count: number
         }[]
+      }
+      update_webhook_stats: {
+        Args: { webhook_id: string; success: boolean }
+        Returns: undefined
       }
     }
     Enums: {

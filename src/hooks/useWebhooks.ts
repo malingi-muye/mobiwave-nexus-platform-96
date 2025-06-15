@@ -29,12 +29,17 @@ export const useWebhooks = () => {
     queryKey: ['webhook-endpoints'],
     queryFn: async (): Promise<WebhookEndpoint[]> => {
       const { data, error } = await supabase
-        .from('webhook_endpoints')
+        .from('webhook_endpoints' as any)
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      
+      // Transform the data to ensure events is always an array
+      return (data || []).map(item => ({
+        ...item,
+        events: Array.isArray(item.events) ? item.events : JSON.parse(item.events as string || '[]')
+      }));
     }
   });
 
@@ -44,7 +49,7 @@ export const useWebhooks = () => {
       const secret = `whsec_${Math.random().toString(36).substring(2, 15)}`;
       
       const { data, error } = await supabase
-        .from('webhook_endpoints')
+        .from('webhook_endpoints' as any)
         .insert({
           name: webhookData.name,
           url: webhookData.url,
@@ -59,7 +64,11 @@ export const useWebhooks = () => {
         .single();
 
       if (error) throw error;
-      return data;
+      
+      return {
+        ...data,
+        events: Array.isArray(data.events) ? data.events : JSON.parse(data.events as string || '[]')
+      };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['webhook-endpoints'] });
@@ -73,7 +82,7 @@ export const useWebhooks = () => {
   const toggleWebhook = useMutation({
     mutationFn: async ({ webhookId, isActive }: { webhookId: string; isActive: boolean }) => {
       const { error } = await supabase
-        .from('webhook_endpoints')
+        .from('webhook_endpoints' as any)
         .update({ is_active: isActive })
         .eq('id', webhookId);
 
@@ -91,7 +100,7 @@ export const useWebhooks = () => {
   const deleteWebhook = useMutation({
     mutationFn: async (webhookId: string) => {
       const { error } = await supabase
-        .from('webhook_endpoints')
+        .from('webhook_endpoints' as any)
         .delete()
         .eq('id', webhookId);
 
@@ -126,7 +135,7 @@ export const useWebhooks = () => {
 
   const getWebhookDeliveries = async (webhookId: string) => {
     const { data, error } = await supabase
-      .from('webhook_deliveries')
+      .from('webhook_deliveries' as any)
       .select('*')
       .eq('webhook_id', webhookId)
       .order('created_at', { ascending: false })

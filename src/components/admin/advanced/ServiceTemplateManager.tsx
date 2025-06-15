@@ -17,6 +17,7 @@ import { useServiceTemplates } from '@/hooks/useServiceTemplates';
 import { TemplateCard } from '../services/templates/TemplateCard';
 import { TemplateCreateForm } from '../services/templates/TemplateCreateForm';
 
+// Updated interface to match database schema
 interface ServiceTemplate {
   id: string;
   name: string;
@@ -26,6 +27,7 @@ interface ServiceTemplate {
   is_default: boolean;
   created_at: string;
   updated_at: string;
+  created_by?: string;
 }
 
 export function ServiceTemplateManager() {
@@ -46,16 +48,22 @@ export function ServiceTemplateManager() {
     setEditingTemplate(template);
   };
 
-  const handleDelete = (template: ServiceTemplate) => {
-    deleteTemplate(template);
+  const handleDelete = async (template: ServiceTemplate) => {
+    await deleteTemplate(template.id);
   };
 
-  const handleDuplicate = (template: ServiceTemplate) => {
-    duplicateTemplate(template);
+  const handleDuplicate = async (template: ServiceTemplate) => {
+    await duplicateTemplate(template);
   };
 
   const handleCreateTemplate = async (templateData: any): Promise<boolean> => {
-    return await createTemplate(templateData);
+    try {
+      await createTemplate(templateData);
+      return true;
+    } catch (error) {
+      console.error('Failed to create template:', error);
+      return false;
+    }
   };
 
   const exportTemplates = () => {

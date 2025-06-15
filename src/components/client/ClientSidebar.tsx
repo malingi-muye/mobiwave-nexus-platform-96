@@ -1,40 +1,137 @@
 
 import React from 'react';
-import { useLocation } from 'react-router-dom';
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { sidebarSections } from './sidebar/SidebarData';
-import { SidebarGroup } from './sidebar/SidebarGroup';
-import { SidebarHeader } from './sidebar/SidebarHeader';
-import { useUserCredits } from '@/hooks/useUserCredits';
+import { 
+  Home, 
+  MessageSquare, 
+  Phone, 
+  CreditCard, 
+  BarChart3, 
+  Settings,
+  TrendingUp,
+  Activity,
+  DollarSign
+} from 'lucide-react';
+import { 
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
+import { Link, useLocation } from 'react-router-dom';
+
+const mainNavItems = [
+  {
+    title: "Dashboard",
+    url: "/",
+    icon: Home,
+  },
+  {
+    title: "SMS",
+    url: "/sms",
+    icon: MessageSquare,
+  },
+  {
+    title: "USSD",
+    url: "/ussd",
+    icon: Phone,
+  },
+  {
+    title: "Surveys",
+    url: "/surveys",
+    icon: BarChart3,
+  },
+];
+
+const analyticsItems = [
+  {
+    title: "Analytics",
+    url: "/client-analytics",
+    icon: TrendingUp,
+  },
+  {
+    title: "Campaign Analytics",
+    url: "/campaign-analytics",
+    icon: BarChart3,
+  },
+];
+
+const accountItems = [
+  {
+    title: "Credits",
+    url: "/credits",
+    icon: CreditCard,
+  },
+  {
+    title: "Settings",
+    url: "/settings",
+    icon: Settings,
+  },
+];
 
 export function ClientSidebar() {
   const location = useLocation();
-  const { data: credits } = useUserCredits();
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
-      <SidebarHeader />
-      
-      <ScrollArea className="flex-1 px-2">
-        <div className="py-4">
-          {sidebarSections.map((section) => (
-            <SidebarGroup
-              key={section.id}
-              section={section}
-              currentPath={location.pathname}
-            />
-          ))}
-        </div>
-      </ScrollArea>
+    <Sidebar>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Services</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {mainNavItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={location.pathname === item.url}>
+                    <Link to={item.url}>
+                      <item.icon className="w-4 h-4" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-      <div className="p-4 border-t border-gray-200 bg-gray-50">
-        <div className="text-center">
-          <div className="text-sm text-gray-600 mb-1">Available Credits</div>
-          <div className="text-lg font-bold text-green-600">
-            ${credits?.credits_remaining?.toFixed(2) || '0.00'}
-          </div>
-        </div>
-      </div>
-    </div>
+        <SidebarGroup>
+          <SidebarGroupLabel>Analytics</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {analyticsItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={location.pathname === item.url}>
+                    <Link to={item.url}>
+                      <item.icon className="w-4 h-4" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Account</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {accountItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={location.pathname === item.url}>
+                    <Link to={item.url}>
+                      <item.icon className="w-4 h-4" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>
   );
 }

@@ -1,12 +1,14 @@
 
 import React from 'react';
-import { AdminDashboardLayout } from '@/components/admin/AdminDashboardLayout';
-import { AdvancedAnalyticsHub } from '@/components/admin/analytics/AdvancedAnalyticsHub';
+import { AdminDashboardLayout } from '../../components/admin/AdminDashboardLayout';
+import { AdminAnalyticsDashboard } from '../../components/analytics/AdminAnalyticsDashboard';
 
-export default function AdvancedAnalytics() {
+const AdvancedAnalytics = () => {
   return (
     <AdminDashboardLayout>
-      <AdvancedAnalyticsHub />
+      <AdminAnalyticsDashboard />
     </AdminDashboardLayout>
   );
-}
+};
+
+export default AdvancedAnalytics;

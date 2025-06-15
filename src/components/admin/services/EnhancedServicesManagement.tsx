@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Users, DollarSign, Wrench, UserCheck, Shield, Grid } from 'lucide-react';
+import { Settings, Users, DollarSign, Wrench, UserCheck, Shield, Grid, BarChart3 } from 'lucide-react';
 import { ServicesManagementHeader } from './ServicesManagementHeader';
 import { ServiceCatalogView } from './ServiceCatalogView';
 import { UserServicesMatrix } from './UserServicesMatrix';
@@ -10,6 +10,7 @@ import { BillingOverview } from './BillingOverview';
 import { ServiceConfigurationManager } from './ServiceConfigurationManager';
 import { ServiceActivationRequests } from './ServiceActivationRequests';
 import { UserServiceActivations } from './UserServiceActivations';
+import { ServiceAnalyticsDashboard } from './analytics/ServiceAnalyticsDashboard';
 import { useRealServicesManagement } from '@/hooks/useRealServicesManagement';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -64,8 +65,12 @@ export function EnhancedServicesManagement() {
     <div className="space-y-6">
       <ServicesManagementHeader />
 
-      <Tabs defaultValue="user-services-matrix" className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
+      <Tabs defaultValue="analytics" className="w-full">
+        <TabsList className="grid w-full grid-cols-8">
+          <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <BarChart3 className="w-4 h-4" />
+            Analytics
+          </TabsTrigger>
           <TabsTrigger value="user-services-matrix" className="flex items-center gap-2">
             <Grid className="w-4 h-4" />
             Users & Services
@@ -95,6 +100,10 @@ export function EnhancedServicesManagement() {
             Billing Overview
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="analytics" className="space-y-4">
+          <ServiceAnalyticsDashboard />
+        </TabsContent>
 
         <TabsContent value="user-services-matrix" className="space-y-4">
           <UserServicesMatrix />

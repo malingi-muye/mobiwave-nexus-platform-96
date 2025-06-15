@@ -1,11 +1,9 @@
 
 import { useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
 import EnhancedSecurityManager from '@/lib/enhanced-security';
 import { logSecurityEvent } from '@/lib/security-headers';
 
 export function useSecurityMonitoring() {
-  const { user } = useAuth();
   const securityManager = EnhancedSecurityManager.getInstance();
 
   useEffect(() => {
@@ -19,17 +17,16 @@ export function useSecurityMonitoring() {
         navigationCount++;
         if (navigationCount > 10) { // More than 10 navigations in 30 seconds
           logSecurityEvent('rapid_navigation', 'medium', {
-            count: navigationCount,
-            user_id: user?.id
+            count: navigationCount
           });
         }
       };
 
       // Monitor session validity
       const sessionMonitor = setInterval(() => {
-        if (user && !securityManager.validateSession()) {
+        if (!securityManager.validateSession()) {
           logSecurityEvent('invalid_session_detected', 'high', {
-            user_id: user.id
+            timestamp: new Date().toISOString()
           });
         }
       }, 60000); // Check every minute
@@ -39,8 +36,7 @@ export function useSecurityMonitoring() {
         const target = event.target as HTMLElement;
         if (target && target.innerHTML && /<script|javascript:/i.test(target.innerHTML)) {
           logSecurityEvent('xss_attempt_detected', 'critical', {
-            element: target.tagName,
-            user_id: user?.id
+            element: target.tagName
           });
         }
       };
@@ -70,7 +66,7 @@ export function useSecurityMonitoring() {
       cleanup();
       clearInterval(cacheCleanup);
     };
-  }, [user, securityManager]);
+  }, [securityManager]);
 
   return {
     logSecurityEvent: securityManager.logSecurityEvent.bind(securityManager),

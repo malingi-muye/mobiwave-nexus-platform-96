@@ -1,12 +1,12 @@
 
 import React from 'react';
 import { ClientDashboardLayout } from '../components/client/ClientDashboardLayout';
-import { SurveyDashboard } from '../components/surveys/SurveyDashboard';
+import { UnifiedSurveyManager } from '../components/surveys/UnifiedSurveyManager';
 
 const Surveys = () => {
   return (
     <ClientDashboardLayout>
-      <SurveyDashboard />
+      <UnifiedSurveyManager />
     </ClientDashboardLayout>
   );
 };

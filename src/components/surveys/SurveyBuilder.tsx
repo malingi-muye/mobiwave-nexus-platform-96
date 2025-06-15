@@ -1,12 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Plus, Trash2, Save, Send } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, Send, Eye } from 'lucide-react';
 import { useSurveys } from '@/hooks/useSurveys';
 import { toast } from 'sonner';
 
@@ -20,9 +20,10 @@ interface Question {
 
 interface SurveyBuilderProps {
   onBack: () => void;
+  editingSurveyId?: string | null;
 }
 
-export function SurveyBuilder({ onBack }: SurveyBuilderProps) {
+export function SurveyBuilder({ onBack, editingSurveyId }: SurveyBuilderProps) {
   const [surveyData, setSurveyData] = useState({
     title: '',
     description: '',
@@ -35,7 +36,22 @@ export function SurveyBuilder({ onBack }: SurveyBuilderProps) {
     required: false
   });
 
-  const { createSurvey, publishSurvey, isCreating } = useSurveys();
+  const [previewMode, setPreviewMode] = useState(false);
+  const { surveys, createSurvey, updateSurvey, isCreating, isUpdating } = useSurveys();
+
+  // Load existing survey data if editing
+  useEffect(() => {
+    if (editingSurveyId) {
+      const existingSurvey = surveys.find(s => s.id === editingSurveyId);
+      if (existingSurvey) {
+        setSurveyData({
+          title: existingSurvey.title,
+          description: existingSurvey.description || '',
+          questions: existingSurvey.question_flow || []
+        });
+      }
+    }
+  }, [editingSurveyId, surveys]);
 
   const addQuestion = () => {
     if (!newQuestion.text) {
@@ -73,35 +89,55 @@ export function SurveyBuilder({ onBack }: SurveyBuilderProps) {
     }
 
     try {
-      await createSurvey({
-        title: surveyData.title,
-        description: surveyData.description,
-        question_flow: surveyData.questions,
-        status: 'draft',
-        target_audience: {},
-        distribution_channels: []
-      });
+      if (editingSurveyId) {
+        await updateSurvey({
+          id: editingSurveyId,
+          title: surveyData.title,
+          description: surveyData.description,
+          question_flow: surveyData.questions,
+          status: 'draft'
+        });
+      } else {
+        await createSurvey({
+          title: surveyData.title,
+          description: surveyData.description,
+          question_flow: surveyData.questions,
+          status: 'draft',
+          target_audience: {},
+          distribution_channels: []
+        });
+      }
       onBack();
     } catch (error) {
       console.error('Failed to save survey:', error);
     }
   };
 
-  const publishSurveyDirect = async () => {
+  const publishSurvey = async () => {
     if (!surveyData.title || surveyData.questions.length === 0) {
       toast.error('Please add a title and at least one question');
       return;
     }
 
     try {
-      const survey = await createSurvey({
-        title: surveyData.title,
-        description: surveyData.description,
-        question_flow: surveyData.questions,
-        status: 'active',
-        target_audience: {},
-        distribution_channels: ['sms']
-      });
+      if (editingSurveyId) {
+        await updateSurvey({
+          id: editingSurveyId,
+          title: surveyData.title,
+          description: surveyData.description,
+          question_flow: surveyData.questions,
+          status: 'active'
+        });
+      } else {
+        await createSurvey({
+          title: surveyData.title,
+          description: surveyData.description,
+          question_flow: surveyData.questions,
+          status: 'active',
+          target_audience: {},
+          distribution_channels: ['sms']
+        });
+      }
       
       toast.success('Survey published successfully');
       onBack();
@@ -110,6 +146,81 @@ export function SurveyBuilder({ onBack }: SurveyBuilderProps) {
     }
   };
 
+  if (previewMode) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" onClick={() => setPreviewMode(false)}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Editor
+          </Button>
+          <h2 className="text-2xl font-bold">Survey Preview</h2>
+        </div>
+
+        <Card className="max-w-2xl">
+          <CardHeader>
+            <CardTitle>{surveyData.title || 'Untitled Survey'}</CardTitle>
+            {surveyData.description && (
+              <CardDescription>{surveyData.description}</CardDescription>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {surveyData.questions.map((question, index) => (
+              <div key={question.id} className="space-y-2">
+                <Label className="text-base font-medium">
+                  {index + 1}. {question.text}
+                  {question.required && <span className="text-red-500 ml-1">*</span>}
+                </Label>
+                
+                {question.type === 'text' && (
+                  <Input placeholder="Enter your answer..." disabled />
+                )}
+                
+                {question.type === 'choice' && question.options && (
+                  <div className="space-y-2">
+                    {question.options.map((option, idx) => (
+                      <div key={idx} className="flex items-center space-x-2">
+                        <input type="radio" disabled />
+                        <span className="text-sm">{option}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {question.type === 'rating' && (
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((rating) => (
+                      <button key={rating} className="w-8 h-8 border rounded" disabled>
+                        {rating}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                
+                {question.type === 'yes_no' && (
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <input type="radio" disabled />
+                      <span className="text-sm">Yes</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input type="radio" disabled />
+                      <span className="text-sm">No</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+            
+            {surveyData.questions.length === 0 && (
+              <p className="text-gray-500 text-center py-8">No questions added yet</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -117,7 +228,9 @@ export function SurveyBuilder({ onBack }: SurveyBuilderProps) {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
-        <h2 className="text-2xl font-bold">Survey Builder</h2>
+        <h2 className="text-2xl font-bold">
+          {editingSurveyId ? 'Edit Survey' : 'Create Survey'}
+        </h2>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -201,13 +314,17 @@ export function SurveyBuilder({ onBack }: SurveyBuilderProps) {
             </div>
 
             <div className="flex gap-2 pt-4">
-              <Button onClick={saveDraft} variant="outline" disabled={isCreating}>
+              <Button onClick={saveDraft} variant="outline" disabled={isCreating || isUpdating}>
                 <Save className="w-4 h-4 mr-2" />
                 Save Draft
               </Button>
-              <Button onClick={publishSurveyDirect} disabled={isCreating}>
+              <Button onClick={publishSurvey} disabled={isCreating || isUpdating}>
                 <Send className="w-4 h-4 mr-2" />
-                Publish Survey
+                {editingSurveyId ? 'Update & Publish' : 'Publish Survey'}
+              </Button>
+              <Button onClick={() => setPreviewMode(true)} variant="outline">
+                <Eye className="w-4 h-4 mr-2" />
+                Preview
               </Button>
             </div>
           </CardContent>

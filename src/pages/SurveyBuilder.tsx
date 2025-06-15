@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ClientDashboardLayout } from '../components/client/ClientDashboardLayout';
-import { SurveyBuilder as SurveyBuilderComponent } from '../components/forms/SurveyBuilder';
+import { UnifiedSurveyManager } from '../components/surveys/UnifiedSurveyManager';
 
 const SurveyBuilder = () => {
   return (
@@ -15,7 +15,7 @@ const SurveyBuilder = () => {
             Create interactive surveys and forms to collect feedback and data from your audience.
           </p>
         </div>
-        <SurveyBuilderComponent />
+        <UnifiedSurveyManager />
       </div>
     </ClientDashboardLayout>
   );

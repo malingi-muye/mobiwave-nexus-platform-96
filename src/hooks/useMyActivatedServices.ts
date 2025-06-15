@@ -1,46 +1,46 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { UserServiceActivation } from '@/types/serviceActivation';
+import { UserServiceActivation } from '@/types/serviceActivation';
+import { useAuth } from '@/components/auth/AuthProvider';
 
-export function useMyActivatedServices() {
+export const useMyActivatedServices = () => {
+  const { user } = useAuth();
+
   return useQuery({
-    queryKey: ['my-activated-services'],
+    queryKey: ['my-activated-services', user?.id],
     queryFn: async (): Promise<UserServiceActivation[]> => {
-      const { data: activations, error: activationsError } = await supabase
-        .from('user_service_activations')
-        .select('*')
-        .eq('is_active', true);
+      if (!user?.id) return [];
 
-      if (activationsError) throw activationsError;
-      
-      if (!activations || activations.length === 0) {
-        return [];
+      const { data, error } = await supabase
+        .from('user_service_activations')
+        .select(`
+          *,
+          service:services_catalog!user_service_activations_service_id_fkey(
+            id,
+            service_name,
+            service_type
+          )
+        `)
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('activated_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching my activated services:', error);
+        throw error;
       }
 
-      // Get service details for each activation
-      const serviceIds = activations.map(activation => activation.service_id);
-      const { data: services, error: servicesError } = await supabase
-        .from('services_catalog')
-        .select('id, service_name, service_type')
-        .in('id', serviceIds);
-
-      if (servicesError) throw servicesError;
-
-      // Combine the data
-      return activations.map(activation => {
-        const service = services?.find(s => s.id === activation.service_id);
-        return {
-          ...activation,
-          service: service ? {
-            service_name: service.service_name,
-            service_type: service.service_type
-          } : {
-            service_name: 'Unknown Service',
-            service_type: 'unknown'
-          }
-        };
-      }) as UserServiceActivation[];
-    }
+      return (data || []).map(item => ({
+        id: item.id,
+        user_id: item.user_id,
+        service_id: item.service_id,
+        is_active: item.is_active,
+        activated_at: item.activated_at,
+        activated_by: item.activated_by,
+        service: Array.isArray(item.service) ? item.service[0] : item.service
+      }));
+    },
+    enabled: !!user?.id
   });
-}
+};

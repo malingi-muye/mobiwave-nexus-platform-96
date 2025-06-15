@@ -20,9 +20,6 @@ interface UserServiceSubscription {
   user_id: string;
   service_id: string;
   status: string;
-  configuration: any;
-  setup_fee_paid: boolean;
-  monthly_billing_active: boolean;
   activated_at: string;
   service: {
     id: string;
@@ -89,7 +86,7 @@ export function UserSubscriptionsView({
                   <TableHead>User</TableHead>
                   <TableHead>Service</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Billing</TableHead>
+                  <TableHead>Activated</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>

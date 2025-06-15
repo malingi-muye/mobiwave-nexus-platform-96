@@ -1,20 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-
-interface UserServiceActivation {
-  id: string;
-  user_id: string;
-  service_id: string;
-  is_active: boolean;
-  activated_at: string;
-  activated_by?: string;
-  service: {
-    id: string;
-    service_name: string;
-    service_type: string;
-  };
-}
+import { UserServiceActivation } from '@/types/serviceActivation';
 
 export const useUserServiceActivations = () => {
   return useQuery({
@@ -33,8 +20,20 @@ export const useUserServiceActivations = () => {
         .eq('is_active', true)
         .order('activated_at', { ascending: false });
 
-      if (error) throw error;
-      return data || [];
+      if (error) {
+        console.error('Error fetching user service activations:', error);
+        throw error;
+      }
+
+      return (data || []).map(item => ({
+        id: item.id,
+        user_id: item.user_id,
+        service_id: item.service_id,
+        is_active: item.is_active,
+        activated_at: item.activated_at,
+        activated_by: item.activated_by,
+        service: Array.isArray(item.service) ? item.service[0] : item.service
+      }));
     }
   });
 };

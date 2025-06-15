@@ -20,3 +20,17 @@ export interface ServiceActivationRequest {
     service_type: string;
   };
 }
+
+export interface UserServiceActivation {
+  id: string;
+  user_id: string;
+  service_id: string;
+  is_active: boolean;
+  activated_at: string;
+  activated_by?: string;
+  service: {
+    id: string;
+    service_name: string;
+    service_type: string;
+  };
+}

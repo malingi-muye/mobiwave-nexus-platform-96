@@ -1,28 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-
-interface ServiceActivationRequest {
-  id: string;
-  user_id: string;
-  service_id: string;
-  status: string;
-  requested_at: string;
-  approved_at?: string;
-  approved_by?: string;
-  rejection_reason?: string;
-  user?: {
-    id: string;
-    email: string;
-    first_name?: string;
-    last_name?: string;
-  };
-  service?: {
-    id: string;
-    service_name: string;
-    service_type: string;
-  };
-}
+import { ServiceActivationRequest } from '@/types/serviceActivation';
 
 export const useServiceActivationRequests = () => {
   return useQuery({
@@ -46,8 +25,23 @@ export const useServiceActivationRequests = () => {
         `)
         .order('requested_at', { ascending: false });
 
-      if (error) throw error;
-      return data || [];
+      if (error) {
+        console.error('Error fetching service activation requests:', error);
+        throw error;
+      }
+
+      return (data || []).map(item => ({
+        id: item.id,
+        user_id: item.user_id,
+        service_id: item.service_id,
+        status: item.status,
+        requested_at: item.requested_at,
+        approved_at: item.approved_at,
+        approved_by: item.approved_by,
+        rejection_reason: item.rejection_reason,
+        user: Array.isArray(item.user) ? item.user[0] : item.user,
+        service: Array.isArray(item.service) ? item.service[0] : item.service
+      }));
     }
   });
 };

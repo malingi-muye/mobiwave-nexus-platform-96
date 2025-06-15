@@ -1,3 +1,4 @@
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -89,6 +90,7 @@ export const useServiceActivation = () => {
   return {
     requestServiceActivation: requestServiceActivation.mutateAsync,
     approveServiceActivation: approveServiceActivation.mutateAsync,
-    rejectServiceActivation: rejectServiceActivation.mutateAsync
+    rejectServiceActivation: rejectServiceActivation.mutateAsync,
+    isRequesting: requestServiceActivation.isPending
   };
 };

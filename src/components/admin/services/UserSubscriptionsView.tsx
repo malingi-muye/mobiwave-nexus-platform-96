@@ -21,6 +21,9 @@ interface UserServiceSubscription {
   service_id: string;
   status: string;
   activated_at: string;
+  configuration?: any;
+  setup_fee_paid?: boolean;
+  monthly_billing_active?: boolean;
   service: {
     id: string;
     service_name: string;

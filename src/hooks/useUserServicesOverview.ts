@@ -110,7 +110,7 @@ export const useUserServicesOverview = () => {
               service_name: service.service_name,
               service_type: service.service_type,
               is_activated: activation?.is_active || false,
-              is_eligible: !service.is_premium || user.role !== 'demo',
+              is_eligible: !service.is_premium || user.role !== 'demo_user',
               status: activation?.is_active ? 'active' : 'available'
             };
           })

@@ -1,18 +1,20 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  MessageSquare, 
-  Users, 
-  BarChart3, 
+import {
+  MessageSquare,
+  Users,
+  BarChart3,
   CreditCard,
   Send,
   Clock,
   CheckCircle,
   TrendingUp,
-  Activity
+  Activity,
+  Zap,
+  AlertTriangle
 } from 'lucide-react';
 import { ClientDashboardLayout } from './ClientDashboardLayout';
 import { useAuth } from '@/hooks/useAuth';
@@ -27,6 +29,7 @@ import { LoadingState } from '@/components/common/LoadingState';
 import { RealTimeNotifications } from '@/components/notifications/RealTimeNotifications';
 import { MetricsGrid } from '@/components/dashboard/MetricsGrid';
 import { Link } from 'react-router-dom';
+import { ServiceStatusWidget } from './ServiceStatusWidget';
 
 export function ClientDashboard() {
   const { user } = useAuth();
@@ -41,14 +44,11 @@ export function ClientDashboard() {
   const renderStartTime = performance.now();
 
   React.useEffect(() => {
-    measureRenderTime('ClientDashboard', renderStartTime);
-    
-    // Prefetch likely next pages
+    // Correct usage: measure render time with no arguments
+    measureRenderTime();
+    // Prefetch likely next pages (simulate with string key or array as in hook)
     if (!campaignsLoading) {
-      prefetchKey(['campaign-analytics'], async () => {
-        // This would fetch analytics data
-        return {};
-      });
+      prefetchKey("campaign-analytics");
     }
   }, [campaignsLoading]);
 
@@ -202,6 +202,9 @@ export function ClientDashboard() {
               </div>
             </CardContent>
           </Card>
+
+          {/* ---- My Services Section --- */}
+          <ServiceStatusWidget />
 
           {/* Mobile-Responsive Recent Activity */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

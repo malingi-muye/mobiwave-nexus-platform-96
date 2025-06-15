@@ -1,15 +1,62 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Settings, CheckCircle, AlertCircle, Clock } from 'lucide-react';
-import { useClientServiceSync } from '@/hooks/useClientServiceSync';
-import { useNavigate } from 'react-router-dom';
+import { Settings, CheckCircle, AlertCircle, Clock, Crown } from 'lucide-react';
+import { useMyActivatedServices } from '@/hooks/useMyActivatedServices';
+import { useServiceActivation } from '@/hooks/useServiceActivation';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export function ServiceStatusWidget() {
-  const { data: services = [], isLoading } = useClientServiceSync();
-  const navigate = useNavigate();
+  // Fetch ALL available services for client to show
+  const { data: activatedServices = [], isLoading: isLoadingActive } = useMyActivatedServices();
+  const { requestServiceActivation, isRequesting } = useServiceActivation();
+
+  // All catalog services
+  const { data: services = [], isLoading: isLoadingCatalog } = useQuery({
+    queryKey: ['services-catalog-available'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('services_catalog')
+        .select('*')
+        .eq('is_active', true)
+        .order('service_name');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  // User's pending activation requests
+  const [pendingServiceId, setPendingServiceId] = useState<string | null>(null);
+
+  // Combine active/pending status logic
+  const isServiceActivated = (serviceId: string) =>
+    activatedServices.some((s) => s.service_id === serviceId);
+
+  // Simulate pending requests for now (should map status from actual DB if designed)
+  // Optionally, you can fetch pending requests from 'service_activation_requests' table if needed.
+
+  const handleRequestAccess = async (serviceId: string) => {
+    setPendingServiceId(serviceId);
+    try {
+      await requestServiceActivation({ serviceId });
+    } catch (error) {
+      // toast error happens inside hook
+    } finally {
+      setPendingServiceId(null);
+    }
+  };
+
+  const formatCurrency = (amount: number) => {
+    if (!amount || amount === 0) return 'Free';
+    return new Intl.NumberFormat('en-KE', {
+      style: 'currency',
+      currency: 'KES',
+      minimumFractionDigits: 0
+    }).format(amount);
+  };
 
   const getServiceIcon = (serviceType: string) => {
     switch (serviceType) {
@@ -25,25 +72,11 @@ export function ServiceStatusWidget() {
     }
   };
 
-  const getStatusColor = (service: any) => {
-    if (!service.is_active) return 'bg-red-100 text-red-800';
-    if (!service.setup_fee_paid) return 'bg-yellow-100 text-yellow-800';
-    return 'bg-green-100 text-green-800';
-  };
+  // (Optional) fetch pending requests and use status instead
+  // ... You may wish to integrate useQuery for activation requests
+  // (left out for brevity and performance - but see admin view for example)
 
-  const getStatusIcon = (service: any) => {
-    if (!service.is_active) return <AlertCircle className="w-3 h-3" />;
-    if (!service.setup_fee_paid) return <Clock className="w-3 h-3" />;
-    return <CheckCircle className="w-3 h-3" />;
-  };
-
-  const getStatusText = (service: any) => {
-    if (!service.is_active) return 'Inactive';
-    if (!service.setup_fee_paid) return 'Setup Pending';
-    return 'Active';
-  };
-
-  if (isLoading) {
+  if (isLoadingActive || isLoadingCatalog) {
     return (
       <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
         <CardHeader>
@@ -69,55 +102,54 @@ export function ServiceStatusWidget() {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Settings className="w-5 h-5 text-blue-600" />
-            My Services ({services.length})
+            My Services
           </CardTitle>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => navigate('/services')}
-          >
-            View All
-          </Button>
         </div>
       </CardHeader>
       <CardContent>
-        {services.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500 mb-4">No active services yet</p>
-            <Button onClick={() => navigate('/services')}>
-              Browse Services
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {services.slice(0, 5).map((service) => (
-              <div key={service.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">{getServiceIcon(service.service_type)}</span>
+        <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {services.map((service) => {
+              const isActive = isServiceActivated(service.id);
+              // Additional status checks can go here (pending, rejected, etc.)
+              return (
+                <div key={service.id} className="flex items-start justify-between bg-gray-50 rounded-lg p-3 border">
+                  <div className="flex gap-2 items-center">
+                    <span className="text-2xl">{getServiceIcon(service.service_type)}</span>
+                    <div>
+                      <div className="font-medium">{service.service_name} {service.is_premium && <Crown className="w-4 h-4 text-yellow-500 inline-block ml-1" />}</div>
+                      <div className="text-xs text-gray-500 capitalize mb-1">{service.service_type}</div>
+                      <div className="flex gap-2 text-xs">
+                        <Badge variant="outline">Setup: {formatCurrency(service.setup_fee)}</Badge>
+                        <Badge variant="outline">Monthly: {formatCurrency(service.monthly_fee)}</Badge>
+                      </div>
+                    </div>
+                  </div>
                   <div>
-                    <div className="font-medium">{service.service_name}</div>
-                    <div className="text-sm text-gray-500 capitalize">{service.service_type}</div>
+                    {isActive ? (
+                      <Badge className="bg-green-100 text-green-700 flex items-center gap-1" variant="secondary">
+                        <CheckCircle className="w-4 h-4" />
+                        Active
+                      </Badge>
+                    ) : (
+                      <Button
+                        size="sm"
+                        disabled={isRequesting && pendingServiceId === service.id}
+                        className="w-full"
+                        onClick={() => handleRequestAccess(service.id)}
+                      >
+                        {isRequesting && pendingServiceId === service.id ? "Requesting..." : "Request Access"}
+                      </Button>
+                    )}
                   </div>
                 </div>
-                <Badge className={getStatusColor(service)} variant="secondary">
-                  {getStatusIcon(service)}
-                  <span className="ml-1">{getStatusText(service)}</span>
-                </Badge>
-              </div>
-            ))}
-            {services.length > 5 && (
-              <div className="text-center pt-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => navigate('/services')}
-                >
-                  View {services.length - 5} more services
-                </Button>
-              </div>
+              );
+            })}
+            {services.length === 0 && (
+              <div className="text-gray-500 text-center p-4">No available services right now</div>
             )}
           </div>
-        )}
+        </div>
       </CardContent>
     </Card>
   );

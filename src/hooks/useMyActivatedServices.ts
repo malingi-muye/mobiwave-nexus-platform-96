@@ -28,7 +28,7 @@ export const useMyActivatedServices = () => {
 
       if (error) {
         console.error('Error fetching my activated services:', error);
-        throw error;
+        return [];
       }
 
       return (data || []).map(item => ({

@@ -1,316 +1,266 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { 
   Users, 
   MousePointer, 
   Clock, 
-  Eye, 
-  Navigation,
-  Smartphone,
-  Monitor,
-  Tablet,
+  Eye,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  Activity,
+  Target
 } from 'lucide-react';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  HeatMapChart
-} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 
 export function UserBehaviorAnalytics() {
-  const [timeframe, setTimeframe] = useState('7d');
+  const [timeRange, setTimeRange] = useState('7d');
+  const [userSegment, setUserSegment] = useState('all');
+
+  const pageViewData = [
+    { page: 'Dashboard', views: 12847, avgTime: '4:32', bounceRate: 23 },
+    { page: 'SMS Campaign', views: 8934, avgTime: '6:18', bounceRate: 15 },
+    { page: 'Analytics', views: 6521, avgTime: '3:45', bounceRate: 32 },
+    { page: 'Contacts', views: 5432, avgTime: '2:56', bounceRate: 28 },
+    { page: 'Settings', views: 3210, avgTime: '1:43', bounceRate: 45 }
+  ];
 
   const userFlowData = [
-    { step: 'Landing', users: 10000, dropoff: 0 },
-    { step: 'Signup', users: 6500, dropoff: 35 },
-    { step: 'Onboarding', users: 5200, dropoff: 20 },
-    { step: 'First Action', users: 4100, dropoff: 21 },
-    { step: 'Active User', users: 3400, dropoff: 17 }
+    { step: 'Landing', users: 10000, conversion: 100 },
+    { step: 'Sign Up', users: 7500, conversion: 75 },
+    { step: 'Onboarding', users: 6200, conversion: 62 },
+    { step: 'First Action', users: 4800, conversion: 48 },
+    { step: 'Active User', users: 3600, conversion: 36 }
   ];
 
   const deviceData = [
-    { name: 'Desktop', value: 45, color: '#3b82f6' },
-    { name: 'Mobile', value: 40, color: '#10b981' },
-    { name: 'Tablet', value: 15, color: '#f59e0b' }
+    { name: 'Desktop', value: 65, color: '#8884d8' },
+    { name: 'Mobile', value: 28, color: '#82ca9d' },
+    { name: 'Tablet', value: 7, color: '#ffc658' }
   ];
 
-  const pageAnalytics = [
-    { page: '/dashboard', views: 12500, time: '3m 45s', bounce: 23 },
-    { page: '/services', views: 8900, time: '2m 12s', bounce: 45 },
-    { page: '/billing', views: 3400, time: '4m 18s', bounce: 12 },
-    { page: '/settings', views: 2100, time: '5m 32s', bounce: 8 }
+  const engagementMetrics = [
+    { metric: 'Session Duration', value: '5m 23s', change: '+12%', trend: 'up' },
+    { metric: 'Pages per Session', value: '3.8', change: '+5%', trend: 'up' },
+    { metric: 'Bounce Rate', value: '24%', change: '-8%', trend: 'down' },
+    { metric: 'Return Rate', value: '68%', change: '+15%', trend: 'up' }
   ];
 
   const userSegments = [
-    { segment: 'Power Users', count: 1240, growth: '+12%', engagement: 89 },
-    { segment: 'Regular Users', count: 5680, growth: '+8%', engagement: 67 },
-    { segment: 'Occasional Users', count: 3450, growth: '-3%', engagement: 34 },
-    { segment: 'New Users', count: 890, growth: '+25%', engagement: 78 }
-  ];
-
-  const heatmapData = [
-    { hour: '00', monday: 12, tuesday: 15, wednesday: 18, thursday: 22, friday: 28, saturday: 35, sunday: 20 },
-    { hour: '06', monday: 45, tuesday: 52, wednesday: 48, thursday: 55, friday: 62, saturday: 28, sunday: 25 },
-    { hour: '12', monday: 78, tuesday: 85, wednesday: 92, thursday: 88, friday: 95, saturday: 45, sunday: 38 },
-    { hour: '18', monday: 65, tuesday: 72, wednesday: 68, thursday: 75, friday: 82, saturday: 55, sunday: 48 }
+    { name: 'New Users', count: 2847, percentage: 23, growth: '+18%' },
+    { name: 'Active Users', count: 8934, percentage: 72, growth: '+12%' },
+    { name: 'Power Users', count: 623, percentage: 5, growth: '+25%' }
   ];
 
   return (
     <div className="space-y-6">
-      {/* User Behavior Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* Controls */}
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Users className="w-4 h-4 text-blue-500" />
+          <span className="text-sm font-medium">Time Range:</span>
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7d">Last 7 days</SelectItem>
+              <SelectItem value="30d">Last 30 days</SelectItem>
+              <SelectItem value="90d">Last 3 months</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-2">
+          <Target className="w-4 h-4 text-green-500" />
+          <span className="text-sm font-medium">Segment:</span>
+          <Select value={userSegment} onValueChange={setUserSegment}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Users</SelectItem>
+              <SelectItem value="new">New Users</SelectItem>
+              <SelectItem value="returning">Returning</SelectItem>
+              <SelectItem value="power">Power Users</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Engagement Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {engagementMetrics.map((metric, index) => (
+          <Card key={index}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">{metric.metric}</p>
+                  <p className="text-2xl font-bold">{metric.value}</p>
+                </div>
+                <div className="flex items-center gap-1">
+                  {metric.trend === 'up' ? (
+                    <TrendingUp className="w-4 h-4 text-green-500" />
+                  ) : (
+                    <TrendingDown className="w-4 h-4 text-red-500" />
+                  )}
+                  <Badge 
+                    variant={metric.trend === 'up' ? 'default' : 'destructive'}
+                    className="text-xs"
+                  >
+                    {metric.change}
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Page Views */}
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2 mb-2">
-              <Eye className="w-4 h-4 text-blue-500" />
-              <span className="text-sm font-medium">Page Views</span>
-            </div>
-            <div className="text-2xl font-bold">156.2K</div>
-            <div className="flex items-center gap-1 text-sm">
-              <TrendingUp className="w-3 h-3 text-green-500" />
-              <span className="text-green-500">+12.5%</span>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Eye className="w-5 h-5" />
+              Top Pages
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {pageViewData.map((page, index) => (
+                <div key={index} className="flex items-center justify-between p-3 border rounded">
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-medium">{page.page}</span>
+                      <span className="text-sm text-gray-600">{page.views.toLocaleString()} views</span>
+                    </div>
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span>Avg Time: {page.avgTime}</span>
+                      <span>Bounce: {page.bounceRate}%</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
 
+        {/* Device Distribution */}
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2 mb-2">
-              <Clock className="w-4 h-4 text-green-500" />
-              <span className="text-sm font-medium">Avg Session</span>
-            </div>
-            <div className="text-2xl font-bold">4m 32s</div>
-            <div className="flex items-center gap-1 text-sm">
-              <TrendingDown className="w-3 h-3 text-red-500" />
-              <span className="text-red-500">-2.1%</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2 mb-2">
-              <MousePointer className="w-4 h-4 text-purple-500" />
-              <span className="text-sm font-medium">Bounce Rate</span>
-            </div>
-            <div className="text-2xl font-bold">32.8%</div>
-            <div className="flex items-center gap-1 text-sm">
-              <TrendingDown className="w-3 h-3 text-green-500" />
-              <span className="text-green-500">-5.2%</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2 mb-2">
-              <Navigation className="w-4 h-4 text-orange-500" />
-              <span className="text-sm font-medium">Conversion</span>
-            </div>
-            <div className="text-2xl font-bold">3.8%</div>
-            <div className="flex items-center gap-1 text-sm">
-              <TrendingUp className="w-3 h-3 text-green-500" />
-              <span className="text-green-500">+0.5%</span>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MousePointer className="w-5 h-5" />
+              Device Usage
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={deviceData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    dataKey="value"
+                    label={({ name, value }) => `${name}: ${value}%`}
+                  >
+                    {deviceData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Tabs defaultValue="flow" className="w-full">
-        <TabsList>
-          <TabsTrigger value="flow">User Flow</TabsTrigger>
-          <TabsTrigger value="devices">Devices</TabsTrigger>
-          <TabsTrigger value="pages">Page Analytics</TabsTrigger>
-          <TabsTrigger value="segments">User Segments</TabsTrigger>
-          <TabsTrigger value="heatmap">Activity Heatmap</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="flow" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>User Conversion Flow</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={userFlowData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="step" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="users" fill="#3b82f6" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="devices" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Device Distribution</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={deviceData}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        dataKey="value"
-                        label={({ name, value }) => `${name}: ${value}%`}
-                      >
-                        {deviceData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Device Performance</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Monitor className="w-4 h-4" />
-                    <span>Desktop</span>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-medium">4m 15s</div>
-                    <div className="text-sm text-gray-500">Avg Session</div>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Smartphone className="w-4 h-4" />
-                    <span>Mobile</span>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-medium">2m 48s</div>
-                    <div className="text-sm text-gray-500">Avg Session</div>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Tablet className="w-4 h-4" />
-                    <span>Tablet</span>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-medium">3m 22s</div>
-                    <div className="text-sm text-gray-500">Avg Session</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+      {/* User Flow */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="w-5 h-5" />
+            User Conversion Funnel
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={userFlowData} layout="horizontal">
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" />
+                <YAxis dataKey="step" type="category" />
+                <Tooltip />
+                <Bar dataKey="users" fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-        </TabsContent>
+        </CardContent>
+      </Card>
 
-        <TabsContent value="pages" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Page Performance Analytics</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-2">Page</th>
-                      <th className="text-right py-2">Page Views</th>
-                      <th className="text-right py-2">Avg Time</th>
-                      <th className="text-right py-2">Bounce Rate</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pageAnalytics.map((page, index) => (
-                      <tr key={index} className="border-b">
-                        <td className="py-3 font-medium">{page.page}</td>
-                        <td className="text-right py-3">{page.views.toLocaleString()}</td>
-                        <td className="text-right py-3">{page.time}</td>
-                        <td className="text-right py-3">
-                          <Badge variant={page.bounce < 30 ? 'default' : 'destructive'}>
-                            {page.bounce}%
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="segments" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* User Segments */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="w-5 h-5" />
+            User Segments
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {userSegments.map((segment, index) => (
-              <Card key={index}>
-                <CardContent className="p-6">
-                  <div className="space-y-3">
-                    <h3 className="font-medium">{segment.segment}</h3>
-                    <div className="text-2xl font-bold">{segment.count.toLocaleString()}</div>
-                    <div className="flex items-center justify-between">
-                      <Badge 
-                        variant={segment.growth.startsWith('+') ? 'default' : 'destructive'}
-                        className="text-xs"
-                      >
-                        {segment.growth}
-                      </Badge>
-                      <span className="text-sm text-gray-500">Growth</span>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Engagement</span>
-                        <span>{segment.engagement}%</span>
-                      </div>
-                      <Progress value={segment.engagement} className="h-2" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <div key={index} className="p-4 border rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-medium">{segment.name}</h4>
+                  <Badge variant="outline" className="text-xs">
+                    {segment.growth}
+                  </Badge>
+                </div>
+                <p className="text-2xl font-bold mb-1">{segment.count.toLocaleString()}</p>
+                <div className="flex items-center gap-2">
+                  <Progress value={segment.percentage} className="flex-1 h-2" />
+                  <span className="text-sm text-gray-600">{segment.percentage}%</span>
+                </div>
+              </div>
             ))}
           </div>
-        </TabsContent>
+        </CardContent>
+      </Card>
 
-        <TabsContent value="heatmap" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Activity Heatmap</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Interactive activity heatmap showing user engagement patterns</p>
-                <p className="text-sm">Peak activity: Weekdays 12-2 PM</p>
+      {/* Behavioral Insights */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Behavioral Insights</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Clock className="w-4 h-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-800">Peak Usage</span>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              <p className="text-sm text-blue-700">
+                Most users are active between 9 AM and 2 PM on weekdays
+              </p>
+            </div>
+            <div className="p-4 bg-green-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="w-4 h-4 text-green-600" />
+                <span className="text-sm font-medium text-green-800">Engagement Growth</span>
+              </div>
+              <p className="text-sm text-green-700">
+                User engagement has increased 23% over the last month
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

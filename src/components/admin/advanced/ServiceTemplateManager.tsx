@@ -48,20 +48,22 @@ export function ServiceTemplateManager() {
     setEditingTemplate(template);
   };
 
-  const handleDelete = async (template: ServiceTemplate) => {
-    await deleteTemplate(template.id);
+  const handleDelete = async (templateId: string) => {
+    await deleteTemplate(templateId);
   };
 
-  const handleDuplicate = async (template: ServiceTemplate) => {
-    await duplicateTemplate(template);
+  const handleDuplicate = async (templateId: string) => {
+    const template = templates.find(t => t.id === templateId);
+    if (template) {
+      await duplicateTemplate(template);
+    }
   };
 
-  const handleCreateTemplate = async (templateData: any) => {
+  const handleCreateTemplate = async (templateData: any): Promise<void> => {
     const success = await createTemplate(templateData);
     if (success) {
       setIsCreating(false);
     }
-    return success;
   };
 
   const exportTemplates = () => {
@@ -117,8 +119,8 @@ export function ServiceTemplateManager() {
             key={template.id}
             template={template}
             onEdit={handleEdit}
-            onDuplicate={handleDuplicate}
-            onDelete={handleDelete}
+            onDuplicate={() => handleDuplicate(template.id)}
+            onDelete={() => handleDelete(template.id)}
           />
         ))}
       </div>

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Users, DollarSign, Wrench, UserCheck, Shield, Grid, BarChart3 } from 'lucide-react';
+import { Settings, Users, DollarSign, Wrench, UserCheck, Shield, Grid, BarChart3, Zap } from 'lucide-react';
 import { ServicesManagementHeader } from './ServicesManagementHeader';
 import { ServiceCatalogView } from './ServiceCatalogView';
 import { UserServicesMatrix } from './UserServicesMatrix';
@@ -11,6 +11,7 @@ import { ServiceConfigurationManager } from './ServiceConfigurationManager';
 import { ServiceActivationRequests } from './ServiceActivationRequests';
 import { UserServiceActivations } from './UserServiceActivations';
 import { ServiceAnalyticsDashboard } from './analytics/ServiceAnalyticsDashboard';
+import { ServiceAutomationHub } from './ServiceAutomationHub';
 import { useRealServicesManagement } from '@/hooks/useRealServicesManagement';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -66,10 +67,14 @@ export function EnhancedServicesManagement() {
       <ServicesManagementHeader />
 
       <Tabs defaultValue="analytics" className="w-full">
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className="grid w-full grid-cols-9">
           <TabsTrigger value="analytics" className="flex items-center gap-2">
             <BarChart3 className="w-4 h-4" />
             Analytics
+          </TabsTrigger>
+          <TabsTrigger value="automation" className="flex items-center gap-2">
+            <Zap className="w-4 h-4" />
+            Automation
           </TabsTrigger>
           <TabsTrigger value="user-services-matrix" className="flex items-center gap-2">
             <Grid className="w-4 h-4" />
@@ -103,6 +108,10 @@ export function EnhancedServicesManagement() {
 
         <TabsContent value="analytics" className="space-y-4">
           <ServiceAnalyticsDashboard />
+        </TabsContent>
+
+        <TabsContent value="automation" className="space-y-4">
+          <ServiceAutomationHub />
         </TabsContent>
 
         <TabsContent value="user-services-matrix" className="space-y-4">

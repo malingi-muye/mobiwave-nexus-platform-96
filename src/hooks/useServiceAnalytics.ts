@@ -120,18 +120,18 @@ export function useServiceAnalytics() {
       
       if (error) throw error;
 
-      const statusCounts = data.reduce((acc: any, row: any) => {
+      const statusCounts = data.reduce((acc: Record<string, number>, row: any) => {
         const status = row.overall_status;
         acc[status] = (acc[status] || 0) + 1;
         return acc;
       }, {});
 
-      const total = Object.values(statusCounts).reduce((sum: number, count) => sum + (count as number), 0);
+      const total = Object.values(statusCounts).reduce((sum: number, count: number) => sum + count, 0);
 
       return Object.entries(statusCounts).map(([status, count]) => ({
         status,
         count: count as number,
-        percentage: total > 0 ? ((count as number) / total) * 100 : 0
+        percentage: total > 0 ? (count / total) * 100 : 0
       }));
     }
   });

@@ -1,282 +1,281 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { 
   Activity, 
-  TrendingUp, 
   Users, 
-  MessageSquare, 
-  DollarSign, 
-  AlertTriangle,
-  Zap,
-  BarChart3,
+  Zap, 
+  TrendingUp, 
+  Eye,
+  MessageSquare,
+  DollarSign,
   Clock,
-  Globe
+  RefreshCw,
+  Pause,
+  Play
 } from 'lucide-react';
-
-interface RealTimeMetric {
-  timestamp: string;
-  activeUsers: number;
-  messagesPerMinute: number;
-  revenue: number;
-  systemLoad: number;
-  responseTime: number;
-  errorRate: number;
-}
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export function RealTimeMetricsDashboard() {
-  const [timeRange, setTimeRange] = useState<'1h' | '6h' | '24h' | '7d'>('1h');
-  const [metrics, setMetrics] = useState<RealTimeMetric[]>([]);
   const [isLive, setIsLive] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState(new Date());
 
   // Simulate real-time data updates
   useEffect(() => {
-    const generateMetric = (): RealTimeMetric => ({
-      timestamp: new Date().toLocaleTimeString(),
-      activeUsers: Math.floor(Math.random() * 500) + 100,
-      messagesPerMinute: Math.floor(Math.random() * 1000) + 200,
-      revenue: Math.random() * 1000 + 500,
-      systemLoad: Math.random() * 100,
-      responseTime: Math.random() * 500 + 100,
-      errorRate: Math.random() * 5
-    });
+    if (!isLive) return;
 
     const interval = setInterval(() => {
-      if (isLive) {
-        setMetrics(prev => {
-          const newMetrics = [...prev, generateMetric()];
-          return newMetrics.slice(-50); // Keep last 50 points
-        });
-      }
-    }, 3000);
-
-    // Initialize with some data
-    if (metrics.length === 0) {
-      const initialData = Array.from({ length: 20 }, generateMetric);
-      setMetrics(initialData);
-    }
+      setLastUpdate(new Date());
+    }, 5000);
 
     return () => clearInterval(interval);
-  }, [isLive, metrics.length]);
+  }, [isLive]);
 
-  const currentMetrics = metrics[metrics.length - 1] || {
-    activeUsers: 0,
-    messagesPerMinute: 0,
-    revenue: 0,
-    systemLoad: 0,
-    responseTime: 0,
-    errorRate: 0
-  };
-
-  const getSystemHealthStatus = () => {
-    if (currentMetrics.systemLoad > 80 || currentMetrics.errorRate > 3) return 'critical';
-    if (currentMetrics.systemLoad > 60 || currentMetrics.errorRate > 1) return 'warning';
-    return 'healthy';
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'critical': return 'bg-red-100 text-red-800';
-      case 'warning': return 'bg-yellow-100 text-yellow-800';
-      case 'healthy': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const realTimeMetrics = [
+    {
+      title: 'Active Users',
+      value: '1,247',
+      change: '+23',
+      changePercent: '+1.9%',
+      trend: 'up',
+      icon: <Users className="w-4 h-4" />
+    },
+    {
+      title: 'Page Views',
+      value: '8,532',
+      change: '+156',
+      changePercent: '+1.8%',
+      trend: 'up',
+      icon: <Eye className="w-4 h-4" />
+    },
+    {
+      title: 'Live Sessions',
+      value: '892',
+      change: '-12',
+      changePercent: '-1.3%',
+      trend: 'down',
+      icon: <Activity className="w-4 h-4" />
+    },
+    {
+      title: 'Revenue/Hour',
+      value: '$2,847',
+      change: '+$127',
+      changePercent: '+4.7%',
+      trend: 'up',
+      icon: <DollarSign className="w-4 h-4" />
     }
-  };
+  ];
+
+  const liveActivityData = [
+    { time: '14:50', users: 1220, sessions: 890, revenue: 2720 },
+    { time: '14:51', users: 1235, sessions: 895, revenue: 2745 },
+    { time: '14:52', users: 1247, sessions: 892, revenue: 2782 },
+    { time: '14:53', users: 1241, sessions: 888, revenue: 2801 },
+    { time: '14:54', users: 1253, sessions: 901, revenue: 2847 },
+  ];
+
+  const liveEvents = [
+    { time: '14:54:32', event: 'New user registration', user: 'john.doe@email.com', type: 'success' },
+    { time: '14:54:18', event: 'Premium subscription', user: 'jane.smith@email.com', type: 'revenue' },
+    { time: '14:54:05', event: 'API rate limit exceeded', user: 'system', type: 'warning' },
+    { time: '14:53:47', event: 'Large file upload', user: 'mike.wilson@email.com', type: 'info' },
+    { time: '14:53:22', event: 'Password reset request', user: 'sarah.brown@email.com', type: 'info' }
+  ];
+
+  const topPages = [
+    { page: '/dashboard', visitors: 342, duration: '3m 45s' },
+    { page: '/services', visitors: 187, duration: '2m 12s' },
+    { page: '/billing', visitors: 98, duration: '4m 18s' },
+    { page: '/analytics', visitors: 76, duration: '5m 32s' },
+    { page: '/settings', visitors: 54, duration: '2m 08s' }
+  ];
 
   return (
     <div className="space-y-6">
+      {/* Controls */}
       <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-2xl font-bold">Real-Time Analytics</h3>
-          <p className="text-gray-600">Live system performance and user activity monitoring</p>
-        </div>
         <div className="flex items-center gap-4">
-          <Select value={timeRange} onValueChange={(value: '1h' | '6h' | '24h' | '7d') => setTimeRange(value)}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1h">Last Hour</SelectItem>
-              <SelectItem value="6h">Last 6 Hours</SelectItem>
-              <SelectItem value="24h">Last 24 Hours</SelectItem>
-              <SelectItem value="7d">Last 7 Days</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button 
+          <Button
             variant={isLive ? "default" : "outline"}
+            size="sm"
             onClick={() => setIsLive(!isLive)}
             className="flex items-center gap-2"
           >
-            <Activity className={`w-4 h-4 ${isLive ? 'animate-pulse' : ''}`} />
-            {isLive ? 'Live' : 'Paused'}
+            {isLive ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+            {isLive ? 'Pause' : 'Resume'} Live Updates
           </Button>
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <RefreshCw className="w-3 h-3" />
+            Last update: {lastUpdate.toLocaleTimeString()}
+          </div>
         </div>
+        {isLive && (
+          <Badge variant="default" className="animate-pulse">
+            <Activity className="w-3 h-3 mr-1" />
+            LIVE
+          </Badge>
+        )}
       </div>
 
-      {/* System Health Overview */}
+      {/* Real-time Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {realTimeMetrics.map((metric, index) => (
+          <Card key={index} className={isLive ? 'border-green-200' : ''}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    {metric.icon}
+                    <span className="text-sm font-medium text-gray-600">{metric.title}</span>
+                  </div>
+                  <div className="text-2xl font-bold">{metric.value}</div>
+                  <div className="flex items-center gap-1 text-sm">
+                    <span className={metric.trend === 'up' ? 'text-green-500' : 'text-red-500'}>
+                      {metric.change}
+                    </span>
+                    <span className="text-gray-500">({metric.changePercent})</span>
+                  </div>
+                </div>
+                {isLive && (
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Live Activity Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="w-5 h-5" />
+              Live Activity Stream
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={liveActivityData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="time" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line 
+                    type="monotone" 
+                    dataKey="users" 
+                    stroke="#3b82f6" 
+                    strokeWidth={2}
+                    dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                    name="Active Users"
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="sessions" 
+                    stroke="#10b981" 
+                    strokeWidth={2}
+                    dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                    name="Sessions"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Live Events Feed */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="w-5 h-5" />
+              Live Events Feed
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3 max-h-80 overflow-y-auto">
+              {liveEvents.map((event, index) => (
+                <div key={index} className="flex items-start gap-3 p-3 border rounded-lg">
+                  <div className={`w-2 h-2 rounded-full mt-2 ${
+                    event.type === 'success' ? 'bg-green-500' :
+                    event.type === 'revenue' ? 'bg-blue-500' :
+                    event.type === 'warning' ? 'bg-yellow-500' :
+                    'bg-gray-400'
+                  }`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-medium">{event.event}</span>
+                      <Badge 
+                        variant={event.type === 'revenue' ? 'default' : 'outline'}
+                        className="text-xs"
+                      >
+                        {event.type}
+                      </Badge>
+                    </div>
+                    <div className="text-xs text-gray-500 truncate">{event.user}</div>
+                    <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
+                      <Clock className="w-3 h-3" />
+                      {event.time}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Current Activity Breakdown */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Globe className="w-5 h-5" />
-            System Health Status
-            <Badge className={getStatusColor(getSystemHealthStatus())}>
-              {getSystemHealthStatus().toUpperCase()}
-            </Badge>
-          </CardTitle>
+          <CardTitle>Current Activity Breakdown</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{currentMetrics.activeUsers}</div>
-              <div className="text-sm text-gray-500">Active Users</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="font-medium mb-3">Top Pages (Live Visitors)</h4>
+              <div className="space-y-2">
+                {topPages.map((page, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 border rounded">
+                    <div>
+                      <div className="font-medium text-sm">{page.page}</div>
+                      <div className="text-xs text-gray-500">Avg. {page.duration}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold text-sm">{page.visitors}</div>
+                      <div className="text-xs text-gray-500">visitors</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{currentMetrics.messagesPerMinute}</div>
-              <div className="text-sm text-gray-500">Messages/Min</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">${currentMetrics.revenue.toFixed(0)}</div>
-              <div className="text-sm text-gray-500">Revenue</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">{currentMetrics.systemLoad.toFixed(1)}%</div>
-              <div className="text-sm text-gray-500">System Load</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-teal-600">{currentMetrics.responseTime.toFixed(0)}ms</div>
-              <div className="text-sm text-gray-500">Response Time</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">{currentMetrics.errorRate.toFixed(2)}%</div>
-              <div className="text-sm text-gray-500">Error Rate</div>
+
+            <div>
+              <h4 className="font-medium mb-3">Geographic Distribution</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center p-2 border rounded">
+                  <span className="text-sm">🇺🇸 United States</span>
+                  <span className="font-medium">427 users</span>
+                </div>
+                <div className="flex justify-between items-center p-2 border rounded">
+                  <span className="text-sm">🇬🇧 United Kingdom</span>
+                  <span className="font-medium">234 users</span>
+                </div>
+                <div className="flex justify-between items-center p-2 border rounded">
+                  <span className="text-sm">🇨🇦 Canada</span>
+                  <span className="font-medium">189 users</span>
+                </div>
+                <div className="flex justify-between items-center p-2 border rounded">
+                  <span className="text-sm">🇩🇪 Germany</span>
+                  <span className="font-medium">156 users</span>
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* User Activity Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-blue-600" />
-              Active Users
-            </CardTitle>
-            <CardDescription>Real-time user activity tracking</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={metrics}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="timestamp" />
-                <YAxis />
-                <Tooltip />
-                <Area 
-                  type="monotone" 
-                  dataKey="activeUsers" 
-                  stroke="#3B82F6" 
-                  fill="#3B82F6" 
-                  fillOpacity={0.3}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Message Throughput */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-green-600" />
-              Message Throughput
-            </CardTitle>
-            <CardDescription>Messages processed per minute</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={metrics}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="timestamp" />
-                <YAxis />
-                <Tooltip />
-                <Line 
-                  type="monotone" 
-                  dataKey="messagesPerMinute" 
-                  stroke="#10B981" 
-                  strokeWidth={2}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* System Performance */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="w-5 h-5 text-orange-600" />
-              System Performance
-            </CardTitle>
-            <CardDescription>CPU load and response times</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={metrics}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="timestamp" />
-                <YAxis />
-                <Tooltip />
-                <Line 
-                  type="monotone" 
-                  dataKey="systemLoad" 
-                  stroke="#F59E0B" 
-                  strokeWidth={2}
-                  name="System Load (%)"
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="responseTime" 
-                  stroke="#EF4444" 
-                  strokeWidth={2}
-                  name="Response Time (ms)"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Revenue Tracking */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-purple-600" />
-              Revenue Tracking
-            </CardTitle>
-            <CardDescription>Real-time revenue generation</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={metrics}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="timestamp" />
-                <YAxis />
-                <Tooltip formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Revenue']} />
-                <Area 
-                  type="monotone" 
-                  dataKey="revenue" 
-                  stroke="#8B5CF6" 
-                  fill="#8B5CF6" 
-                  fillOpacity={0.3}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }

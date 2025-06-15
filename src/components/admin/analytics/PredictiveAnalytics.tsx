@@ -1,396 +1,257 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { 
   TrendingUp, 
-  Users, 
-  DollarSign, 
-  MessageSquare, 
+  TrendingDown, 
+  AlertTriangle, 
+  Target, 
   Brain,
-  Target,
-  AlertTriangle,
-  Calendar,
   Zap,
-  BarChart3
+  Users,
+  DollarSign
 } from 'lucide-react';
-
-interface Prediction {
-  metric: string;
-  currentValue: number;
-  predictedValue: number;
-  change: number;
-  confidence: number;
-  timeframe: string;
-}
-
-interface TrendData {
-  period: string;
-  actual: number;
-  predicted: number;
-  upperBound: number;
-  lowerBound: number;
-}
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
 export function PredictiveAnalytics() {
-  const [selectedMetric, setSelectedMetric] = useState<string>('revenue');
-  const [timeHorizon, setTimeHorizon] = useState<string>('30d');
+  const [predictionModel, setPredictionModel] = useState('revenue');
+  const [timeHorizon, setTimeHorizon] = useState('3m');
 
-  const predictions: Prediction[] = [
+  const predictionData = [
+    { month: 'Jan', actual: 45000, predicted: 44800, confidence: 92 },
+    { month: 'Feb', actual: 52000, predicted: 51200, confidence: 89 },
+    { month: 'Mar', actual: 48000, predicted: 49100, confidence: 94 },
+    { month: 'Apr', actual: null, predicted: 53500, confidence: 87 },
+    { month: 'May', actual: null, predicted: 56200, confidence: 85 },
+    { month: 'Jun', actual: null, predicted: 58900, confidence: 82 }
+  ];
+
+  const insights = [
     {
-      metric: 'Monthly Revenue',
-      currentValue: 45200,
-      predictedValue: 52800,
-      change: 16.8,
+      type: 'opportunity',
+      title: 'Revenue Growth Opportunity',
+      description: 'Model predicts 18% revenue increase with improved user retention',
+      impact: 'High',
       confidence: 87,
-      timeframe: 'Next 30 days'
+      icon: <TrendingUp className="w-4 h-4" />
     },
     {
-      metric: 'Active Users',
-      currentValue: 1250,
-      predictedValue: 1420,
-      change: 13.6,
+      type: 'risk',
+      title: 'Churn Risk Alert',
+      description: 'Increased churn probability detected for premium users',
+      impact: 'Medium',
       confidence: 92,
-      timeframe: 'Next 30 days'
+      icon: <AlertTriangle className="w-4 h-4" />
     },
     {
-      metric: 'Message Volume',
-      currentValue: 125000,
-      predictedValue: 142000,
-      change: 13.6,
-      confidence: 89,
-      timeframe: 'Next 30 days'
-    },
-    {
-      metric: 'Churn Rate',
-      currentValue: 5.2,
-      predictedValue: 4.1,
-      change: -21.2,
-      confidence: 78,
-      timeframe: 'Next 30 days'
+      type: 'trend',
+      title: 'Seasonal Pattern',
+      description: 'Usage typically drops 15% in summer months',
+      impact: 'Low',
+      confidence: 95,
+      icon: <Target className="w-4 h-4" />
     }
   ];
 
-  const trendData: TrendData[] = [
-    { period: 'Week 1', actual: 45200, predicted: 46000, upperBound: 48000, lowerBound: 44000 },
-    { period: 'Week 2', actual: 47100, predicted: 47800, upperBound: 49800, lowerBound: 45800 },
-    { period: 'Week 3', actual: 48900, predicted: 49600, upperBound: 51600, lowerBound: 47600 },
-    { period: 'Week 4', actual: 50200, predicted: 51400, upperBound: 53400, lowerBound: 49400 },
-    { period: 'Week 5', actual: 0, predicted: 52800, upperBound: 55800, lowerBound: 49800 },
-    { period: 'Week 6', actual: 0, predicted: 54200, upperBound: 57200, lowerBound: 51200 }
+  const modelMetrics = [
+    { name: 'Accuracy', value: 89, target: 85 },
+    { name: 'Precision', value: 92, target: 90 },
+    { name: 'Recall', value: 87, target: 85 },
+    { name: 'F1-Score', value: 89, target: 88 }
   ];
-
-  const userSegmentPredictions = [
-    { segment: 'Enterprise', currentUsers: 45, predictedGrowth: 22, potential: 'High' },
-    { segment: 'Small Business', currentUsers: 280, predictedGrowth: 15, potential: 'Medium' },
-    { segment: 'Startups', currentUsers: 520, predictedGrowth: 35, potential: 'Very High' },
-    { segment: 'Individual', currentUsers: 405, predictedGrowth: 8, potential: 'Low' }
-  ];
-
-  const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 85) return 'bg-green-100 text-green-800';
-    if (confidence >= 70) return 'bg-yellow-100 text-yellow-800';
-    return 'bg-red-100 text-red-800';
-  };
-
-  const getChangeColor = (change: number) => {
-    return change >= 0 ? 'text-green-600' : 'text-red-600';
-  };
-
-  const getPotentialColor = (potential: string) => {
-    switch (potential) {
-      case 'Very High': return 'bg-green-100 text-green-800';
-      case 'High': return 'bg-blue-100 text-blue-800';
-      case 'Medium': return 'bg-yellow-100 text-yellow-800';
-      case 'Low': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-2xl font-bold flex items-center gap-2">
-            <Brain className="w-7 h-7 text-purple-600" />
-            Predictive Analytics
-          </h3>
-          <p className="text-gray-600">AI-powered predictions and trend analysis</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <Select value={timeHorizon} onValueChange={setTimeHorizon}>
+      {/* Model Configuration */}
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Brain className="w-4 h-4 text-blue-500" />
+          <span className="text-sm font-medium">Prediction Model:</span>
+          <Select value={predictionModel} onValueChange={setPredictionModel}>
             <SelectTrigger className="w-40">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="7d">Next 7 Days</SelectItem>
-              <SelectItem value="30d">Next 30 Days</SelectItem>
-              <SelectItem value="90d">Next 90 Days</SelectItem>
-              <SelectItem value="1y">Next Year</SelectItem>
+              <SelectItem value="revenue">Revenue</SelectItem>
+              <SelectItem value="users">User Growth</SelectItem>
+              <SelectItem value="churn">Churn Rate</SelectItem>
+              <SelectItem value="engagement">Engagement</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-2">
+          <Target className="w-4 h-4 text-green-500" />
+          <span className="text-sm font-medium">Time Horizon:</span>
+          <Select value={timeHorizon} onValueChange={setTimeHorizon}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1m">1 Month</SelectItem>
+              <SelectItem value="3m">3 Months</SelectItem>
+              <SelectItem value="6m">6 Months</SelectItem>
+              <SelectItem value="1y">1 Year</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="trends">Trend Analysis</TabsTrigger>
-          <TabsTrigger value="segments">User Segments</TabsTrigger>
-          <TabsTrigger value="scenarios">Scenarios</TabsTrigger>
-        </TabsList>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Prediction Chart */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5" />
+              Revenue Predictions vs Actual
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={predictionData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip 
+                    formatter={(value, name) => [
+                      typeof value === 'number' ? `$${value.toLocaleString()}` : 'N/A',
+                      name === 'actual' ? 'Actual' : 'Predicted'
+                    ]}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="actual" 
+                    stroke="#2563eb" 
+                    strokeWidth={2}
+                    name="actual"
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="predicted" 
+                    stroke="#dc2626" 
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    name="predicted"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
 
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {predictions.map((prediction, index) => (
-              <Card key={index}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-gray-600">
-                    {prediction.metric}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div>
-                      <div className="text-2xl font-bold">
-                        {prediction.metric.includes('Rate') 
-                          ? `${prediction.predictedValue}%`
-                          : prediction.metric.includes('Revenue')
-                          ? `$${prediction.predictedValue.toLocaleString()}`
-                          : prediction.predictedValue.toLocaleString()
-                        }
-                      </div>
-                      <div className={`text-sm font-medium ${getChangeColor(prediction.change)}`}>
-                        {prediction.change >= 0 ? '+' : ''}{prediction.change}% predicted change
-                      </div>
+        {/* Model Performance */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="w-5 h-5" />
+              Model Performance
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {modelMetrics.map((metric, index) => (
+              <div key={index} className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>{metric.name}</span>
+                  <span className="font-medium">{metric.value}%</span>
+                </div>
+                <Progress value={metric.value} className="h-2" />
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>Target: {metric.target}%</span>
+                  <Badge 
+                    variant={metric.value >= metric.target ? 'default' : 'destructive'}
+                    className="text-xs"
+                  >
+                    {metric.value >= metric.target ? 'Good' : 'Needs Improvement'}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* AI Insights */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Brain className="w-5 h-5" />
+            AI-Generated Insights
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {insights.map((insight, index) => (
+              <Card key={index} className="border">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className={`p-2 rounded-lg ${
+                      insight.type === 'opportunity' ? 'bg-green-100 text-green-600' :
+                      insight.type === 'risk' ? 'bg-red-100 text-red-600' :
+                      'bg-blue-100 text-blue-600'
+                    }`}>
+                      {insight.icon}
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500">{prediction.timeframe}</span>
-                      <Badge className={getConfidenceColor(prediction.confidence)}>
-                        {prediction.confidence}% confidence
-                      </Badge>
+                    <div className="flex-1 space-y-2">
+                      <h4 className="font-medium">{insight.title}</h4>
+                      <p className="text-sm text-gray-600">{insight.description}</p>
+                      <div className="flex items-center justify-between">
+                        <Badge variant="outline" className="text-xs">
+                          {insight.impact} Impact
+                        </Badge>
+                        <span className="text-xs text-gray-500">
+                          {insight.confidence}% confidence
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
+        </CardContent>
+      </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-amber-600" />
-                AI Insights & Recommendations
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="p-4 border border-green-200 bg-green-50 rounded-lg">
-                  <div className="flex items-start gap-3">
-                    <TrendingUp className="w-5 h-5 text-green-600 mt-0.5" />
-                    <div>
-                      <h4 className="font-medium text-green-900">Revenue Growth Opportunity</h4>
-                      <p className="text-sm text-green-700 mt-1">
-                        Based on current trends, implementing premium features could increase revenue by 25% within 60 days.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="p-4 border border-blue-200 bg-blue-50 rounded-lg">
-                  <div className="flex items-start gap-3">
-                    <Users className="w-5 h-5 text-blue-600 mt-0.5" />
-                    <div>
-                      <h4 className="font-medium text-blue-900">User Acquisition</h4>
-                      <p className="text-sm text-blue-700 mt-1">
-                        Startup segment shows 35% growth potential. Consider targeted marketing campaigns.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-4 border border-amber-200 bg-amber-50 rounded-lg">
-                  <div className="flex items-start gap-3">
-                    <Target className="w-5 h-5 text-amber-600 mt-0.5" />
-                    <div>
-                      <h4 className="font-medium text-amber-900">Churn Prevention</h4>
-                      <p className="text-sm text-amber-700 mt-1">
-                        Proactive engagement campaigns could reduce churn rate from 5.2% to 4.1%.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+      {/* Action Recommendations */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recommended Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <TrendingUp className="w-4 h-4 text-green-600" />
+                <span className="text-sm font-medium">Implement retention campaign for high-value users</span>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="trends" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-purple-600" />
-                Revenue Prediction Trend
-              </CardTitle>
-              <CardDescription>
-                Actual vs predicted revenue with confidence intervals
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <LineChart data={trendData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="period" />
-                  <YAxis />
-                  <Tooltip formatter={(value) => [`$${Number(value).toLocaleString()}`, '']} />
-                  <Line 
-                    type="monotone" 
-                    dataKey="actual" 
-                    stroke="#10B981" 
-                    strokeWidth={3}
-                    name="Actual"
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="predicted" 
-                    stroke="#8B5CF6" 
-                    strokeWidth={2}
-                    strokeDasharray="5 5"
-                    name="Predicted"
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="upperBound" 
-                    stroke="#D1D5DB" 
-                    strokeWidth={1}
-                    name="Upper Bound"
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="lowerBound" 
-                    stroke="#D1D5DB" 
-                    strokeWidth={1}
-                    name="Lower Bound"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="segments" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-blue-600" />
-                User Segment Growth Predictions
-              </CardTitle>
-              <CardDescription>
-                Predicted growth rates for different user segments
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {userSegmentPredictions.map((segment, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="space-y-1">
-                      <h4 className="font-medium">{segment.segment}</h4>
-                      <p className="text-sm text-gray-600">
-                        Current: {segment.currentUsers} users
-                      </p>
-                    </div>
-                    <div className="text-right space-y-1">
-                      <div className="text-lg font-bold text-green-600">
-                        +{segment.predictedGrowth}%
-                      </div>
-                      <Badge className={getPotentialColor(segment.potential)}>
-                        {segment.potential}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
+              <Button size="sm" variant="outline">
+                Execute
+              </Button>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Users className="w-4 h-4 text-blue-600" />
+                <span className="text-sm font-medium">Optimize onboarding flow to reduce early churn</span>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="scenarios" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-green-600">Optimistic Scenario</CardTitle>
-                <CardDescription>Best case predictions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span>Revenue Growth</span>
-                    <span className="font-bold text-green-600">+28%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>User Growth</span>
-                    <span className="font-bold text-green-600">+35%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Churn Rate</span>
-                    <span className="font-bold text-green-600">-35%</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-blue-600">Expected Scenario</CardTitle>
-                <CardDescription>Most likely predictions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span>Revenue Growth</span>
-                    <span className="font-bold text-blue-600">+17%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>User Growth</span>
-                    <span className="font-bold text-blue-600">+14%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Churn Rate</span>
-                    <span className="font-bold text-blue-600">-21%</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-red-600">Conservative Scenario</CardTitle>
-                <CardDescription>Worst case predictions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span>Revenue Growth</span>
-                    <span className="font-bold text-red-600">+8%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>User Growth</span>
-                    <span className="font-bold text-red-600">+5%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Churn Rate</span>
-                    <span className="font-bold text-red-600">-10%</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+              <Button size="sm" variant="outline">
+                Review
+              </Button>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <DollarSign className="w-4 h-4 text-yellow-600" />
+                <span className="text-sm font-medium">Adjust pricing strategy for Q2 revenue goals</span>
+              </div>
+              <Button size="sm" variant="outline">
+                Plan
+              </Button>
+            </div>
           </div>
-        </TabsContent>
-      </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 }

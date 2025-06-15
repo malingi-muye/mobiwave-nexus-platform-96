@@ -1,197 +1,200 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DatePickerWithRange } from "@/components/ui/date-picker";
 import { Badge } from "@/components/ui/badge";
-import { RealTimeMetricsDashboard } from './RealTimeMetricsDashboard';
-import { PerformanceOptimizer } from './PerformanceOptimizer';
-import { PredictiveAnalytics } from './PredictiveAnalytics';
 import { 
-  Activity, 
-  Zap, 
-  Brain, 
   BarChart3, 
   TrendingUp, 
-  Clock,
-  AlertTriangle
+  Users, 
+  DollarSign, 
+  Activity,
+  Download,
+  Filter,
+  Calendar,
+  Eye,
+  Target,
+  Zap
 } from 'lucide-react';
+import { PredictiveAnalytics } from './PredictiveAnalytics';
+import { UserBehaviorAnalytics } from './UserBehaviorAnalytics';
+import { RevenueAnalytics } from './RevenueAnalytics';
+import { PerformanceOptimizer } from './PerformanceOptimizer';
+import { RealTimeMetricsDashboard } from './RealTimeMetricsDashboard';
+import { SystemAnalyticsDashboard } from './SystemAnalyticsDashboard';
 
 export function AdvancedAnalyticsHub() {
-  const [activeTab, setActiveTab] = useState('realtime');
+  const [dateRange, setDateRange] = useState<any>(null);
+  const [selectedMetric, setSelectedMetric] = useState('overview');
+  const [timeFrame, setTimeFrame] = useState('30d');
 
-  const analyticsOverview = {
-    systemHealth: 94,
-    performanceScore: 87,
-    predictionAccuracy: 91,
-    optimizationsActive: 8
-  };
+  const analyticsModules = [
+    {
+      id: 'predictive',
+      title: 'Predictive Analytics',
+      description: 'AI-powered forecasting and trend analysis',
+      icon: <TrendingUp className="w-5 h-5" />,
+      component: <PredictiveAnalytics />
+    },
+    {
+      id: 'behavior',
+      title: 'User Behavior',
+      description: 'Deep dive into user interactions and patterns',
+      icon: <Users className="w-5 h-5" />,
+      component: <UserBehaviorAnalytics />
+    },
+    {
+      id: 'revenue',
+      title: 'Revenue Analytics',
+      description: 'Financial performance and revenue optimization',
+      icon: <DollarSign className="w-5 h-5" />,
+      component: <RevenueAnalytics />
+    },
+    {
+      id: 'performance',
+      title: 'Performance Optimizer',
+      description: 'System performance insights and recommendations',
+      icon: <Zap className="w-5 h-5" />,
+      component: <PerformanceOptimizer />
+    },
+    {
+      id: 'realtime',
+      title: 'Real-time Metrics',
+      description: 'Live monitoring and instant insights',
+      icon: <Activity className="w-5 h-5" />,
+      component: <RealTimeMetricsDashboard />
+    },
+    {
+      id: 'system',
+      title: 'System Analytics',
+      description: 'Infrastructure and system performance metrics',
+      icon: <BarChart3 className="w-5 h-5" />,
+      component: <SystemAnalyticsDashboard />
+    }
+  ];
 
-  const getHealthColor = (score: number) => {
-    if (score >= 90) return 'text-green-600';
-    if (score >= 75) return 'text-yellow-600';
-    return 'text-red-600';
-  };
+  const keyMetrics = [
+    { label: 'Total Users', value: '12,847', change: '+12.5%', trend: 'up' },
+    { label: 'Revenue', value: '$48,392', change: '+8.3%', trend: 'up' },
+    { label: 'Conversion Rate', value: '3.8%', change: '+0.5%', trend: 'up' },
+    { label: 'Avg Session', value: '4m 32s', change: '-2.1%', trend: 'down' }
+  ];
 
   return (
-    <div className="space-y-8">
-      <div className="mb-8">
-        <h2 className="text-4xl font-bold tracking-tight mb-3 bg-gradient-to-r from-purple-900 via-purple-800 to-purple-700 bg-clip-text text-transparent">
-          Advanced Analytics Hub
-        </h2>
-        <p className="text-lg text-gray-600 max-w-2xl">
-          Real-time monitoring, performance optimization, and AI-powered predictive analytics for your platform.
-        </p>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Advanced Analytics Hub</h2>
+          <p className="text-gray-600">
+            Comprehensive business intelligence and data insights platform
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm">
+            <Download className="w-4 h-4 mr-2" />
+            Export Report
+          </Button>
+          <Button variant="outline" size="sm">
+            <Filter className="w-4 h-4 mr-2" />
+            Filters
+          </Button>
+        </div>
       </div>
 
-      {/* Analytics Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">System Health</p>
-                <p className={`text-3xl font-bold ${getHealthColor(analyticsOverview.systemHealth)}`}>
-                  {analyticsOverview.systemHealth}%
-                </p>
-                <div className="flex items-center gap-1 mt-1">
-                  <Activity className="w-3 h-3 text-green-500" />
-                  <span className="text-xs text-green-600">Excellent</span>
-                </div>
-              </div>
-              <div className="p-3 rounded-full bg-green-50">
-                <Activity className="w-6 h-6 text-green-600" />
-              </div>
+      {/* Quick Filters */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-gray-500" />
+              <span className="text-sm font-medium">Time Range:</span>
+              <Select value={timeFrame} onValueChange={setTimeFrame}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7d">Last 7 days</SelectItem>
+                  <SelectItem value="30d">Last 30 days</SelectItem>
+                  <SelectItem value="90d">Last 3 months</SelectItem>
+                  <SelectItem value="1y">Last year</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Performance Score</p>
-                <p className={`text-3xl font-bold ${getHealthColor(analyticsOverview.performanceScore)}`}>
-                  {analyticsOverview.performanceScore}%
-                </p>
-                <div className="flex items-center gap-1 mt-1">
-                  <Zap className="w-3 h-3 text-yellow-500" />
-                  <span className="text-xs text-yellow-600">Good</span>
-                </div>
-              </div>
-              <div className="p-3 rounded-full bg-yellow-50">
-                <Zap className="w-6 h-6 text-yellow-600" />
-              </div>
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-gray-500" />
+              <span className="text-sm font-medium">Focus:</span>
+              <Select value={selectedMetric} onValueChange={setSelectedMetric}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="overview">Overview</SelectItem>
+                  <SelectItem value="users">User Metrics</SelectItem>
+                  <SelectItem value="revenue">Revenue</SelectItem>
+                  <SelectItem value="performance">Performance</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">AI Accuracy</p>
-                <p className={`text-3xl font-bold ${getHealthColor(analyticsOverview.predictionAccuracy)}`}>
-                  {analyticsOverview.predictionAccuracy}%
-                </p>
-                <div className="flex items-center gap-1 mt-1">
-                  <Brain className="w-3 h-3 text-purple-500" />
-                  <span className="text-xs text-purple-600">High</span>
-                </div>
-              </div>
-              <div className="p-3 rounded-full bg-purple-50">
-                <Brain className="w-6 h-6 text-purple-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Active Optimizations</p>
-                <p className="text-3xl font-bold text-blue-600">
-                  {analyticsOverview.optimizationsActive}
-                </p>
-                <div className="flex items-center gap-1 mt-1">
-                  <TrendingUp className="w-3 h-3 text-blue-500" />
-                  <span className="text-xs text-blue-600">Running</span>
-                </div>
-              </div>
-              <div className="p-3 rounded-full bg-blue-50">
-                <BarChart3 className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <Card className="border-0 shadow-lg bg-white/70 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-blue-600" />
-            Quick Actions
-          </CardTitle>
-          <CardDescription>
-            Common analytics and optimization tasks
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-3">
-            <Button variant="outline" size="sm">
-              <Activity className="w-4 h-4 mr-2" />
-              System Health Check
-            </Button>
-            <Button variant="outline" size="sm">
-              <Zap className="w-4 h-4 mr-2" />
-              Performance Scan
-            </Button>
-            <Button variant="outline" size="sm">
-              <Brain className="w-4 h-4 mr-2" />
-              Generate Predictions
-            </Button>
-            <Button variant="outline" size="sm">
-              <BarChart3 className="w-4 h-4 mr-2" />
-              Export Analytics
-            </Button>
-            <Button variant="outline" size="sm">
-              <AlertTriangle className="w-4 h-4 mr-2" />
-              Alert Settings
-            </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Main Analytics Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="realtime" className="flex items-center gap-2">
-            <Activity className="w-4 h-4" />
-            Real-Time Metrics
-          </TabsTrigger>
-          <TabsTrigger value="performance" className="flex items-center gap-2">
-            <Zap className="w-4 h-4" />
-            Performance
-          </TabsTrigger>
-          <TabsTrigger value="predictive" className="flex items-center gap-2">
-            <Brain className="w-4 h-4" />
-            Predictive AI
-          </TabsTrigger>
-        </TabsList>
+      {/* Key Metrics Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {keyMetrics.map((metric, index) => (
+          <Card key={index}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">{metric.label}</p>
+                  <p className="text-2xl font-bold">{metric.value}</p>
+                </div>
+                <Badge 
+                  variant={metric.trend === 'up' ? 'default' : 'destructive'}
+                  className="text-xs"
+                >
+                  {metric.change}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-        <TabsContent value="realtime" className="space-y-6">
-          <RealTimeMetricsDashboard />
-        </TabsContent>
+      {/* Analytics Modules */}
+      <Tabs defaultValue="predictive" className="w-full">
+        <div className="flex items-center justify-between mb-4">
+          <TabsList className="grid w-full grid-cols-6">
+            {analyticsModules.map((module) => (
+              <TabsTrigger key={module.id} value={module.id} className="flex items-center gap-2">
+                {module.icon}
+                <span className="hidden sm:inline">{module.title}</span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
 
-        <TabsContent value="performance" className="space-y-6">
-          <PerformanceOptimizer />
-        </TabsContent>
-
-        <TabsContent value="predictive" className="space-y-6">
-          <PredictiveAnalytics />
-        </TabsContent>
+        {analyticsModules.map((module) => (
+          <TabsContent key={module.id} value={module.id} className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  {module.icon}
+                  <div>
+                    <CardTitle>{module.title}</CardTitle>
+                    <p className="text-sm text-gray-600">{module.description}</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {module.component}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        ))}
       </Tabs>
     </div>
   );

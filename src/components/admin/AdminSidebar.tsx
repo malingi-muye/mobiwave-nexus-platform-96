@@ -1,193 +1,186 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { cn } from '@/lib/utils';
 import { 
-  LayoutDashboard, 
   Users, 
   Settings, 
   BarChart3, 
   Shield, 
-  Database,
+  Monitor,
   Wrench,
+  UserPlus,
   DollarSign,
-  Zap,
-  Smartphone,
-  Activity,
-  Brain,
+  Database,
   FileText,
-  Key,
+  Briefcase,
+  Activity,
+  TrendingUp,
+  Eye,
   Bell,
-  Monitor
+  Server,
+  CheckCircle2,
+  AlertTriangle
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-const adminMenuItems = [
-  { 
-    title: 'Overview', 
-    href: '/admin', 
-    icon: LayoutDashboard,
-    description: 'Main dashboard overview',
-    color: 'text-blue-600'
-  },
-  { 
-    title: 'User Management', 
-    href: '/admin/users', 
-    icon: Users,
-    description: 'Manage users and permissions',
-    color: 'text-purple-600'
-  },
-  { 
-    title: 'Services Management', 
-    href: '/admin/services', 
-    icon: Wrench,
-    description: 'Configure platform services',
-    color: 'text-orange-600'
-  },
-  { 
-    title: 'Revenue Reports', 
-    href: '/admin/revenue', 
-    icon: DollarSign,
-    description: 'Financial analytics and reports',
-    color: 'text-green-600'
-  },
-  { 
-    title: 'Analytics', 
-    href: '/admin/analytics', 
+const sidebarItems = [
+  {
+    title: 'Dashboard',
+    href: '/admin',
     icon: BarChart3,
-    description: 'Platform usage analytics',
-    color: 'text-cyan-600'
   },
-  { 
-    title: 'Advanced Analytics', 
-    href: '/admin/advanced-analytics', 
-    icon: Brain,
-    description: 'AI-powered insights and predictions',
-    color: 'text-indigo-600'
+  {
+    title: 'User Management',
+    icon: Users,
+    children: [
+      { title: 'Basic Users', href: '/admin/users', icon: Users },
+      { title: 'Enhanced Users', href: '/admin/users/enhanced', icon: Users },
+      { title: 'Create User', href: '/admin/users/create', icon: UserPlus },
+    ]
   },
-  { 
-    title: 'Real-Time Monitoring', 
-    href: '/admin/real-time-monitoring', 
-    icon: Activity,
-    description: 'Live system monitoring',
-    color: 'text-pink-600'
+  {
+    title: 'Services',
+    href: '/admin/services',
+    icon: Wrench,
   },
-  { 
-    title: 'System Health', 
-    href: '/admin/system-health', 
+  {
+    title: 'Analytics',
+    icon: TrendingUp,
+    children: [
+      { title: 'Basic Analytics', href: '/admin/analytics', icon: BarChart3 },
+      { title: 'Enhanced Analytics', href: '/admin/analytics/enhanced', icon: TrendingUp },
+      { title: 'Advanced Analytics', href: '/admin/analytics/advanced', icon: Activity },
+    ]
+  },
+  {
+    title: 'Monitoring',
     icon: Monitor,
-    description: 'Infrastructure health monitoring',
-    color: 'text-teal-600'
+    children: [
+      { title: 'Basic Monitoring', href: '/admin/monitoring', icon: Monitor },
+      { title: 'Real-time Monitoring', href: '/admin/monitoring/realtime', icon: Activity },
+    ]
   },
-  { 
-    title: 'Security Center', 
-    href: '/admin/security', 
+  {
+    title: 'Security',
     icon: Shield,
-    description: 'Security monitoring and config',
-    color: 'text-red-600'
+    children: [
+      { title: 'Basic Security', href: '/admin/security', icon: Shield },
+      { title: 'Advanced Security', href: '/admin/security/advanced', icon: AlertTriangle },
+    ]
   },
-  { 
-    title: 'Database Admin', 
-    href: '/admin/database', 
-    icon: Database,
-    description: 'Database management tools',
-    color: 'text-emerald-600'
+  {
+    title: 'System',
+    icon: Server,
+    children: [
+      { title: 'System Settings', href: '/admin/settings', icon: Settings },
+      { title: 'System Health', href: '/admin/system/health', icon: Activity },
+      { title: 'System Diagnostics', href: '/admin/system/diagnostics', icon: Eye },
+      { title: 'System Integrity', href: '/admin/system/integrity', icon: CheckCircle2 },
+      { title: 'Database Admin', href: '/admin/database', icon: Database },
+      { title: 'System Logs', href: '/admin/logs', icon: FileText },
+    ]
   },
-  { 
-    title: 'API Management', 
-    href: '/admin/api', 
-    icon: Key,
-    description: 'API keys and integrations',
-    color: 'text-yellow-600'
+  {
+    title: 'Revenue Reports',
+    href: '/admin/revenue',
+    icon: DollarSign,
   },
-  { 
-    title: 'Logs & Audit', 
-    href: '/admin/logs', 
-    icon: FileText,
-    description: 'System logs and audit trails',
-    color: 'text-slate-600'
+  {
+    title: 'Project Progress',
+    href: '/admin/project',
+    icon: Briefcase,
   },
-  { 
-    title: 'Notifications', 
-    href: '/admin/notifications', 
+  {
+    title: 'Notifications',
+    href: '/admin/notifications',
     icon: Bell,
-    description: 'System notifications and alerts',
-    color: 'text-amber-600'
   },
-  { 
-    title: 'Settings', 
-    href: '/admin/settings', 
-    icon: Settings,
-    description: 'Platform configuration',
-    color: 'text-gray-600'
-  }
 ];
 
 export function AdminSidebar() {
   const location = useLocation();
+  const [openGroups, setOpenGroups] = React.useState<string[]>([]);
+
+  const toggleGroup = (title: string) => {
+    setOpenGroups(prev => 
+      prev.includes(title) 
+        ? prev.filter(group => group !== title)
+        : [...prev, title]
+    );
+  };
+
+  const renderSidebarItem = (item: any) => {
+    if (item.children) {
+      const isOpen = openGroups.includes(item.title);
+      const hasActiveChild = item.children.some((child: any) => location.pathname === child.href);
+      
+      return (
+        <div key={item.title} className="space-y-1">
+          <button
+            onClick={() => toggleGroup(item.title)}
+            className={cn(
+              "w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors hover:bg-gray-100",
+              (isOpen || hasActiveChild) && "bg-gray-100 text-gray-900"
+            )}
+          >
+            <div className="flex items-center">
+              <item.icon className="mr-3 h-4 w-4" />
+              {item.title}
+            </div>
+            <svg
+              className={cn("h-4 w-4 transition-transform", isOpen && "rotate-90")}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+          {isOpen && (
+            <div className="ml-6 space-y-1">
+              {item.children.map((child: any) => (
+                <Link
+                  key={child.href}
+                  to={child.href}
+                  className={cn(
+                    "block px-3 py-2 text-sm rounded-md transition-colors hover:bg-gray-100",
+                    location.pathname === child.href ? "bg-blue-100 text-blue-700 font-medium" : "text-gray-600"
+                  )}
+                >
+                  <div className="flex items-center">
+                    <child.icon className="mr-2 h-3 w-3" />
+                    {child.title}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <Link
+        key={item.href}
+        to={item.href}
+        className={cn(
+          "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors hover:bg-gray-100",
+          location.pathname === item.href ? "bg-blue-100 text-blue-700" : "text-gray-600"
+        )}
+      >
+        <item.icon className="mr-3 h-4 w-4" />
+        {item.title}
+      </Link>
+    );
+  };
 
   return (
-    <div className="flex h-full w-64 flex-col bg-white border-r border-gray-200">
-      {/* Header */}
-      <div className="flex h-16 items-center justify-center px-6 border-b border-gray-200">
-        <div className="flex items-center gap-2">
-          <Smartphone className="w-8 h-8 text-blue-600" />
-          <div>
-            <h1 className="text-lg font-bold text-gray-900">MobiWave</h1>
-            <p className="text-xs text-gray-500">Communication Hub</p>
-          </div>
-        </div>
+    <div className="w-64 bg-white shadow-sm border-r border-gray-200 h-full">
+      <div className="p-6">
+        <h2 className="text-lg font-semibold text-gray-900">Admin Panel</h2>
       </div>
-
-      {/* Admin Badge */}
-      <div className="px-6 py-3 bg-red-50 border-b border-red-100">
-        <div className="flex items-center gap-2">
-          <Shield className="w-4 h-4 text-red-600" />
-          <span className="text-sm font-medium text-red-900">Administrator Panel</span>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4">
-        <div className="space-y-1 px-3">
-          {adminMenuItems.map((item) => {
-            const isActive = location.pathname === item.href;
-            const Icon = item.icon;
-            
-            return (
-              <Link
-                key={item.href}
-                to={item.href}
-                className={cn(
-                  'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
-                  isActive
-                    ? 'bg-blue-100 text-blue-900 shadow-sm'
-                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                )}
-              >
-                <Icon className={cn(
-                  'h-4 w-4 transition-colors',
-                  isActive ? 'text-blue-600' : item.color + ' group-hover:text-gray-700'
-                )} />
-                <div className="flex flex-col">
-                  <span>{item.title}</span>
-                  {!isActive && (
-                    <span className="text-xs text-gray-500 group-hover:text-gray-600">
-                      {item.description}
-                    </span>
-                  )}
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+      <nav className="px-4 pb-4 space-y-1">
+        {sidebarItems.map(renderSidebarItem)}
       </nav>
-
-      {/* Footer */}
-      <div className="border-t border-gray-200 p-4">
-        <div className="flex items-center gap-2 text-xs text-gray-500">
-          <Zap className="w-3 h-3 text-yellow-500" />
-          <span>Admin v2.0</span>
-        </div>
-      </div>
     </div>
   );
 }

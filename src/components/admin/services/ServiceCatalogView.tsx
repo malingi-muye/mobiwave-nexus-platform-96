@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Settings } from 'lucide-react';
 import { ServiceCard } from './ServiceCard';
-import { ServiceEditDialog } from './ServiceEditDialog';
-import { useServiceCatalogOperations } from '@/hooks/useServiceCatalogOperations';
+import { SecureServiceEditDialog } from './SecureServiceEditDialog';
+import { useSecureServiceOperations } from '@/hooks/useSecureServiceOperations';
 
 interface ServiceCatalog {
   id: string;
@@ -29,7 +29,7 @@ export function ServiceCatalogView({ services, isLoading }: ServiceCatalogViewPr
   const [editingService, setEditingService] = useState<ServiceCatalog | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
-  const { updateService, toggleServiceStatus, isUpdating } = useServiceCatalogOperations();
+  const { updateService, toggleServiceStatus, isUpdating } = useSecureServiceOperations();
 
   const handleEditService = (service: ServiceCatalog) => {
     setEditingService(service);
@@ -90,7 +90,7 @@ export function ServiceCatalogView({ services, isLoading }: ServiceCatalogViewPr
         </CardContent>
       </Card>
 
-      <ServiceEditDialog
+      <SecureServiceEditDialog
         service={editingService}
         isOpen={isEditDialogOpen}
         onClose={handleCloseEditDialog}
